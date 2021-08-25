@@ -2,6 +2,7 @@
 from discord import Intents, Embed, Color, file
 import discord
 from discord.ext import commands
+from discord.ext.commands.core import command
 from discord_components import DiscordComponents, Button, ButtonStyle, InteractionType
 
 # Local packages
@@ -24,10 +25,42 @@ class CommandCenter(commands.Cog):
         self.website_historicals = []
 
     @commands.command()
+    async def uptime(self, ctx):
+
+        # Find how much time has elasped since we started the bot
+        current_time = datetime.datetime.now()
+        elasped_time = current_time - self.bot.startup_time
+
+        # Format the elasped time properly
+        days_formatted = elasped_time.days
+        hours_formatted = elasped_time.seconds // 3600
+        minutes_formatted = elasped_time.seconds // 60 % 60
+        seconds_formatted = elasped_time.seconds % 60
+
+        # Send the uptime
+        await ctx.send("Atmobot uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
+
+    @commands.command()
+    async def meme(self, ctx):
+
+        # Path to get our memes from
+        current_path = os.path.join(os.getcwd(), bot_globals.resources_path)
+
+        # Pick a random file
+        all_files = [x for x in list(os.scandir(current_path)) if x.is_file()]
+        random_file = random.choice(all_files).name
+
+        # Generate a file path and send the file
+        file_path = os.path.join(current_path, random_file)
+        file_to_send = discord.File(file_path)
+        await ctx.send(file=file_to_send)
+
+    
+    @commands.command()
     async def deepfake(self, ctx, directory: typing.Optional[str]):
 
         # Path to get our deepfakes from
-        current_path = os.path.join(os.getcwd(), bot_globals.deepfake_path)
+        current_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.deepfakes_path)
 
         def get_all_directories(return_as_strings=False):
             directories_to_return = []
@@ -54,14 +87,14 @@ class CommandCenter(commands.Cog):
             return
 
         # If the user specifies a directory that doesn't exist, let them know
-        elif directory and not os.path.exists(os.path.join(bot_globals.deepfake_path, directory)):
+        elif directory and not os.path.exists(os.path.join(bot_globals.resources_path, bot_globals.deepfakes_path, directory)):
 
             # Send the message
             await ctx.send("Deepfake category '{}' does not exist!".format(directory))
             return
 
         # But if they specify a directory and it DOES exist, pick a random file from it
-        elif directory and os.path.exists(os.path.join(bot_globals.deepfake_path, directory)):
+        elif directory and os.path.exists(os.path.join(bot_globals.resources_path, bot_globals.deepfakes_path, directory)):
 
             # Pick a random file
             all_files = [x for x in list(os.scandir(os.path.join(current_path, directory)))]

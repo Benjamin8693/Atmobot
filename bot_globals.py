@@ -63,4 +63,5 @@ patcher_tips = {200: "The Patcher is online",
                 403: "The Patcher may be online",
                 404: "The Patcher may be online"}
 
-deepfake_path = "resources/deepfakes"
+resources_path = "resources"
+deepfakes_path = "deepfakes"

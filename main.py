@@ -25,8 +25,9 @@ class Atmobot(commands.Bot):
     # Preliminary stuff done when starting up the bot
     def startup(self):
 
-        # Load up our settings
+        # Load our settings and update startup time
         self.load_settings()
+        self.update_setting("last_startup", self.startup_time.strftime("%Y-%m-%d %H:%M:%S"))
 
         # Checker class used for checking url and patcher status
         self.checker = checker.Checker(self)
@@ -51,6 +52,19 @@ class Atmobot(commands.Bot):
         # Load our settings
         with open("settings.json") as data:
             self.bot_settings = json.load(data)
+
+    def update_setting(self, setting_name, variable_to_replace):
+
+        # We typically shouldn't be updating a setting that doesn't already exist
+        if setting_name not in self.bot_settings:
+            print("Updated setting '{}' that does not exist!".format(setting_name))
+
+        # Update the setting
+        self.bot_settings[setting_name] = variable_to_replace
+
+        # Write it to the settings file
+        with open("settings.json", "w") as data:
+            json.dump(self.bot_settings, data, indent=4)
 
     async def on_ready(self):
 

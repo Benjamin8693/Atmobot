@@ -24,6 +24,10 @@ class CommandCenter(commands.Cog):
         self.patcher_historicals = []
         self.website_historicals = []
 
+    @commands.command()
+    async def testing(self, ctx):
+        await self.bot.spoilers.unpack()
+
     async def get_full_username(self, user):
         user_name = user.name
         user_discriminator = user.discriminator

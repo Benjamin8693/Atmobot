@@ -23,7 +23,7 @@ URL_CACHE_REQUEST = 0
 URL_CACHE_HASH = 1
 
 # Base patcher url
-patcher_url = "http://{server}.us.{game_longhand}.com/{game_shorthand}Patcher/{revision}/LatestBuild/Data/GameData/{wad_name}.wad"
+patcher_url = "http://{server}.us.{game_longhand}.com/{game_shorthand}Patcher/V_{revision}/LatestBuild/Data/GameData/{wad_name}.wad"
 
 # Service information
 SERVICE_UNKNOWN = -1

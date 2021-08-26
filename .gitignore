@@ -130,4 +130,5 @@ dmypy.json
 
 # Custom
 .vscode
+archive
 settings.json

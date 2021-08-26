@@ -5,10 +5,12 @@ from discord.ext import commands
 from discord_components import DiscordComponents, Button, ButtonStyle, InteractionType
 
 # Local packages
-import checker
 import bot_globals
+import checker
+import spoilers
 
 # Built-in packages
+import asyncio
 import datetime
 import json
 import os
@@ -85,6 +87,10 @@ class Atmobot(commands.Bot):
                                                  service=service_name.capitalize(),
                                                  service_suffix=bot_globals.service_suffix,
                                                  footer="=" * 52))
+
+        # Testing
+        self.spoilers = spoilers.Spoilers(self)
+        #await self.spoilers.unpack()
 
 # Setup logging
 if not os.path.exists("logs/"):

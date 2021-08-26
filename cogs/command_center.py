@@ -24,8 +24,21 @@ class CommandCenter(commands.Cog):
         self.patcher_historicals = []
         self.website_historicals = []
 
+    async def get_full_username(self, user):
+        user_name = user.name
+        user_discriminator = user.discriminator
+
+        full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
+        return full_username
+
+    async def get_formatted_time(self):
+        return datetime.datetime.now().strftime("%H:%M:%S")
+
     @commands.command()
     async def uptime(self, ctx):
+
+        # Logging
+        print("{time} | UPTIME: {user} requested bot uptime.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.message.author)))
 
         # Find how much time has elasped since we started the bot
         current_time = datetime.datetime.now()
@@ -40,8 +53,14 @@ class CommandCenter(commands.Cog):
         # Send the uptime
         await ctx.send("Atmobot uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
+        # Log the result
+        print("{time} | UPTIME: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.".format(time=await self.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
+
     @commands.command()
     async def meme(self, ctx):
+
+        # Logging
+        print("{time} | MEME: {user} requested a meme.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.message.author)))
 
         # Path to get our memes from
         current_path = os.path.join(os.getcwd(), bot_globals.resources_path)
@@ -55,9 +74,14 @@ class CommandCenter(commands.Cog):
         file_to_send = discord.File(file_path)
         await ctx.send(file=file_to_send)
 
-    
+        # Log the result
+        print("{time} | MEME: Random meme '{file_path}' uploaded.".format(time=await self.get_formatted_time(), file_path=random_file))
+
     @commands.command()
     async def deepfake(self, ctx, directory: typing.Optional[str]):
+
+        # Logging
+        print("{time} | DEEPFAKE: {user} requested a deepfake with directory {directory}.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.message.author), directory=directory))
 
         # Path to get our deepfakes from
         current_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.deepfakes_path)
@@ -84,6 +108,10 @@ class CommandCenter(commands.Cog):
 
             # Relay our categories back to them
             await ctx.send("Deepfake categories: {}".format(categories_string))
+
+            # Log the result
+            print("{time} | DEEPFAKE: Deepfake categories requested, returning category list '{category_list}'.".format(time=await self.get_formatted_time(), category_list=categories_string))
+
             return
 
         # If the user specifies a directory that doesn't exist, let them know
@@ -91,6 +119,10 @@ class CommandCenter(commands.Cog):
 
             # Send the message
             await ctx.send("Deepfake category '{}' does not exist!".format(directory))
+
+            # Log the result
+            print("{time} | DEEPFAKE: Deepfake category '{category}' requested, but does not exist.".format(time=await self.get_formatted_time(), category=directory))
+
             return
 
         # But if they specify a directory and it DOES exist, pick a random file from it
@@ -116,6 +148,9 @@ class CommandCenter(commands.Cog):
         file_to_send = discord.File(file_path)
         await ctx.send(file=file_to_send)
 
+        # Log the result
+        print("{time} | DEEPFAKE: Deepfake '{file_path}' uploaded.".format(time=await self.get_formatted_time(), file_path=random_file))
+
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def website(self, ctx):
@@ -126,7 +161,6 @@ class CommandCenter(commands.Cog):
         else:
             await ctx.send("Website change!")
 
-
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def patcher(self, ctx):
@@ -134,48 +168,55 @@ class CommandCenter(commands.Cog):
 
         await ctx.send("Patcher error code is {}".format(response_code))
 
-
+    # Generates a set of buttons users can click on to check Test Realm status manually
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def start(self, ctx):
+    async def status(self, ctx):
 
+        # Embed header
         initial_embed = Embed(title="Wizard101 Test Realm Status", color=Color.blurple())
+
+        # Disclaimer so people don't flip their shit and take the bot as gospel
         initial_embed.add_field(name="Notice",
                                 value=f"This bot is experimental! Do not take any response given as an absolute indicator of Test Realm. While the intended purpose of Atmobot is to check for Test Realm activity, at the end of the day we're all just having fun!",
                                 inline=False)
+
+        # Explains what the patcher status actually is
         initial_embed.add_field(name="Patcher Status",
                                 value=f"If the game patcher is being modified, it is possible (but not certain) Test Realm could be releasing soon. Once the patcher is completely up, The Atmoplex will begin datamining the new update, and posts will be made to Twitter momentarily.",
                                 inline=False)
+
+        # Likewise with website status
         initial_embed.add_field(name="Website Status",
                                 value=f"There are various websites that contain information regarding Test Realm. If any of these see a change, it is likely Test Realm could be releasing soon.",
                                 inline=False)
 
+        # Buttons to check the patcher status (technically there are two, but one is always invisible)
         patcher_button_normal = Button(style=ButtonStyle.blue, label="Patcher Status")
         patcher_button_cooldown = Button(style=ButtonStyle.blue, label="Patcher Status (Cooldown)", disabled=True)
+        patcher_button_state = patcher_button_normal
 
+        # Likewise with patcher buttons
         website_button_normal = Button(style=ButtonStyle.green, label="Website Status")
         website_button_cooldown = Button(style=ButtonStyle.green, label="Website Status (Cooldown)", disabled=True)
-
-        patcher_button_state = patcher_button_normal
         website_button_state = website_button_normal
 
+        # Send the embed
         message = await ctx.send(embed=initial_embed, components=[patcher_button_state, website_button_state])
-        patcher_message = None
-        website_message = None
-        patcher_processed = 0
-        website_processed = 0
 
-        await self.handle_button_press(ctx, initial_embed, message, patcher_button_normal, patcher_button_cooldown, website_button_normal, website_button_cooldown, patcher_button_state, website_button_state, patcher_message, website_message, patcher_processed, website_processed)
-
+        # Set up a loop that waits for users to press a button
+        await self.handle_button_press(ctx, initial_embed, message, patcher_button_normal, patcher_button_cooldown, website_button_normal, website_button_cooldown, patcher_button_state, website_button_state, patcher_message=None, website_message=None, patcher_processed=0, website_processed=0)
 
     async def handle_button_press(self, ctx, initial_embed, message, patcher_button_normal, patcher_button_cooldown, website_button_normal, website_button_cooldown, patcher_button_state, website_button_state, patcher_message, website_message, patcher_processed, website_processed):
 
+        # We only care about button presses in the channel our message was sent in
         def check(response):
             return response.channel == ctx.channel
 
-        res = await self.bot.bot.wait_for("button_click", check=check)
+        # Wait for the button press
+        res = await self.bot.wait_for("button_click", check=check)
 
-        # Determine message response
+        # Handle the patcher button
         if res.component.label.startswith("Patcher"):
 
             patcher_processed += 1
@@ -199,11 +240,11 @@ class CommandCenter(commands.Cog):
             website_button_state = website_button_cooldown
             await message.edit(embed=initial_embed, components=[patcher_button_state, website_button_state])
 
+            # Color the embed based on the response code we've obtained
+            embed_color = Color.red()
             response_code = self.bot.checker.check_patcher()
-            if response_code in (200, 403, 404):
+            if response_code in list(bot_globals.patcher_tips.keys()):
                 embed_color = Color.green()
-            else:
-                embed_color = Color.red()
 
             author_name = res.user
 
@@ -245,6 +286,7 @@ class CommandCenter(commands.Cog):
             website_button_state = website_button_normal
             await message.edit(embed=initial_embed, components=[patcher_button_state, website_button_state])
 
+        # Handle the website button
         elif res.component.label.startswith("Website"):
 
             website_processed += 1
@@ -300,10 +342,10 @@ class CommandCenter(commands.Cog):
 
                 if website_change:
                     change_header = "Website Updated"
-                    change_footer = "At {}, A Test Realm related website page updated!. Go check to see if the update notes are out, or if the launcher has updated!"
+                    change_footer = "A Test Realm related website page updated!. Go check to see if the update notes are out, or if the launcher has updated!"
                 else:
                     change_header = "No Update"
-                    change_footer = "As of {}, there have been no Test Realm website changes."
+                    change_footer = "There have been no Test Realm website changes."
 
                 website_embed.add_field(name=change_header,
                                         value="{}\nRequested by {} @ {} ET".format(change_footer, author_name, message_timestamp),
@@ -319,7 +361,9 @@ class CommandCenter(commands.Cog):
             website_button_state = website_button_normal
             await message.edit(embed=initial_embed, components=[patcher_button_state, website_button_state])
 
+        # Loop back around and wait for the next time the button is pressed
         await self.handle_button_press(ctx, initial_embed, message, patcher_button_normal, patcher_button_cooldown, website_button_normal, website_button_cooldown, patcher_button_state, website_button_state, patcher_message, website_message, patcher_processed, website_processed)
 
+# Used for connecting the Command Center to the rest of the bot
 def setup(bot):
     bot.add_cog(CommandCenter(bot=bot))

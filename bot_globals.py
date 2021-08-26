@@ -12,6 +12,9 @@ default_settings = '''{
 
 bot_description = '''Atmobot adds unique functionality to The Atmoplex Discord Server!'''
 
+# Debug message for when the bot starts up
+startup_message = "{header}\nLogged in as {username} with user ID {id}\nStarted up at {timestamp}\nRunning in {game_longhand} {service} {service_suffix} mode\n{footer}"
+
 # Important urls to check
 test_patch_client_url = "https://www.wizard101.com/testpatchClient"
 update_notes_url = "https://www.wizard101.com/game/community/update-notes/{month}{year}"
@@ -30,6 +33,8 @@ TEST_REALM = 1
 service_names = {SERVICE_UNKNOWN: "",
                  LIVE_REALM: "",
                  TEST_REALM: "test"}
+
+service_suffix = "Realm"
 
 # Server information
 SERVER_UNKNOWN = -1

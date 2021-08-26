@@ -1,5 +1,6 @@
 # 3rd-Party Packages
-from discord import Intents, Embed, Color
+from sys import exc_info
+from discord import Intents, Embed, Color, file
 from discord.ext import commands
 from discord_components import DiscordComponents, Button, ButtonStyle, InteractionType
 
@@ -11,7 +12,9 @@ import bot_globals
 import datetime
 import json
 import os
+import sys
 
+# Atmobot
 class Atmobot(commands.Bot):
 
     def __init__(self, command_prefix, description, intents):
@@ -72,21 +75,72 @@ class Atmobot(commands.Bot):
         DiscordComponents(self)
 
         # Proof that our bot is actually running
-        print("----------\nBot logged in as {} with user ID of {}\n----------".format(self.user.name, self.user.id))
+        game_longhand = bot_globals.game_longhands.get(self.bot_settings.get("game", -1))
+        service_name = bot_globals.service_names.get(self.bot_settings.get("service", -1))
+        print(bot_globals.startup_message.format(header="=" * 52,
+                                                 username=self.user.name,
+                                                 id=self.user.id,
+                                                 timestamp=self.startup_time.strftime("%Y-%m-%d-%H-%M-%S"),
+                                                 game_longhand=game_longhand,
+                                                 service=service_name.capitalize(),
+                                                 service_suffix=bot_globals.service_suffix,
+                                                 footer="=" * 52))
 
-intents = Intents.default()
-intents.members = True
+# Setup logging
+if not os.path.exists("logs/"):
+    os.mkdir("logs/")
 
+class LogOutput:
+
+    def __init__(self, orig, log):
+        self.orig = orig
+        self.log = log
+
+    def write(self, out):
+        if isinstance(out, str):
+            out_bytes = out.encode('utf-8', 'ignore')
+        else:
+            out_bytes = out
+            out = out.decode('utf-8', 'ignore')
+        self.log.write(out_bytes)
+        self.log.flush()
+        if self.console:
+            self.orig.write(out)
+            self.orig.flush()
+
+    def flush(self):
+        self.log.flush()
+        self.orig.flush()
+
+log_name = "logs/atmobot-log-{}.log".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+log = open(log_name, "ab")
+logOut = LogOutput(sys.__stdout__, log)
+logErr = LogOutput(sys.__stderr__, log)
+sys.stdout = logOut
+sys.stderr = logErr
+sys.stdout.console = True
+sys.stderr.console = True
+
+# What prefix are we going to use?
 def _prefix_callable(bot, msg):
+    
+    # Prefixes we can use for the bot
     prefixes = []
+
+    # Right now we only care if we're mentioned
     bot_id = bot.user.id
     mention = (f"<@!{bot_id}> ", f"<@{bot_id}> ")
     prefixes.extend(mention)
+
+    # If we don't have any other prefixes to use, default to ">"
     if len(prefixes) < 1:
-        # if we're *still* empty, default to ">"
         prefixes.append(">")
+    
+    # Return available prefixes
     return prefixes
 
 # Run the bot
+intents = Intents.default()
+intents.members = True
 atmobot = Atmobot(command_prefix=_prefix_callable, description=bot_globals.bot_description, intents=intents)
 atmobot.startup()

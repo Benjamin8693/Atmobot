@@ -1,14 +1,14 @@
 # Default settings
-default_settings = '''{
-    "last_startup": "",
+default_settings = {
     "bot_token": "ODYxNDQ4NjI2NTU4MjA1OTUy.YOJ8jQ.kql-_eSMOcC7QnUYvRXtg4NFvl0",
-    "game": 0,
-    "service": 1,
-    "latest_revision": "r703991.Wizard_1_460",
-    "revision_bruteforce": true,
-    "wads_to_download": ["Root", "_Shared-WorldData"],
-    "download_updated_wads": true
-}'''
+    "subscribed_guilds": [231218732440092675],
+    "last_startup": "",
+    "game_id": 0,
+    "service_id": 1,
+    "latest_revision": "r703991.Wizard_1_460"
+}
+
+settings_path = "settings.json"
 
 bot_description = '''Atmobot adds unique functionality to The Atmoplex Discord Server!'''
 
@@ -68,5 +68,18 @@ patcher_tips = {200: "The Patcher is online",
                 403: "The Patcher may be online",
                 404: "The Patcher may be online"}
 
+# Paths to our resource folders
 resources_path = "resources"
 deepfakes_path = "deepfakes"
+
+# Slash command information
+COMMAND_UPTIME_NAME = "uptime"
+COMMAND_UPTIME_DESCRIPTION = "Displays how long Atmobot has been online for."
+
+COMMAND_MEME_NAME = "meme"
+COMMAND_MEME_DESCRIPTION = "Posts a random meme relevant to The Atmoplex Discord Server."
+
+COMMAND_DEEPFAKE_NAME = "deepfake"
+COMMAND_DEEPFAKE_DESCRIPTION = "Posts a deepfake of a person or character related to Kingsisle."
+COMMAND_DEEPFAKE_ARG_DIRECTORY_NAME = "directory"
+COMMAND_DEEPFAKE_ARG_DIRECTORY_DESCRIPTION = "Choose a specific category to retrieve a deepfake from."

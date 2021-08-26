@@ -1,9 +1,13 @@
 # 3rd-Party Packages
-from discord import Intents, Embed, Color, file
+from discord import Embed, Color
 import discord
 from discord.ext import commands
+from discord.ext.commands import bot
 from discord.ext.commands.core import command
-from discord_components import DiscordComponents, Button, ButtonStyle, InteractionType
+from discord_components import Button, ButtonStyle, InteractionType
+from discord_slash import cog_ext
+from discord_slash.context import SlashContext
+from discord_slash.utils.manage_commands import create_choice, create_option
 
 # Local packages
 import bot_globals
@@ -17,16 +21,22 @@ import typing
 
 class CommandCenter(commands.Cog):
 
+    subscribed_guilds = []
+
     def __init__(self, bot):
 
         self.bot = bot
+        self.bot.bot_settings.get("subscribed_guilds")
 
         self.patcher_historicals = []
         self.website_historicals = []
 
+        self.subscribed_guilds += self.bot.bot_settings.get("subscribed_guilds")
+
     @commands.command()
-    async def testing(self, ctx):
-        await self.bot.spoilers.unpack()
+    @commands.has_permissions(administrator=True)
+    async def spoilers(self, ctx):
+        await self.bot.spoilers.unpack_test()
 
     async def get_full_username(self, user):
         user_name = user.name
@@ -38,11 +48,11 @@ class CommandCenter(commands.Cog):
     async def get_formatted_time(self):
         return datetime.datetime.now().strftime("%H:%M:%S")
 
-    @commands.command()
+    @cog_ext.cog_slash(name=bot_globals.COMMAND_UPTIME_NAME, description=bot_globals.COMMAND_UPTIME_DESCRIPTION, guild_ids=subscribed_guilds)
     async def uptime(self, ctx):
 
         # Logging
-        print("{time} | UPTIME: {user} requested bot uptime.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.message.author)))
+        print("{time} | UPTIME: {user} requested bot uptime.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         # Find how much time has elasped since we started the bot
         current_time = datetime.datetime.now()
@@ -60,11 +70,11 @@ class CommandCenter(commands.Cog):
         # Log the result
         print("{time} | UPTIME: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.".format(time=await self.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
-    @commands.command()
+    @cog_ext.cog_slash(name=bot_globals.COMMAND_MEME_NAME, description=bot_globals.COMMAND_MEME_DESCRIPTION, guild_ids=subscribed_guilds)
     async def meme(self, ctx):
 
         # Logging
-        print("{time} | MEME: {user} requested a meme.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.message.author)))
+        print("{time} | MEME: {user} requested a meme.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         # Path to get our memes from
         current_path = os.path.join(os.getcwd(), bot_globals.resources_path)
@@ -81,33 +91,39 @@ class CommandCenter(commands.Cog):
         # Log the result
         print("{time} | MEME: Random meme '{file_path}' uploaded.".format(time=await self.get_formatted_time(), file_path=random_file))
 
-    @commands.command()
-    async def deepfake(self, ctx, directory: typing.Optional[str]):
+    def get_directories_from_path(self, current_path, return_as_strings=False):
+        directories_to_return = []
+
+        all_directories = [(x) for x in list(os.scandir(current_path)) if x.is_dir()]
+
+        if return_as_strings:
+            for directory in all_directories:
+                directories_to_return.append(directory.name)
+        else:
+            directories_to_return = all_directories
+
+        return directories_to_return
+
+    deepfake_directories = get_directories_from_path(None, os.path.join(bot_globals.resources_path, bot_globals.deepfakes_path), return_as_strings=True)
+    directory_choices = []
+    for directory in deepfake_directories:
+        choice = create_choice(name=directory.capitalize(), value=directory)
+        directory_choices.append(choice)
+    directory_option = create_option(name=bot_globals.COMMAND_DEEPFAKE_ARG_DIRECTORY_NAME, description=bot_globals.COMMAND_DEEPFAKE_ARG_DIRECTORY_DESCRIPTION, option_type=3, required=False, choices=directory_choices)
+    @cog_ext.cog_slash(name=bot_globals.COMMAND_DEEPFAKE_NAME, description=bot_globals.COMMAND_DEEPFAKE_DESCRIPTION, guild_ids=subscribed_guilds, options=[directory_option])
+    async def deepfake(self, ctx, directory: typing.Optional[str] = None):
 
         # Logging
-        print("{time} | DEEPFAKE: {user} requested a deepfake with directory {directory}.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.message.author), directory=directory))
+        print("{time} | DEEPFAKE: {user} requested a deepfake with directory {directory}.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.author), directory=directory))
 
         # Path to get our deepfakes from
         current_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.deepfakes_path)
-
-        def get_all_directories(return_as_strings=False):
-            directories_to_return = []
-
-            all_directories = [(x) for x in list(os.scandir(current_path)) if x.is_dir()]
-
-            if return_as_strings:
-                for directory in all_directories:
-                    directories_to_return.append(directory.name)
-            else:
-                directories_to_return = all_directories
-
-            return directories_to_return
 
         # The user wants to know about our deepfake categories
         if directory and directory.lower() == "list":
 
             # Grab all the directories
-            all_directories = get_all_directories(return_as_strings=True)
+            all_directories = self.get_directories_from_path(current_path, return_as_strings=True)
             categories_string = ", ".join(all_directories)
 
             # Relay our categories back to them
@@ -140,7 +156,7 @@ class CommandCenter(commands.Cog):
         else:
 
             # Pick a random directory
-            all_directories = get_all_directories()
+            all_directories = self.get_directories_from_path(current_path)
             directory = random.choice(all_directories).name
 
             # Pick a random file

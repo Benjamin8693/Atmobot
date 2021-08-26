@@ -1,8 +1,10 @@
 # 3rd-Party Packages
 from sys import exc_info
-from discord import Intents, Embed, Color, file
+from discord import Intents
 from discord.ext import commands
-from discord_components import DiscordComponents, Button, ButtonStyle, InteractionType
+from discord.ext.commands import bot
+from discord_components import DiscordComponents
+from discord_slash import SlashCommand
 
 # Local packages
 import bot_globals
@@ -48,15 +50,27 @@ class Atmobot(commands.Bot):
     # Used to load the settings file
     def load_settings(self):
 
-        # If we don't have a prior settings.json, generate one
-        if not os.path.isfile("settings.json"):
-            with open("settings.json", "w") as data:
-                data.write(bot_globals.default_settings)
-                data.close()
+        # If we don't have a settings file, generate one
+        if not os.path.isfile(bot_globals.settings_path):
+            with open(bot_globals.settings_path, "w") as data:
+                json.dump(bot_globals.default_settings, data, indent=4)
 
         # Load our settings
-        with open("settings.json") as data:
+        with open(bot_globals.settings_path) as data:
             self.bot_settings = json.load(data)
+
+        # Make sure our settings are up-to-date
+        changed = False
+        for setting in list(bot_globals.default_settings.keys()):
+
+            # Add a setting if we're missing it
+            if setting not in self.bot_settings:
+                changed = True
+                value = bot_globals.default_settings.get(setting)
+                self.bot_settings[setting] = value
+
+        if changed:
+            self.save_settings()
 
     def update_setting(self, setting_name, variable_to_replace):
 
@@ -67,8 +81,13 @@ class Atmobot(commands.Bot):
         # Update the setting
         self.bot_settings[setting_name] = variable_to_replace
 
-        # Write it to the settings file
-        with open("settings.json", "w") as data:
+        # Save our settings
+        self.save_settings()
+
+    def save_settings(self):
+
+        # Write to the settings file
+        with open(bot_globals.settings_path, "w") as data:
             json.dump(self.bot_settings, data, indent=4)
 
     async def on_ready(self):
@@ -146,7 +165,6 @@ def _prefix_callable(bot, msg):
     return prefixes
 
 # Run the bot
-intents = Intents.default()
-intents.members = True
-atmobot = Atmobot(command_prefix=_prefix_callable, description=bot_globals.bot_description, intents=intents)
+atmobot = Atmobot(command_prefix=_prefix_callable, description=bot_globals.bot_description, intents=Intents.all())
+slash = SlashCommand(atmobot, sync_commands=True)
 atmobot.startup()

@@ -1,11 +1,12 @@
 # Default settings
 default_settings = {
+    "game_id": 0,
     "bot_token": "ODYxNDQ4NjI2NTU4MjA1OTUy.YOJ8jQ.kql-_eSMOcC7QnUYvRXtg4NFvl0",
     "subscribed_guilds": [231218732440092675],
     "last_startup": "",
-    "game_id": 0,
-    "service_id": 1,
-    "latest_revision": "r703991.Wizard_1_460"
+    "revision_info_live": [],
+    "revision_info_test": [],
+    "fetch_revision_on_startup": False
 }
 
 settings_path = "settings.json"
@@ -13,7 +14,7 @@ settings_path = "settings.json"
 bot_description = '''Atmobot adds unique functionality to The Atmoplex Discord Server!'''
 
 # Debug message for when the bot starts up
-startup_message = "{header}\nLogged in as {username} with user ID {id}\nStarted up at {timestamp}\nRunning in {game_longhand} {service} {service_suffix} mode\n{footer}"
+startup_message = "{header}\nLogged in as {username} with user ID {id}\nStarted up at {timestamp}\nRunning in {game_longhand} mode\n{footer}"
 
 # Important urls to check
 test_patch_client_url = "https://www.wizard101.com/testpatchClient"
@@ -23,7 +24,7 @@ URL_CACHE_REQUEST = 0
 URL_CACHE_HASH = 1
 
 # Base patcher url
-patcher_url = "http://{server}.us.{game_longhand}.com/{game_shorthand}Patcher/V_{revision}/LatestBuild/Data/GameData/{wad_name}.wad"
+patcher_url = "http://{server}.us.{game_longhand}.com/{game_shorthand}Patcher/V_r{revision_number}.{revision_version}/LatestBuild/Data/GameData/{wad_name}.wad"
 
 # Service information
 SERVICE_UNKNOWN = -1
@@ -59,6 +60,19 @@ game_longhands = {GAME_UNKNOWN: "",
 game_shorthands = {GAME_UNKNOWN: "",
                    WIZARD101: "Wiz",
                    PIRATE101: "Pirate"}
+
+# Revision handling
+REVISION_UNKNOWN = -1
+REVISION_NUMBER = 0
+REVISION_VERSION = 1
+
+fallback_revision = 702000
+fallback_version = "Wizard_1_460"
+fallback_version_dev = "WizardDev"
+
+version_empty = "Wizard_{}_{}"
+
+default_revision_range = 5000
 
 # Fallback .WAD file used for testing
 fallback_wad = "Root"

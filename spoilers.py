@@ -18,7 +18,7 @@ class Spoilers:
     async def unpack_test(self):
 
         revision = self.bot.bot_settings.get("latest_revision")
-        discord_channel = self.bot.get_channel(880314326014111744)
+        discord_channel = self.bot.get_channel(814900537966329936)
 
         await discord_channel.send("Starting up! Please wait, this may take a few seconds.")
 

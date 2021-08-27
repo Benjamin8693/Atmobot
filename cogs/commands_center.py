@@ -19,7 +19,7 @@ import random
 import time
 import typing
 
-class CommandCenter(commands.Cog):
+class CommandsCenter(commands.Cog):
 
     subscribed_guilds = []
 
@@ -45,14 +45,11 @@ class CommandCenter(commands.Cog):
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
 
-    async def get_formatted_time(self):
-        return datetime.datetime.now().strftime("%H:%M:%S")
-
     @cog_ext.cog_slash(name=bot_globals.COMMAND_UPTIME_NAME, description=bot_globals.COMMAND_UPTIME_DESCRIPTION, guild_ids=subscribed_guilds)
     async def uptime(self, ctx):
 
         # Logging
-        print("{time} | UPTIME: {user} requested bot uptime.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+        print("{time} | UPTIME: {user} requested bot uptime".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         # Find how much time has elasped since we started the bot
         current_time = datetime.datetime.now()
@@ -68,13 +65,13 @@ class CommandCenter(commands.Cog):
         await ctx.send("Atmobot uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
         # Log the result
-        print("{time} | UPTIME: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.".format(time=await self.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
+        print("{time} | UPTIME: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(time=await self.bot.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
     @cog_ext.cog_slash(name=bot_globals.COMMAND_MEME_NAME, description=bot_globals.COMMAND_MEME_DESCRIPTION, guild_ids=subscribed_guilds)
     async def meme(self, ctx):
 
         # Logging
-        print("{time} | MEME: {user} requested a meme.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+        print("{time} | MEME: {user} requested a meme.".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         # Path to get our memes from
         current_path = os.path.join(os.getcwd(), bot_globals.resources_path)
@@ -89,7 +86,7 @@ class CommandCenter(commands.Cog):
         await ctx.send(file=file_to_send)
 
         # Log the result
-        print("{time} | MEME: Random meme '{file_path}' uploaded.".format(time=await self.get_formatted_time(), file_path=random_file))
+        print("{time} | MEME: Random meme '{file_path}' uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
 
     def get_directories_from_path(self, current_path, return_as_strings=False):
         directories_to_return = []
@@ -114,7 +111,7 @@ class CommandCenter(commands.Cog):
     async def deepfake(self, ctx, directory: typing.Optional[str] = None):
 
         # Logging
-        print("{time} | DEEPFAKE: {user} requested a deepfake with directory {directory}.".format(time=await self.get_formatted_time(), user=await self.get_full_username(ctx.author), directory=directory))
+        print("{time} | DEEPFAKE: {user} requested a deepfake with directory {directory}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), directory=directory))
 
         # Path to get our deepfakes from
         current_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.deepfakes_path)
@@ -130,7 +127,7 @@ class CommandCenter(commands.Cog):
             await ctx.send("Deepfake categories: {}".format(categories_string))
 
             # Log the result
-            print("{time} | DEEPFAKE: Deepfake categories requested, returning category list '{category_list}'.".format(time=await self.get_formatted_time(), category_list=categories_string))
+            print("{time} | DEEPFAKE: Deepfake categories requested, returning category list '{category_list}'".format(time=await self.bot.get_formatted_time(), category_list=categories_string))
 
             return
 
@@ -141,7 +138,7 @@ class CommandCenter(commands.Cog):
             await ctx.send("Deepfake category '{}' does not exist!".format(directory))
 
             # Log the result
-            print("{time} | DEEPFAKE: Deepfake category '{category}' requested, but does not exist.".format(time=await self.get_formatted_time(), category=directory))
+            print("{time} | DEEPFAKE: Deepfake category '{category}' requested, but does not exist".format(time=await self.bot.get_formatted_time(), category=directory))
 
             return
 
@@ -169,12 +166,12 @@ class CommandCenter(commands.Cog):
         await ctx.send(file=file_to_send)
 
         # Log the result
-        print("{time} | DEEPFAKE: Deepfake '{file_path}' uploaded.".format(time=await self.get_formatted_time(), file_path=random_file))
+        print("{time} | DEEPFAKE: Deepfake '{file_path}' uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
 
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def website(self, ctx):
-        website_change = self.bot.checker.check_url_status()
+        website_change = await self.bot.checker.check_url_status()
 
         if not website_change:
             await ctx.send("No website change.")
@@ -184,7 +181,7 @@ class CommandCenter(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def patcher(self, ctx):
-        response_code = self.bot.checker.check_patcher()
+        response_code = await self.bot.checker.check_patcher()
 
         await ctx.send("Patcher error code is {}".format(response_code))
 
@@ -262,7 +259,7 @@ class CommandCenter(commands.Cog):
 
             # Color the embed based on the response code we've obtained
             embed_color = Color.red()
-            response_code = self.bot.checker.check_patcher()
+            response_code = await self.bot.checker.check_patcher()
             if response_code in list(bot_globals.patcher_tips.keys()):
                 embed_color = Color.green()
 
@@ -330,7 +327,7 @@ class CommandCenter(commands.Cog):
             website_button_state = website_button_cooldown
             await message.edit(embed=initial_embed, components=[patcher_button_state, website_button_state])
 
-            website_change = self.bot.checker.check_url_status()
+            website_change = await self.bot.checker.check_url_status()
             if website_change:
                 embed_color = Color.green()
             else:
@@ -386,4 +383,4 @@ class CommandCenter(commands.Cog):
 
 # Used for connecting the Command Center to the rest of the bot
 def setup(bot):
-    bot.add_cog(CommandCenter(bot=bot))
+    bot.add_cog(CommandsCenter(bot=bot))

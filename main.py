@@ -29,23 +29,45 @@ class Atmobot(commands.Bot):
 
         self.checker = None
 
-    # Preliminary stuff done when starting up the bot
-    def startup(self):
-
-        # Load our settings and update startup time
         self.load_settings()
-        self.update_setting("last_startup", self.startup_time.strftime("%Y-%m-%d %H:%M:%S"))
+
+    # Runs when the bot has readied up
+    async def on_ready(self):
+
+        # Setup the Discord Components library
+        DiscordComponents(self)
+
+        # Start up our other services
+        await self.startup()
+
+        # Log that our bot is actually running
+        game_longhand = bot_globals.game_longhands.get(self.bot_settings.get("game_id", -1))
+        print(bot_globals.startup_message.format(header="=" * 52,
+                                                 username=self.user.name,
+                                                 id=self.user.id,
+                                                 timestamp=self.startup_time.strftime("%Y-%m-%d-%H-%M-%S"),
+                                                 game_longhand=game_longhand,
+                                                 footer="=" * 52))
+
+    # Preliminary stuff done when starting up the bot
+    async def startup(self):
+
+        # Update startup time
+        await self.update_setting("last_startup", self.startup_time.strftime("%Y-%m-%d %H:%M:%S"))
 
         # Checker class used for checking url and patcher status
+        print("{time} | STARTUP: Loading Patch Checker".format(time=await self.get_formatted_time()))
         self.checker = checker.Checker(self)
-        self.checker.startup()
+        await self.checker.startup()
 
         # Hub for all our command logic
-        self.load_extension("cogs.command_center")
+        print("{time} | STARTUP: Loading Commands Center".format(time=await self.get_formatted_time()))
+        self.load_extension("cogs.commands_center")
 
-        # Run the bot
-        token = self.bot_settings.get("bot_token", "")
-        self.run(token)
+        # Testing
+        print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))
+        self.spoilers = spoilers.Spoilers(self)
+        #await self.spoilers.unpack()
 
     # Used to load the settings file
     def load_settings(self):
@@ -72,7 +94,7 @@ class Atmobot(commands.Bot):
         if changed:
             self.save_settings()
 
-    def update_setting(self, setting_name, variable_to_replace):
+    async def update_setting(self, setting_name, variable_to_replace):
 
         # We typically shouldn't be updating a setting that doesn't already exist
         if setting_name not in self.bot_settings:
@@ -90,26 +112,8 @@ class Atmobot(commands.Bot):
         with open(bot_globals.settings_path, "w") as data:
             json.dump(self.bot_settings, data, indent=4)
 
-    async def on_ready(self):
-
-        # Setup the Discord Components library
-        DiscordComponents(self)
-
-        # Proof that our bot is actually running
-        game_longhand = bot_globals.game_longhands.get(self.bot_settings.get("game", -1))
-        service_name = bot_globals.service_names.get(self.bot_settings.get("service", -1))
-        print(bot_globals.startup_message.format(header="=" * 52,
-                                                 username=self.user.name,
-                                                 id=self.user.id,
-                                                 timestamp=self.startup_time.strftime("%Y-%m-%d-%H-%M-%S"),
-                                                 game_longhand=game_longhand,
-                                                 service=service_name.capitalize(),
-                                                 service_suffix=bot_globals.service_suffix,
-                                                 footer="=" * 52))
-
-        # Testing
-        self.spoilers = spoilers.Spoilers(self)
-        #await self.spoilers.unpack()
+    async def get_formatted_time(self):
+        return datetime.datetime.now().strftime("%H:%M:%S")
 
 # Setup logging
 if not os.path.exists("logs/"):
@@ -167,4 +171,5 @@ def _prefix_callable(bot, msg):
 # Run the bot
 atmobot = Atmobot(command_prefix=_prefix_callable, description=bot_globals.bot_description, intents=Intents.all())
 slash = SlashCommand(atmobot, sync_commands=True)
-atmobot.startup()
+token = atmobot.bot_settings.get("bot_token", "")
+atmobot.run(token)

@@ -15,6 +15,7 @@ def bruteforce_list(revision_list, version_list, q):
 
         # And all of the revisions in our list
         for revision in revision_list:
+            print("revision: {}, version: {}".format(revision, version))
 
             # Generate a patch link to test with
             link = "http://testversionec.us.wizard101.com/WizPatcher/V_r{revision}.{version}/Windows/LatestFileList.bin".format(revision=revision, version=version)
@@ -62,4 +63,5 @@ class Bruteforcer:
         await bruteforce_revision(revision_start, revision_range, version_list, q)
 
         new_revision = q.get()
+        print("gayness!")
         return new_revision

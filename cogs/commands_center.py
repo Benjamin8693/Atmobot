@@ -45,7 +45,7 @@ class CommandsCenter(commands.Cog):
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
 
-    @cog_ext.cog_slash(name=bot_globals.COMMAND_UPTIME_NAME, description=bot_globals.COMMAND_UPTIME_DESCRIPTION, guild_ids=subscribed_guilds)
+    @cog_ext.cog_slash(name=bot_globals.command_uptime_name, description=bot_globals.command_uptime_description, guild_ids=subscribed_guilds)
     async def uptime(self, ctx):
 
         # Logging
@@ -67,7 +67,7 @@ class CommandsCenter(commands.Cog):
         # Log the result
         print("{time} | UPTIME: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(time=await self.bot.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
-    @cog_ext.cog_slash(name=bot_globals.COMMAND_MEME_NAME, description=bot_globals.COMMAND_MEME_DESCRIPTION, guild_ids=subscribed_guilds)
+    @cog_ext.cog_slash(name=bot_globals.command_meme_name, description=bot_globals.command_meme_description, guild_ids=subscribed_guilds)
     async def meme(self, ctx):
 
         # Logging
@@ -106,8 +106,8 @@ class CommandsCenter(commands.Cog):
     for directory in deepfake_directories:
         choice = create_choice(name=directory.capitalize(), value=directory)
         directory_choices.append(choice)
-    directory_option = create_option(name=bot_globals.COMMAND_DEEPFAKE_ARG_DIRECTORY_NAME, description=bot_globals.COMMAND_DEEPFAKE_ARG_DIRECTORY_DESCRIPTION, option_type=3, required=False, choices=directory_choices)
-    @cog_ext.cog_slash(name=bot_globals.COMMAND_DEEPFAKE_NAME, description=bot_globals.COMMAND_DEEPFAKE_DESCRIPTION, guild_ids=subscribed_guilds, options=[directory_option])
+    directory_option = create_option(name=bot_globals.command_deepfake_arg_directory_name, description=bot_globals.command_deepfake_arg_directory_description, option_type=3, required=False, choices=directory_choices)
+    @cog_ext.cog_slash(name=bot_globals.command_deepfake_name, description=bot_globals.command_deepfake_description, guild_ids=subscribed_guilds, options=[directory_option])
     async def deepfake(self, ctx, directory: typing.Optional[str] = None):
 
         # Logging

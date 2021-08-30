@@ -110,9 +110,10 @@ class Checker:
 
         # Return most recent revision
         recent_revision = max(live_revision_number, test_revision_number)
+
         return recent_revision
 
-    async def most_recent_version(self):
+    async def most_recent_version(self, next_version=True):
 
         live_revision = self.bot.bot_settings.get("revision_info_live")
         if live_revision:
@@ -130,10 +131,15 @@ class Checker:
 
         # Return most recent version
         recent_version = max(live_version, test_version)
+        
+        if next_version:
+            recent_version += 10
+
         return await self.int_to_version(str(recent_version))
 
     async def revision_to_int(self, revision):
-        return revision.replace("V_r", "")
+        revision = revision.replace("V_r", "")
+        return int(revision)
 
     async def full_revision(self, revision):
         return ".".join(revision)

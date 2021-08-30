@@ -6,11 +6,14 @@ default_settings = {
     "last_startup": "",
     "revision_info_live": [],
     "revision_info_test": [],
-    "fetch_revision_on_startup": False
+    "fetch_revision_on_startup": False,
+    "twitter_api_keys": ["KMHnLXsOx4Ov8Y4GxF0mBTFph", "kksTCeqwGAtipvbyqYXH1dEQLzhMAO1ivmu3z7bAT0W5S2W1MN", "1431849304600178689-rqAp9UinhhKWGO7nB6xaKDQyfOuJXS", "lRAT0SHWiRBtamdsqzyhGQGOvsbSqlfCYSTHZ4X618e6s", "AAAAAAAAAAAAAAAAAAAAAH27TAEAAAAAocKtOIzTQrUkW3JvJjXVOnnBujM%3DbOkZvWFKu1SpsxC09lbVE8gFlr3EjQCQaZTlTdL1c9BIzFRfVo"]
 }
 
+# Name of the settings file
 settings_path = "settings.json"
 
+# Described our bot
 bot_description = '''Atmobot adds unique functionality to The Atmoplex Discord Server!'''
 
 # Debug message for when the bot starts up
@@ -72,7 +75,7 @@ fallback_version_dev = "WizardDev"
 
 version_empty = "Wizard_{}_{}"
 
-default_revision_range = 5000
+default_revision_range = 25
 
 # Fallback .WAD file used for testing
 fallback_wad = "Root"
@@ -87,13 +90,17 @@ resources_path = "resources"
 deepfakes_path = "deepfakes"
 
 # Slash command information
-COMMAND_UPTIME_NAME = "uptime"
-COMMAND_UPTIME_DESCRIPTION = "Displays how long Atmobot has been online for."
+command_uptime_name = "uptime"
+command_uptime_description = "Displays how long Atmobot has been online for."
 
-COMMAND_MEME_NAME = "meme"
-COMMAND_MEME_DESCRIPTION = "Posts a random meme relevant to The Atmoplex Discord Server."
+command_meme_name = "meme"
+command_meme_description = "Posts a random meme relevant to The Atmoplex Discord Server."
 
-COMMAND_DEEPFAKE_NAME = "deepfake"
-COMMAND_DEEPFAKE_DESCRIPTION = "Posts a deepfake of a person or character related to Kingsisle."
-COMMAND_DEEPFAKE_ARG_DIRECTORY_NAME = "directory"
-COMMAND_DEEPFAKE_ARG_DIRECTORY_DESCRIPTION = "Choose a specific category to retrieve a deepfake from."
+command_deepfake_name = "deepfake"
+command_deepfake_description = "Posts a deepfake of a person or character related to Kingsisle."
+command_deepfake_arg_directory_name = "directory"
+command_deepfake_arg_directory_description = "Choose a specific category to retrieve a deepfake from."
+
+# Posted when a new test revision has been detected, and the bot is about to commence with auto-spoilers
+spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is currently datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."
+spoilers_incoming_discord = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is currently datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nCheck out these 3 new channels:"

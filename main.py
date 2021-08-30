@@ -64,10 +64,10 @@ class Atmobot(commands.Bot):
         print("{time} | STARTUP: Loading Commands Center".format(time=await self.get_formatted_time()))
         self.load_extension("cogs.commands_center")
 
-        # Testing
+        # Automatic spoiler system
         print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))
         self.spoilers = spoilers.Spoilers(self)
-        #await self.spoilers.unpack()
+        await self.spoilers.startup()
 
     # Used to load the settings file
     def load_settings(self):

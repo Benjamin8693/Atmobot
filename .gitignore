@@ -130,7 +130,7 @@ dmypy.json
 
 # Custom
 .vscode
-archive
+cache
 settings.json
-join_test
+spoilers.json
 wizdiff.db

@@ -7,7 +7,8 @@ default_settings = {
     "revision_info_live": [],
     "revision_info_test": [],
     "fetch_revision_on_startup": False,
-    "twitter_api_keys": ["KMHnLXsOx4Ov8Y4GxF0mBTFph", "kksTCeqwGAtipvbyqYXH1dEQLzhMAO1ivmu3z7bAT0W5S2W1MN", "1431849304600178689-rqAp9UinhhKWGO7nB6xaKDQyfOuJXS", "lRAT0SHWiRBtamdsqzyhGQGOvsbSqlfCYSTHZ4X618e6s", "AAAAAAAAAAAAAAAAAAAAAH27TAEAAAAAocKtOIzTQrUkW3JvJjXVOnnBujM%3DbOkZvWFKu1SpsxC09lbVE8gFlr3EjQCQaZTlTdL1c9BIzFRfVo"]
+    "twitter_api_keys": ["KMHnLXsOx4Ov8Y4GxF0mBTFph", "kksTCeqwGAtipvbyqYXH1dEQLzhMAO1ivmu3z7bAT0W5S2W1MN", "1431849304600178689-rqAp9UinhhKWGO7nB6xaKDQyfOuJXS", "lRAT0SHWiRBtamdsqzyhGQGOvsbSqlfCYSTHZ4X618e6s", "AAAAAAAAAAAAAAAAAAAAAH27TAEAAAAAocKtOIzTQrUkW3JvJjXVOnnBujM%3DbOkZvWFKu1SpsxC09lbVE8gFlr3EjQCQaZTlTdL1c9BIzFRfVo"],
+    "spoiler_channel_ids": [880314524425678918, 880314326014111744, 880314379797680149]
 }
 
 # Name of the settings file
@@ -104,3 +105,36 @@ command_deepfake_arg_directory_description = "Choose a specific category to retr
 # Posted when a new test revision has been detected, and the bot is about to commence with auto-spoilers
 spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is currently datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."
 spoilers_incoming_discord = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is currently datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nCheck out these 3 new channels:"
+
+# Helps retrieve Twitter API keys from the settings
+TWITTER_KEY_CONSUMER = 0
+TWITTER_KEY_CONSUMER_SECRET = 1
+TWITTER_KEY_ACCESS_TOKEN = 2
+TWITTER_KEY_ACCESS_TOKEN_SECRET = 3
+TWITTER_KEY_BEAR = 4
+
+CHANNEL_INVALID = -1
+CHANNEL_LOCALE = 0
+CHANNEL_IMAGES = 1
+CHANNEL_MUSIC = 2
+
+spoilers_template = {
+    "Root": [{"name": "Spell Preview Icons",
+              "file_path": "GUI/DeckConfig/",
+              "channel_to_post": 1,
+              "post_description": "Take a look at the new Spell Preview Icons!",
+              "post_to_twitter": True}]
+}
+
+spoilers_path = "spoilers.json"
+
+SPOILER_NAME = 0
+SPOILER_FILE_PATH = 1
+SPOILER_CHANNEL_TO_POST = 2
+SPOILER_POST_DESCRIPTION = 3
+SPOILER_POST_TO_TWITTER = 4
+
+time_between_posts = 10
+
+twitter_description_format = "[BOT] {description}"
+twitter_description_extension = " [{current}/{total}]"

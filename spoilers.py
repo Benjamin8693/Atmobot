@@ -36,6 +36,12 @@ class Spoilers(UpdateNotifier):
         self.twitter_api = None
 
         self.spoiler_config = {}
+        self.chained_spoilers = {}
+
+        self.last_tweet_id = 0
+
+        self.discord_post_override = False
+        self.twitter_post_override = False
 
     async def startup(self):
 
@@ -90,8 +96,8 @@ class Spoilers(UpdateNotifier):
 
     def notify_wad_file_update(self, delta: FileDelta):
 
-        delta_name = delta.name.replace("Data/GameData/", "")
-        delta_name = delta_name.replace(".wad", "")
+        # We want a raw wad name
+        delta_name = delta.name.replace("Data/GameData/", "").replace(".wad", "")
 
         # We don't care about this wad file
         if delta_name not in self.spoiler_config:
@@ -108,19 +114,20 @@ class Spoilers(UpdateNotifier):
             paths_of_interest.append((interest_path, interest))
 
         # Iterate over all the changed files
-        for inner_file_info in delta.changed_inner_files:
+        all_changed_files = delta.changed_inner_files + delta.created_inner_files
+        for inner_file_info in all_changed_files:
 
             # Check if one of our paths of interest matches
-            match = False
+            file_path = None
             config = None
             for interest_path in paths_of_interest:
                 if inner_file_info.name.startswith(interest_path[0]):
-                    match = True
+                    file_path = interest_path[0]
                     config = interest_path[1]
                     break
 
             # We aren't a match, so continue with the next file in line
-            if not match or not config:
+            if not file_path or not config:
                 continue
 
             # Okay, now we know this is a file we should spoil
@@ -132,6 +139,20 @@ class Spoilers(UpdateNotifier):
             else:
                 data_size = inner_file_info.size
 
+            # Determine if this is a chained spoiler
+            chained = False
+            if file_path.endswith("/"):
+
+                # We're chained
+                chained = True
+
+                # Add this file's name to the chained spoiler list
+                chained_spoilers = [config]
+                if file_path in self.chained_spoilers:
+                    chained_spoilers = self.chained_spoilers.get(file_path)
+                chained_spoilers.append(inner_file_info.name)
+                self.chained_spoilers[file_path] = chained_spoilers
+
             # Download the file!
             file_data = self.webdriver.get_url_data(delta.url, data_range=(inner_file_info.file_offset, inner_file_info.file_offset + data_size))
 
@@ -139,27 +160,90 @@ class Spoilers(UpdateNotifier):
             if inner_file_info.is_compressed:
                 file_data = zlib.decompress(file_data)
 
-            # Lowercase file name to check extension
-            lower_file_name = inner_file_info.name.lower()
+            # Save file into cache
+            cache_path = "cache/"
+            if chained:
+                cache_path += "chained/"
+            file_name = "{cache_path}/{file_name}".format(cache_path=cache_path, file_name=os.path.basename(inner_file_info.name))
+            with self.safe_open_w(file_name) as fp:
+                fp.write(file_data)
 
-            # Handle locale files
-            if lower_file_name.endswith(".lang"):
-                self.handle_locale_spoiler(file_data, inner_file_info.name, config)
+            # Handle the file right away
+            if not chained:
 
-            # Handle image files
-            elif lower_file_name.endswith((".dds", ".png", ".jpg")):
-                self.handle_image_spoiler(file_data, inner_file_info.name, config)
+                # Determine file handler
+                file_handler = self.determine_file_handler(inner_file_info.name)
 
-            # Handle music files
-            elif lower_file_name.endswith((".mp3", ".ogg", ".wav")):
-                self.handle_music_spoiler(file_data, inner_file_info.name, config)
+                # Handle locale files
+                if file_handler == bot_globals.CHANNEL_LOCALE:
+                    self.handle_locale_spoiler(spoiler_data=inner_file_info.name, config=config)
 
-            time.sleep(bot_globals.time_between_posts)
+                # Handle image files
+                elif file_handler == bot_globals.CHANNEL_IMAGES:
+                    self.handle_image_spoiler(spoiler_data=inner_file_info.name, config=config)
 
-    def handle_locale_spoiler(self, file_data, file_name, config):
+                # Handle music files
+                elif file_handler == bot_globals.CHANNEL_MUSIC:
+                    self.handle_music_spoiler(spoiler_data=inner_file_info.name, config=config)
+
+                time.sleep(bot_globals.time_between_posts)
+
+        # Now we can handle the chained files
+        # Iterate over all the file directories
+        for chained_file_path in list(self.chained_spoilers.keys()):
+
+            # Reset our last tweet ID for sanity purposes
+            self.last_tweet_id = None
+
+            chained_spoilers = self.chained_spoilers.get(chained_file_path)
+
+            # First key is always the config
+            chained_config = chained_spoilers.pop(0)
+
+            # Determine file handler
+            file_handler = self.determine_file_handler(chained_spoilers[0])
+
+            # Create chains of 16 spoilers max
+            spoiler_chains = list(self.divide_spoilers(chained_spoilers, bot_globals.spoiler_divide_amount))
+
+            # Pass each individual chain through to their respective handlers
+            total_chains = len(spoiler_chains)
+            for chain in spoiler_chains:
+
+                # Chain index used for documenting our proegress with this tweet chain
+                chain_index = spoiler_chains.index(chain)
+    
+                # Handle locale files
+                if file_handler == bot_globals.CHANNEL_LOCALE:
+                    self.handle_locale_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains)
+
+                # Handle image files
+                elif file_handler == bot_globals.CHANNEL_IMAGES:
+                    self.handle_image_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains)
+
+                # Handle music files
+                elif file_handler == bot_globals.CHANNEL_MUSIC:
+                    self.handle_music_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains)
+
+                time.sleep(bot_globals.time_between_posts)
+
+    def determine_file_handler(self, file_name):
+        file_handler = bot_globals.CHANNEL_INVALID
+
+        file_name = file_name.lower()
+        if file_name.endswith(".lang"):
+            file_handler = bot_globals.CHANNEL_LOCALE
+        elif file_name.endswith((".dds", ".png", ".jpg")):
+            file_handler = bot_globals.CHANNEL_IMAGES
+        elif file_name.endswith((".mp3", ".ogg", ".wav")):
+            file_handler = bot_globals.CHANNEL_MUSIC
+
+        return file_handler
+
+    def handle_locale_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
         return
     
-    def handle_image_spoiler(self, file_data, file_name, config):
+    def handle_image_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
         
         # Unpack our spoiler config
         spoiler_name, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter = self.unpack_spoiler_config(config)
@@ -167,50 +251,161 @@ class Spoilers(UpdateNotifier):
         # Log that we're handling a music spoiler
         print("{time} | SPOILERS: Handling Image spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
 
-        # Save spoiler into cache
-        file_name = os.path.basename(file_name)
-        file_name = "cache/" + file_name
-        with self.safe_open_w(file_name) as fp:
-            fp.write(file_data)
+        # We're handling a spoiler chain here
+        if type(spoiler_data) == list:
 
-        # Convert any .DDS files to .PNG
-        if file_name.endswith(".dds"):
+            # Convert all .DDS files to .PNG
+            for spoiler in spoiler_data.copy():
 
-            old_file_name = file_name
-            file_name = file_name.replace(".dds", ".png")
+                # Grab index for later use
+                index = spoiler_data.index(spoiler)
 
-            image_conversion = Image.open(old_file_name)
-            image_conversion.save(file_name)
+                # Convert to PNG and update the file name in our spoiler data
+                if spoiler.endswith(".dds"):
+                    file_name = self.convert_to_png("cache/chained/{file_name}".format(file_name=os.path.basename(spoiler)))
+                    spoiler_data[index] = file_name
 
-            os.remove(old_file_name)
+            # If we have 5 or more images in the chain, we want to combine them
+            # Another use case is if we're already part of a chain that has combined images
+            # In which case, we'll allow for the combination of less than 5 for consistency purposes
+            if (len(spoiler_data) >= bot_globals.spoiler_divide_threshold) or (len(spoiler_data) > 1 and chain_index > 0):
 
-        # Check to make sure we have the spoiler channel IDs
-        spoiler_channel_ids = self.bot.bot_settings.get("spoiler_channel_ids")
-        if spoiler_channel_ids:
+                # Open all of the images we're going to chain together
+                files_to_chain = [f for f in spoiler_data]
+                images_to_chain = [Image.open(file_to_chain) for file_to_chain in files_to_chain]
 
-            # Find which channel to post our spoiler to
-            discord_channel_id = spoiler_channel_ids[spoiler_channel_to_post]
-            discord_channel = self.bot.get_channel(discord_channel_id)
+                # Grab their widths and heights to determine our final image size
+                widths, heights = zip(*(image_to_chain.size for image_to_chain in images_to_chain))
 
-            # Send our spoiler!
-            file_to_send = discord.File(file_name)
-            asyncio.run(discord_channel.send(spoiler_post_description, file=file_to_send))
+                # Get the width and height for our new image
+                total_width = sum(widths[:4])
+                max_height = sum(heights[::4])
 
-            # Log it
-            print("{time} | SPOILERS: Posted Image spoiler with name of {spoiler_name} on Discord".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+                # Create the new image
+                chained_image = Image.new('RGBA', (total_width, max_height), (0, 0, 0, 0))
 
-        # Tweet out the spoiler!
-        if spoiler_post_to_twitter:
-            twitter_description = self.format_twitter_description(spoiler_post_description)
-            self.twitter_api.PostUpdate(status=twitter_description, media=file_name)
+                # Misc data for following loop
+                x_offset = 0
+                y_offset = 0
+                every_fourth_image = [3, 7, 11]
 
-            # Log it
-            print("{time} | SPOILERS: Tweeted Image spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+                # Iterate over all our images and place them into our new one
+                for image_to_chain in images_to_chain:
 
-        # Delete our file from cache
-        os.remove(file_name)
+                    # Place
+                    chained_image.paste(image_to_chain, (x_offset, y_offset))
 
-    def handle_music_spoiler(self, file_data, file_name, config):
+                    # Increase x offset for the next one
+                    x_offset += image_to_chain.size[0]
+
+                    # Increase y offset if we need to move down a layer
+                    index = images_to_chain.index(image_to_chain)
+                    if index in every_fourth_image:
+                        x_offset = 0
+                        y_offset += image_to_chain.size[1]
+
+                # Save our new image
+                chained_image_name = "cache/chained/{spoiler_name}{chain_index}.png".format(spoiler_name=spoiler_name, chain_index=chain_index)
+                chained_image.save(chained_image_name)
+
+                # Post the spoiler to Discord if we have channel IDs
+                spoiler_channel_ids = self.bot.bot_settings.get("spoiler_channel_ids")
+                if spoiler_channel_ids:
+
+                    # Only send the description a single time on Discord
+                    discord_post_description = spoiler_post_description
+                    if total_chains > 1 and chain_index != 0:
+                        discord_post_description = None
+
+                    self.post_spoiler_to_discord(chained_image_name, spoiler_name, discord_post_description, spoiler_channel_to_post, spoiler_channel_ids)
+
+                # Tweet out the spoiler!
+                if spoiler_post_to_twitter:
+
+                    # Reply to the former tweet in the chain
+                    in_reply_to_status_id = None
+                    if total_chains > 1 and chain_index != 0 and self.last_tweet_id:
+                        in_reply_to_status_id = self.last_tweet_id
+
+                    # Add counter to descriptions if the chain is more than 1 tweet
+                    twitter_post_description = spoiler_post_description
+                    if total_chains > 1:
+                        chain_counter = bot_globals.twitter_description_extension.format(current=(chain_index + 1), total=total_chains)
+                        twitter_post_description = spoiler_post_description + chain_counter
+                    
+                    self.post_spoiler_to_twitter(chained_image_name, spoiler_name, twitter_post_description, in_reply_to_status_id)
+
+                # Delete our file from cache
+                os.remove(chained_image_name)
+
+            # With 4 or less images, we tweet them out individually and just reply in a chain
+            else:
+                
+                # Iterate over the files in our spoiler data
+                for file_name in spoiler_data:
+
+                    file_index = spoiler_data.index(file_name)
+
+                    # Format proper file name
+                    file_name = "cache/chained/" + os.path.basename(file_name)
+
+                    # Convert .DDS files to .PNG
+                    if file_name.endswith(".dds"):
+                        file_name = self.convert_to_png(file_name)
+
+                    # Post the spoiler to Discord if we have channel IDs
+                    spoiler_channel_ids = self.bot.bot_settings.get("spoiler_channel_ids")
+                    if spoiler_channel_ids:
+
+                        # Only send the description once
+                        discord_post_description = spoiler_post_description
+                        if file_index != 0:
+                            discord_post_description = None
+
+                        self.post_spoiler_to_discord(file_name, spoiler_name, discord_post_description, spoiler_channel_to_post, spoiler_channel_ids)
+
+                    # Tweet out the spoiler!
+                    if spoiler_post_to_twitter:
+
+                        # Reply to the former tweet in the chain
+                        in_reply_to_status_id = None
+                        if file_index != 0:
+                            in_reply_to_status_id = self.last_tweet_id
+
+                        # Add counter to descriptions if the chain is more than 1 tweet
+                        twitter_post_description = spoiler_post_description
+                        if len(spoiler_data) > 1:
+                            chain_counter = bot_globals.twitter_description_extension.format(current=(file_index + 1), total=len(spoiler_data))
+                            twitter_post_description = spoiler_post_description + chain_counter
+
+                        self.post_spoiler_to_twitter(file_name, spoiler_name, twitter_post_description, in_reply_to_status_id)
+
+                    # Delete our file from cache
+                    os.remove(file_name)
+
+        # Otherwise we're spoiling a single file
+        else:
+
+            # Format proper file name
+            file_name = "cache/" + os.path.basename(spoiler_data)
+
+            # Convert .DDS files to .PNG
+            if spoiler_data.endswith(".dds"):
+                file_name = self.convert_to_png(file_name)
+
+            # Post the spoiler to Discord if we have channel IDs
+            spoiler_channel_ids = self.bot.bot_settings.get("spoiler_channel_ids")
+            if spoiler_channel_ids:
+                self.post_spoiler_to_discord(file_name, spoiler_name, spoiler_post_description, spoiler_channel_to_post, spoiler_channel_ids)
+
+            # Tweet out the spoiler!
+            if spoiler_post_to_twitter:
+                self.post_spoiler_to_twitter(file_name, spoiler_name, spoiler_post_description)
+
+            # Delete our file from cache
+            os.remove(file_name)
+
+    def handle_music_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
 
         # Unpack our spoiler config
         spoiler_name, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter = self.unpack_spoiler_config(config)
@@ -218,12 +413,6 @@ class Spoilers(UpdateNotifier):
         # Log that we're handling a music spoiler
         print("{time} | SPOILERS: Handling Music spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
 
-        # Save spoiler into cache
-        file_name = os.path.basename(file_name)
-        file_name = "cache/" + file_name
-        with self.safe_open_w(file_name) as fp:
-            fp.write(file_data)
-
         # Check to make sure we have the spoiler channel IDs
         spoiler_channel_ids = self.bot.bot_settings.get("spoiler_channel_ids")
         if spoiler_channel_ids:
@@ -233,14 +422,14 @@ class Spoilers(UpdateNotifier):
             discord_channel = self.bot.get_channel(discord_channel_id)
 
             # Send our spoiler!
-            file_to_send = discord.File(file_name)
+            file_to_send = discord.File(spoiler_data)
             asyncio.run(discord_channel.send(spoiler_post_description, file=file_to_send))
 
             # Log it
             print("{time} | SPOILERS: Posted Music spoiler with name of {spoiler_name} on Discord".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
 
         # Delete our file from cache
-        os.remove(file_name)
+        os.remove(spoiler_data)
 
     def unpack_spoiler_config(self, config):
         spoiler_name = config[bot_globals.SPOILER_NAME]
@@ -249,6 +438,60 @@ class Spoilers(UpdateNotifier):
         spoiler_post_to_twitter = config[bot_globals.SPOILER_POST_TO_TWITTER]
 
         return spoiler_name, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter
+
+    def divide_spoilers(self, l, n):
+        for i in range(0, len(l), n): 
+            yield l[i:i + n]
+
+    def convert_to_png(self, file_name):
+        old_file_name = file_name
+        file_name = file_name.replace(".dds", ".png")
+
+        image_conversion = Image.open(old_file_name)
+        image_conversion.save(file_name)
+
+        os.remove(old_file_name)
+
+        # Return our new file name
+        return file_name
+
+    def post_spoiler_to_discord(self, file_name, spoiler_name, spoiler_post_description, spoiler_channel_to_post, spoiler_channel_ids):
+
+        if self.discord_post_override:
+            return
+
+        # Find which channel to post our spoiler to
+        discord_channel_id = spoiler_channel_ids[spoiler_channel_to_post]
+        discord_channel = self.bot.get_channel(discord_channel_id)
+
+        # Send our spoiler!
+        file_to_send = discord.File(file_name)
+
+        if spoiler_post_description:
+            asyncio.run(discord_channel.send(spoiler_post_description, file=file_to_send))
+        else:
+            asyncio.run(discord_channel.send(file=file_to_send))
+
+        # Log it
+        print("{time} | SPOILERS: Posted Image spoiler with name of {spoiler_name} on Discord".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+
+    def post_spoiler_to_twitter(self, file_name, spoiler_name, spoiler_post_description=None, in_reply_to_status_id=None):
+
+        if self.twitter_post_override:
+            return
+        
+        # Publish the tweet
+        if spoiler_post_description:
+            twitter_description = self.format_twitter_description(spoiler_post_description)
+        else:
+            twitter_description = ""
+        status = self.twitter_api.PostUpdate(status=twitter_description, media=file_name, in_reply_to_status_id=in_reply_to_status_id)
+
+        # Store the ID of the last tweet made
+        self.last_tweet_id = status.id
+
+        # Log it
+        print("{time} | SPOILERS: Tweeted Image spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
 
     def format_twitter_description(self, description, current=1, total=1):
 
@@ -272,66 +515,6 @@ class Spoilers(UpdateNotifier):
     def safe_open_w(self, path):
         self.mkdir_p(os.path.dirname(path))
         return open(path, 'wb+')
-
-    async def join_images_demo(self):
-
-        discord_channel = self.bot.get_channel(814900537966329936)
-        await discord_channel.send("Start @ {time}".format(time=self.get_formatted_time()))
-
-        npc_portaits = os.listdir("join_test/")
-        images = [Image.open("join_test/{}".format(x)) for x in npc_portaits]
-        widths, heights = zip(*(i.size for i in images))
-
-        total_width = sum(widths[:4])
-        max_height = sum(heights[::4])
-
-        new_im = Image.new('RGB', (total_width, max_height))
-
-        x_offset = 0
-        y_offset = 0
-        every_fourth_image = [images[3], images[7], images[11]]
-        for im in images:
-            new_im.paste(im, (x_offset, y_offset))
-            x_offset += im.size[0]
-            if im in every_fourth_image:
-                x_offset = 0
-                y_offset += im.size[1]
-
-        new_im.save('test.png')
-
-        file_to_send = discord.File('test.png')
-        await discord_channel.send(file=file_to_send)
-        await discord_channel.send("Finish @ {time}".format(time=self.get_formatted_time()))
-
-        return
-
-    async def patcher_file_demo(self):
-        discord_channel = self.bot.get_channel(814900537966329936)
-        await discord_channel.send("Start @ {time}".format(time=datetime.datetime.now().strftime("%H:%M:%S")))
-
-        revision = "V_r702235.Wizard_1_460"
-        file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r702235.Wizard_1_460/Windows/LatestFileList.bin"
-        base_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r702235.Wizard_1_460/LatestBuild"
-        p = threading.Thread(target=self.new_revision, args=(revision, file_list_url, base_url))
-        p.start()
-        p.join()
-
-        # Wait for file to exist
-        image_path = "Button_World_Karamelle.dds"
-        while not os.path.isfile(image_path):
-            sleep(1)
-
-        # Convert
-        deck_config = Image.open(image_path)
-        save_path = "Button_World_Karamelle.png"
-        deck_config.save(save_path)
-
-        # Send
-        file_to_send = discord.File(save_path)
-        await discord_channel.send(file=file_to_send)
-        await discord_channel.send("Finish @ {time}".format(time=datetime.datetime.now().strftime("%H:%M:%S")))
-
-        #self.twitter_api.PostUpdate(status="Testing! :)", media=save_path)
 
     async def wad_download_demo(self):
 

@@ -103,8 +103,8 @@ command_deepfake_arg_directory_name = "directory"
 command_deepfake_arg_directory_description = "Choose a specific category to retrieve a deepfake from."
 
 # Posted when a new test revision has been detected, and the bot is about to commence with auto-spoilers
-spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is currently datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."
-spoilers_incoming_discord = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is currently datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nCheck out these 3 new channels:"
+spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."
+spoilers_incoming_discord = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nCheck out these 3 new channels:"
 
 # Helps retrieve Twitter API keys from the settings
 TWITTER_KEY_CONSUMER = 0
@@ -135,6 +135,8 @@ SPOILER_POST_DESCRIPTION = 3
 SPOILER_POST_TO_TWITTER = 4
 
 time_between_posts = 10
+spoiler_divide_threshold = 5
+spoiler_divide_amount = 16
 
 twitter_description_format = "[BOT] {description}"
 twitter_description_extension = " [{current}/{total}]"

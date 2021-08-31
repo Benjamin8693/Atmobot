@@ -1,8 +1,8 @@
 # 3rd-Party Packages
+import asyncio
 from discord import Embed, Color
 import discord
 from discord.ext import commands
-from discord.ext.commands import bot
 from discord.ext.commands.core import command
 from discord_components import Button, ButtonStyle, InteractionType
 from discord_slash import cog_ext
@@ -45,6 +45,27 @@ class CommandsCenter(commands.Cog):
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
 
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def clear(self, ctx, amount: typing.Optional[str] = "1"):
+
+        # Logging
+        print("{time} | CLEAR: {user} requested to clear {amount} messages from {channel_name}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), amount=amount, channel_name=ctx.message.channel.name))
+
+        # Make sure an actual digit was provided
+        if not amount.isdigit():
+            return
+        amount = int(amount)
+
+        # Delete the messages
+        await ctx.channel.purge(limit=amount)
+
+        # Send notification in the channel that the messages were deleted
+        await ctx.send("{amount} messages cleared.".format(amount=amount), delete_after=5)
+
+        # Log the result
+        print("{time} | CLEAR: Cleared {amount} messages from {channel_name}".format(time=await self.bot.get_formatted_time(), amount=amount, channel_name=ctx.message.channel.name))
+
     @cog_ext.cog_slash(name=bot_globals.command_uptime_name, description=bot_globals.command_uptime_description, guild_ids=subscribed_guilds)
     async def uptime(self, ctx):
 
@@ -62,7 +83,7 @@ class CommandsCenter(commands.Cog):
         seconds_formatted = elasped_time.seconds % 60
 
         # Send the uptime
-        await ctx.send("Atmobot uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
+        await ctx.send("Atmobot uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.".format(days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
         # Log the result
         print("{time} | UPTIME: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(time=await self.bot.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
@@ -124,7 +145,7 @@ class CommandsCenter(commands.Cog):
             categories_string = ", ".join(all_directories)
 
             # Relay our categories back to them
-            await ctx.send("Deepfake categories: {}".format(categories_string))
+            await ctx.send("Deepfake categories: {}.".format(categories_string))
 
             # Log the result
             print("{time} | DEEPFAKE: Deepfake categories requested, returning category list '{category_list}'".format(time=await self.bot.get_formatted_time(), category_list=categories_string))
@@ -183,7 +204,7 @@ class CommandsCenter(commands.Cog):
     async def patcher(self, ctx):
         response_code = await self.bot.checker.check_patcher()
 
-        await ctx.send("Patcher error code is {}".format(response_code))
+        await ctx.send("Patcher error code is {}.".format(response_code))
 
     # Generates a set of buttons users can click on to check Test Realm status manually
     @commands.command()

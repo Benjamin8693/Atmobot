@@ -4,7 +4,6 @@ import discord
 from PIL import Image
 from discord import file
 from discord.ext.commands import bot
-import nest_asyncio
 import twitter
 from wizdiff.delta import FileDelta
 from wizdiff.update_notifier import UpdateNotifier
@@ -41,11 +40,9 @@ class Spoilers(UpdateNotifier):
         self.last_tweet_id = 0
 
         self.discord_post_override = False
-        self.twitter_post_override = False
+        self.twitter_post_override = True
 
     async def startup(self):
-
-        nest_asyncio.apply()
 
         # Load our spoilers config
         self.load_spoilers()
@@ -78,7 +75,7 @@ class Spoilers(UpdateNotifier):
         # TODO: Remove later
         file_list_url, base_url = self.webdriver.get_patch_urls()
         revision = get_revision_from_url(file_list_url)
-        self.new_revision(revision, file_list_url, base_url)
+        await self.new_revision(revision, file_list_url, base_url)
 
     def load_spoilers(self):
 
@@ -94,7 +91,7 @@ class Spoilers(UpdateNotifier):
     def get_formatted_time(self):
         return datetime.datetime.now().strftime("%H:%M:%S")
 
-    def notify_wad_file_update(self, delta: FileDelta):
+    async def notify_wad_file_update(self, delta: FileDelta):
 
         # We want a raw wad name
         delta_name = delta.name.replace("Data/GameData/", "").replace(".wad", "")
@@ -132,6 +129,18 @@ class Spoilers(UpdateNotifier):
 
             # Okay, now we know this is a file we should spoil
             # Let's handle it then pass it off to one of our spoiler components
+
+            # Don't process this file any further if it should be excluded
+            exclusions = config[bot_globals.SPOILER_FILE_EXCLUSIONS]
+            if exclusions:
+                exclude_file = False
+                for exclusion in exclusions:
+                    if exclusion in os.path.basename(inner_file_info.name):
+                        exclude_file = True
+                        break
+
+                if exclude_file:
+                    continue
 
             # Get the size of the file data depending on whether it's compressed
             if inner_file_info.is_compressed:
@@ -180,13 +189,13 @@ class Spoilers(UpdateNotifier):
 
                 # Handle image files
                 elif file_handler == bot_globals.CHANNEL_IMAGES:
-                    self.handle_image_spoiler(spoiler_data=inner_file_info.name, config=config)
+                    await self.handle_image_spoiler(spoiler_data=inner_file_info.name, config=config)
 
                 # Handle music files
                 elif file_handler == bot_globals.CHANNEL_MUSIC:
-                    self.handle_music_spoiler(spoiler_data=inner_file_info.name, config=config)
+                    await self.handle_music_spoiler(spoiler_data=inner_file_info.name, config=config)
 
-                time.sleep(bot_globals.time_between_posts)
+                await asyncio.sleep(bot_globals.time_between_posts)
 
         # Now we can handle the chained files
         # Iterate over all the file directories
@@ -219,13 +228,16 @@ class Spoilers(UpdateNotifier):
 
                 # Handle image files
                 elif file_handler == bot_globals.CHANNEL_IMAGES:
-                    self.handle_image_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains)
+                    await self.handle_image_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains)
 
                 # Handle music files
                 elif file_handler == bot_globals.CHANNEL_MUSIC:
-                    self.handle_music_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains)
+                    await self.handle_music_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains)
 
-                time.sleep(bot_globals.time_between_posts)
+                await asyncio.sleep(bot_globals.time_between_posts)
+
+            # Remove file path from chained spoilers since we're now done with it
+            del self.chained_spoilers[chained_file_path]
 
     def determine_file_handler(self, file_name):
         file_handler = bot_globals.CHANNEL_INVALID
@@ -243,13 +255,13 @@ class Spoilers(UpdateNotifier):
     def handle_locale_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
         return
     
-    def handle_image_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
+    async def handle_image_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
         
         # Unpack our spoiler config
-        spoiler_name, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter = self.unpack_spoiler_config(config)
+        spoiler_name, spoiler_file_path, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter = self.unpack_spoiler_config(config)
 
         # Log that we're handling a music spoiler
-        print("{time} | SPOILERS: Handling Image spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+        print("{time} | SPOILERS: Handling image spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
 
         # We're handling a spoiler chain here
         if type(spoiler_data) == list:
@@ -304,6 +316,9 @@ class Spoilers(UpdateNotifier):
                         x_offset = 0
                         y_offset += image_to_chain.size[1]
 
+                    # Delete the chained image
+                    os.remove(image_to_chain.filename)
+
                 # Save our new image
                 chained_image_name = "cache/chained/{spoiler_name}{chain_index}.png".format(spoiler_name=spoiler_name, chain_index=chain_index)
                 chained_image.save(chained_image_name)
@@ -317,7 +332,7 @@ class Spoilers(UpdateNotifier):
                     if total_chains > 1 and chain_index != 0:
                         discord_post_description = None
 
-                    self.post_spoiler_to_discord(chained_image_name, spoiler_name, discord_post_description, spoiler_channel_to_post, spoiler_channel_ids)
+                    await self.post_spoiler_to_discord(chained_image_name, spoiler_name, discord_post_description, spoiler_channel_to_post, spoiler_channel_ids)
 
                 # Tweet out the spoiler!
                 if spoiler_post_to_twitter:
@@ -362,7 +377,7 @@ class Spoilers(UpdateNotifier):
                         if file_index != 0:
                             discord_post_description = None
 
-                        self.post_spoiler_to_discord(file_name, spoiler_name, discord_post_description, spoiler_channel_to_post, spoiler_channel_ids)
+                        await self.post_spoiler_to_discord(file_name, spoiler_name, discord_post_description, spoiler_channel_to_post, spoiler_channel_ids)
 
                     # Tweet out the spoiler!
                     if spoiler_post_to_twitter:
@@ -383,6 +398,8 @@ class Spoilers(UpdateNotifier):
                     # Delete our file from cache
                     os.remove(file_name)
 
+                    await asyncio.sleep(bot_globals.time_between_posts)
+
         # Otherwise we're spoiling a single file
         else:
 
@@ -396,7 +413,7 @@ class Spoilers(UpdateNotifier):
             # Post the spoiler to Discord if we have channel IDs
             spoiler_channel_ids = self.bot.bot_settings.get("spoiler_channel_ids")
             if spoiler_channel_ids:
-                self.post_spoiler_to_discord(file_name, spoiler_name, spoiler_post_description, spoiler_channel_to_post, spoiler_channel_ids)
+                await self.post_spoiler_to_discord(file_name, spoiler_name, spoiler_post_description, spoiler_channel_to_post, spoiler_channel_ids)
 
             # Tweet out the spoiler!
             if spoiler_post_to_twitter:
@@ -405,13 +422,13 @@ class Spoilers(UpdateNotifier):
             # Delete our file from cache
             os.remove(file_name)
 
-    def handle_music_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
+    async def handle_music_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
 
         # Unpack our spoiler config
-        spoiler_name, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter = self.unpack_spoiler_config(config)
+        spoiler_name, spoiler_file_path, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter = self.unpack_spoiler_config(config)
 
         # Log that we're handling a music spoiler
-        print("{time} | SPOILERS: Handling Music spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+        print("{time} | SPOILERS: Handling music spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
 
         # Check to make sure we have the spoiler channel IDs
         spoiler_channel_ids = self.bot.bot_settings.get("spoiler_channel_ids")
@@ -423,7 +440,7 @@ class Spoilers(UpdateNotifier):
 
             # Send our spoiler!
             file_to_send = discord.File(spoiler_data)
-            asyncio.run(discord_channel.send(spoiler_post_description, file=file_to_send))
+            await discord_channel.send(spoiler_post_description, file=file_to_send)
 
             # Log it
             print("{time} | SPOILERS: Posted Music spoiler with name of {spoiler_name} on Discord".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
@@ -432,12 +449,14 @@ class Spoilers(UpdateNotifier):
         os.remove(spoiler_data)
 
     def unpack_spoiler_config(self, config):
+
         spoiler_name = config[bot_globals.SPOILER_NAME]
+        spoiler_file_path = config[bot_globals.SPOILER_FILE_PATH]
         spoiler_channel_to_post = config[bot_globals.SPOILER_CHANNEL_TO_POST]
         spoiler_post_description = config[bot_globals.SPOILER_POST_DESCRIPTION]
         spoiler_post_to_twitter = config[bot_globals.SPOILER_POST_TO_TWITTER]
 
-        return spoiler_name, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter
+        return spoiler_name, spoiler_file_path, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter
 
     def divide_spoilers(self, l, n):
         for i in range(0, len(l), n): 
@@ -455,7 +474,7 @@ class Spoilers(UpdateNotifier):
         # Return our new file name
         return file_name
 
-    def post_spoiler_to_discord(self, file_name, spoiler_name, spoiler_post_description, spoiler_channel_to_post, spoiler_channel_ids):
+    async def post_spoiler_to_discord(self, file_name, spoiler_name, spoiler_post_description, spoiler_channel_to_post, spoiler_channel_ids):
 
         if self.discord_post_override:
             return
@@ -468,9 +487,9 @@ class Spoilers(UpdateNotifier):
         file_to_send = discord.File(file_name)
 
         if spoiler_post_description:
-            asyncio.run(discord_channel.send(spoiler_post_description, file=file_to_send))
+            await discord_channel.send(spoiler_post_description, file=file_to_send)
         else:
-            asyncio.run(discord_channel.send(file=file_to_send))
+            await discord_channel.send(file=file_to_send)
 
         # Log it
         print("{time} | SPOILERS: Posted Image spoiler with name of {spoiler_name} on Discord".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))

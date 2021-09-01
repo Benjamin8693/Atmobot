@@ -121,6 +121,7 @@ CHANNEL_MUSIC = 2
 spoilers_template = {
     "Root": [{"name": "Spell Preview Icons",
               "file_path": "GUI/DeckConfig/",
+              "file_exclusions": ["Spell_Complete_BW"],
               "channel_to_post": 1,
               "post_description": "Take a look at the new Spell Preview Icons!",
               "post_to_twitter": True}]
@@ -130,9 +131,10 @@ spoilers_path = "spoilers.json"
 
 SPOILER_NAME = 0
 SPOILER_FILE_PATH = 1
-SPOILER_CHANNEL_TO_POST = 2
-SPOILER_POST_DESCRIPTION = 3
-SPOILER_POST_TO_TWITTER = 4
+SPOILER_FILE_EXCLUSIONS = 2
+SPOILER_CHANNEL_TO_POST = 3
+SPOILER_POST_DESCRIPTION = 4
+SPOILER_POST_TO_TWITTER = 5
 
 time_between_posts = 10
 spoiler_divide_threshold = 5

@@ -89,6 +89,7 @@ patcher_tips = {200: "The Patcher is online",
 # Paths to our resource folders
 resources_path = "resources"
 deepfakes_path = "deepfakes"
+video_path = "video"
 
 # Slash command information
 command_uptime_name = "uptime"
@@ -104,7 +105,13 @@ command_deepfake_arg_directory_description = "Choose a specific category to retr
 
 # Posted when a new test revision has been detected, and the bot is about to commence with auto-spoilers
 spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."
-spoilers_incoming_discord = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nCheck out these 3 new channels:"
+spoilers_incoming_discord_title = "Atmobot"
+spoilers_incoming_discord_information_title = "Hello! I am Atmobot"
+spoilers_incoming_discord_information = "I am a bot created by the Atmoplex team for the purpose of spoiling Test Realm when it releases. The Test Realm patcher just updated, so it's time for me to spoil a few things automatically!\n\nThis does **NOT** mean for certain that Test Realm is releasing today- but it's very likely!"
+spoilers_incoming_discord_coming_soon_title = "So what now?"
+spoilers_incoming_discord_coming_soon = "Within the next minute, I will begin posting in three new channels that have opened up. There will be about one file posted every 10 seconds, give or take.\n\nIn the meantime, the Atmoplex team is datamining the update manually. Whatever is missed by Atmobot will be later posted to Twitter. Enjoy these automatic spoilers, and get excited for Test Realm!"
+spoilers_incoming_discord_channels_title = "New Channels"
+spoilers_incoming_discord_channels = "{images_channel} - Icons of new spells, equipment, furniture, spells, NPCs, and more.\n\n{music_channel} - All of the new soundtracks, excluding ambient music and cues.\n\n{locale_channel} - A collection of new zone names, mob names, and more."
 
 # Helps retrieve Twitter API keys from the settings
 TWITTER_KEY_CONSUMER = 0
@@ -136,9 +143,50 @@ SPOILER_CHANNEL_TO_POST = 3
 SPOILER_POST_DESCRIPTION = 4
 SPOILER_POST_TO_TWITTER = 5
 
-time_between_posts = 10
+time_between_posts = 5
 spoiler_divide_threshold = 5
 spoiler_divide_amount = 16
 
 twitter_description_format = "[BOT] {description}"
 twitter_description_extension = " [{current}/{total}]"
+
+thumbnail_template_path = "thumbnail_template.png"
+thumbnail_font_path = "thumbnail_font.ttf"
+thumbnail_output_path = "video_thumbnail.png"
+
+thumbnail_font_size = 130
+thumbnail_header_offset = 272
+thumbnail_header_color = (239, 238, 41)
+thumbnail_footer_offset = 416
+thumbnail_footer_color = (255, 255, 255)
+
+thumbnail_offsets = (thumbnail_header_offset, thumbnail_footer_offset)
+thumbnail_colors = (thumbnail_header_color, thumbnail_footer_color)
+
+thumbnail_dimensions = (1920, 1080)
+
+video_output_path = "music_video.mp4"
+
+prefix_to_world = {
+    "WC": "Wizard City",
+    "KT": "Krokotopia",
+    "MB": "Marleybone",
+    "MS": "Mooshu",
+    "DS": "Dragonspyre",
+    "GH": "Grizzleheim",
+    "WT": "Wintertusk",
+    "WY": "Wysteria",
+    "ZF": "Zafaria",
+    "AV": "Avalon",
+    "AZ": "Azteca",
+    "AQ": "Aquila",
+    "KR": "Khrysalis",
+    "SB": "Shangri-Ba",
+    "DM": "Darkmoor",
+    "PL": "Polaris",
+    "MR": "Mirage",
+    "EM": "Empyrea",
+    "LM": "Lemuria"
+}
+
+twitter_video_limit = 140

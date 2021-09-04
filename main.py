@@ -21,8 +21,8 @@ import sys
 # Atmobot
 class Atmobot(commands.Bot):
 
-    def __init__(self, command_prefix, description, intents):
-        commands.Bot.__init__(self, command_prefix=command_prefix, description=description, intents=intents)
+    def __init__(self, command_prefix, case_insensitive, description, intents):
+        commands.Bot.__init__(self, command_prefix=command_prefix, case_insensitive=case_insensitive, description=description, intents=intents)
         
         self.startup_time = datetime.datetime.now()
         self.bot_settings = None
@@ -30,44 +30,6 @@ class Atmobot(commands.Bot):
         self.checker = None
 
         self.load_settings()
-
-    # Runs when the bot has readied up
-    async def on_ready(self):
-
-        # Setup the Discord Components library
-        DiscordComponents(self)
-
-        # Start up our other services
-        await self.startup()
-
-        # Log that our bot is actually running
-        game_longhand = bot_globals.game_longhands.get(self.bot_settings.get("game_id", -1))
-        print(bot_globals.startup_message.format(header="=" * 52,
-                                                 username=self.user.name,
-                                                 id=self.user.id,
-                                                 timestamp=self.startup_time.strftime("%Y-%m-%d-%H-%M-%S"),
-                                                 game_longhand=game_longhand,
-                                                 footer="=" * 52))
-
-    # Preliminary stuff done when starting up the bot
-    async def startup(self):
-
-        # Update startup time
-        await self.update_setting("last_startup", self.startup_time.strftime("%Y-%m-%d %H:%M:%S"))
-
-        # Checker class used for checking url and patcher status
-        print("{time} | STARTUP: Loading Patch Checker".format(time=await self.get_formatted_time()))
-        self.checker = checker.Checker(self)
-        await self.checker.startup()
-
-        # Hub for all our command logic
-        print("{time} | STARTUP: Loading Commands Center".format(time=await self.get_formatted_time()))
-        self.load_extension("cogs.commands_center")
-
-        # Automatic spoiler system
-        print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))
-        self.spoilers = spoilers.Spoilers(self)
-        await self.spoilers.startup()
 
     # Used to load the settings file
     def load_settings(self):
@@ -114,6 +76,44 @@ class Atmobot(commands.Bot):
 
     async def get_formatted_time(self):
         return datetime.datetime.now().strftime("%H:%M:%S")
+
+    # Runs when the bot has readied up
+    async def on_ready(self):
+
+        # Setup the Discord Components library
+        DiscordComponents(self)
+
+        # Start up our other services
+        await self.startup()
+
+        # Log that our bot is actually running
+        game_longhand = bot_globals.game_longhands.get(self.bot_settings.get("game_id", -1))
+        print(bot_globals.startup_message.format(header="=" * 52,
+                                                 username=self.user.name,
+                                                 id=self.user.id,
+                                                 timestamp=self.startup_time.strftime("%Y-%m-%d-%H-%M-%S"),
+                                                 game_longhand=game_longhand,
+                                                 footer="=" * 52))
+
+    # Preliminary stuff done when starting up the bot
+    async def startup(self):
+
+        # Update startup time
+        await self.update_setting("last_startup", self.startup_time.strftime("%Y-%m-%d %H:%M:%S"))
+
+        # Checker class used for checking url and patcher status
+        print("{time} | STARTUP: Loading Patch Checker".format(time=await self.get_formatted_time()))
+        self.checker = checker.Checker(self)
+        await self.checker.startup()
+
+        # Hub for all our command logic
+        print("{time} | STARTUP: Loading Commands Center".format(time=await self.get_formatted_time()))
+        self.load_extension("cogs.commands_center")
+
+        # Automatic spoiler system
+        print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))
+        self.spoilers = spoilers.Spoilers(self)
+        await self.spoilers.startup()
 
 # Setup logging
 if not os.path.exists("logs/"):
@@ -169,7 +169,7 @@ def _prefix_callable(bot, msg):
     return prefixes
 
 # Run the bot
-atmobot = Atmobot(command_prefix=_prefix_callable, description=bot_globals.bot_description, intents=Intents.all())
+atmobot = Atmobot(command_prefix=_prefix_callable, case_insensitive=True, description=bot_globals.bot_description, intents=Intents.all())
 slash = SlashCommand(atmobot, sync_commands=True)
 token = atmobot.bot_settings.get("bot_token", "")
 atmobot.run(token)

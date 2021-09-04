@@ -1,6 +1,6 @@
 # 3rd-Party Packages
 import asyncio
-from discord import Embed, Color
+from discord import Embed, Color, file
 import discord
 from discord.ext import commands
 from discord.ext.commands.core import command
@@ -26,12 +26,35 @@ class CommandsCenter(commands.Cog):
     def __init__(self, bot):
 
         self.bot = bot
-        self.bot.bot_settings.get("subscribed_guilds")
+
+        self.subscribed_guilds += self.bot.bot_settings.get("subscribed_guilds")
 
         self.patcher_historicals = []
         self.website_historicals = []
 
-        self.subscribed_guilds += self.bot.bot_settings.get("subscribed_guilds")
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def thumbnail(self, ctx, *args):
+
+        thumbnail_info = " ".join(args[:]).upper()
+        if "." not in thumbnail_info:
+            return
+
+        thumbnail_info = thumbnail_info.split(".")
+        thumbnail_header = thumbnail_info[0]
+        thumbnail_footer = thumbnail_info[1]
+
+        # Logging
+        print("{time} | THUMBNAIL: {user} requested custom thumbnail with title {thumbnail_header} and footer {thumbnail_footer}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), thumbnail_header=thumbnail_header, thumbnail_footer=thumbnail_footer))
+
+        # Send the uptime
+        await self.bot.spoilers.create_video_thumbnail(thumbnail_header, thumbnail_footer)
+        file_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path)
+        file_to_send = discord.File(file_path)
+        await ctx.send(file=file_to_send)
+
+        # Log the result
+        print("{time} | THUMBNAIL: Custom thumbnail with header {thumbnail_header} and footer {thumbnail_footer} uploaded".format(time=await self.bot.get_formatted_time(), thumbnail_header=thumbnail_header, thumbnail_footer=thumbnail_footer))
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -208,7 +231,7 @@ class CommandsCenter(commands.Cog):
 
     # Generates a set of buttons users can click on to check Test Realm status manually
     @commands.command()
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_messages=True)
     async def status(self, ctx):
 
         # Embed header

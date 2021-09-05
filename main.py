@@ -27,6 +27,8 @@ class Atmobot(commands.Bot):
         self.startup_time = datetime.datetime.now()
         self.bot_settings = None
 
+        self.started = False
+
         self.checker = None
 
         self.load_settings()
@@ -80,23 +82,35 @@ class Atmobot(commands.Bot):
     # Runs when the bot has readied up
     async def on_ready(self):
 
-        # Setup the Discord Components library
-        DiscordComponents(self)
+        if not self.started:
 
-        # Start up our other services
-        await self.startup()
+            # Start up our other services
+            await self.startup()
 
-        # Log that our bot is actually running
-        game_longhand = bot_globals.game_longhands.get(self.bot_settings.get("game_id", -1))
-        print(bot_globals.startup_message.format(header="=" * 52,
-                                                 username=self.user.name,
-                                                 id=self.user.id,
-                                                 timestamp=self.startup_time.strftime("%Y-%m-%d-%H-%M-%S"),
-                                                 game_longhand=game_longhand,
-                                                 footer="=" * 52))
+            # Log that our bot is actually running
+            game_longhand = bot_globals.game_longhands.get(self.bot_settings.get("game_id", -1))
+            print(bot_globals.startup_message.format(header="=" * 52,
+                                                     username=self.user.name,
+                                                     id=self.user.id,
+                                                     timestamp=self.startup_time.strftime("%Y-%m-%d-%H-%M-%S"),
+                                                     game_longhand=game_longhand,
+                                                     footer="=" * 52))
+
+            # Simulate a file update
+            # TODO: Remove this
+            await self.spoilers.test_file_update()
+
+        else:
+
+            print("{time} | RECONNECT: Bot reconnected to Discord API".format(time=await self.get_formatted_time()))
 
     # Preliminary stuff done when starting up the bot
     async def startup(self):
+
+        self.started = True
+
+        # Setup the Discord Components library
+        DiscordComponents(self)
 
         # Update startup time
         await self.update_setting("last_startup", self.startup_time.strftime("%Y-%m-%d %H:%M:%S"))

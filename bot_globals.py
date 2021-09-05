@@ -152,7 +152,7 @@ twitter_description_extension = " [{current}/{total}]"
 
 thumbnail_template_path = "thumbnail_template.png"
 thumbnail_font_path = "thumbnail_font.ttf"
-thumbnail_output_path = "video_thumbnail.png"
+thumbnail_output_path = "video_thumbnail_{file_name}.png"
 
 thumbnail_font_size = 130
 thumbnail_header_offset = 272
@@ -184,9 +184,32 @@ prefix_to_world = {
     "SB": "Shangri-Ba",
     "DM": "Darkmoor",
     "PL": "Polaris",
+    "AR": "Arcanum",
     "MR": "Mirage",
     "EM": "Empyrea",
+    "KM": "Karamelle",
     "LM": "Lemuria"
 }
 
 twitter_video_limit = 140
+twitter_video_process_time = 15
+
+video_dimension = 720
+video_fade_duration = 5
+
+video_overtime_description = " (Track shortened to adhere to Twitter's video limit. Full version uploaded later.)"
+
+CHAIN_STATUS_INVALID = -1
+CHAIN_STATUS_NOT_READY = 0
+CHAIN_STATUS_WAITING = 1
+CHAIN_STATUS_COMPLETE = 2
+
+LINK_DATA_STATUS = 0
+LINK_DATA_CONFIG = 1
+LINK_DATA_LAST_TWEET_ID = 2
+
+LINK_CONFIG_PATH = 0
+LINK_CONFIG_NAME = 1
+LINK_CONFIG_DESCRIPTION = 2
+
+next_video_signal = "video_next_up"

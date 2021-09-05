@@ -2,6 +2,8 @@
 from discord import Embed, File, Color, file
 from moviepy.editor import *
 from PIL import Image, ImageFont, ImageDraw
+from numpy import broadcast_to
+from pydispatch import dispatcher
 import twitter
 from wizdiff.delta import FileDelta
 from wizdiff.update_notifier import UpdateNotifier
@@ -19,6 +21,7 @@ import json
 import os
 import re
 import threading
+import time
 import urllib.request
 import zlib
 
@@ -35,7 +38,8 @@ class Spoilers(UpdateNotifier):
         self.spoiler_config = {}
         self.chained_spoilers = {}
 
-        self.last_tweet_id = 0
+        self.last_tweet_ids = {bot_globals.CHANNEL_IMAGES: 0, bot_globals.CHANNEL_MUSIC: 0, bot_globals.CHANNEL_LOCALE: 0}
+        self.chained_tweet_status = {}
 
         self.discord_post_override = False
         self.twitter_post_override = False
@@ -68,10 +72,6 @@ class Spoilers(UpdateNotifier):
             print("{time} | SPOILERS: Could not load the Twitter API".format(time=self.get_formatted_time()))
         else:
             print("{time} | SPOILERS: Logged into the Twitter API".format(time=self.get_formatted_time()))
-
-        # Get a new revision for testing purposes
-        # TODO: Remove later
-        await self.test_file_update()
 
     def load_spoilers(self):
 
@@ -224,9 +224,6 @@ class Spoilers(UpdateNotifier):
         # Iterate over all the file directories
         for chained_file_path in list(self.chained_spoilers.keys()):
 
-            # Reset our last tweet ID for sanity purposes
-            self.last_tweet_id = None
-
             chained_spoilers = self.chained_spoilers.get(chained_file_path)
 
             # First key is always the config
@@ -240,6 +237,7 @@ class Spoilers(UpdateNotifier):
 
             # Pass each individual chain through to their respective handlers
             total_chains = len(spoiler_chains)
+            total_spoilers = len([ele for sub in spoiler_chains for ele in sub])
             for chain in spoiler_chains:
 
                 # Chain index used for documenting our proegress with this tweet chain
@@ -251,15 +249,15 @@ class Spoilers(UpdateNotifier):
     
                 # Handle locale files
                 if file_handler == bot_globals.CHANNEL_LOCALE:
-                    self.handle_locale_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains)
+                    self.handle_locale_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains, total_spoilers=total_spoilers)
 
                 # Handle image files
                 elif file_handler == bot_globals.CHANNEL_IMAGES:
-                    await self.handle_image_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains)
+                    await self.handle_image_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains, total_spoilers=total_spoilers)
 
                 # Handle music files
                 elif file_handler == bot_globals.CHANNEL_MUSIC:
-                    await self.handle_music_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains)
+                    await self.handle_music_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains, total_spoilers=total_spoilers)
 
                 await asyncio.sleep(bot_globals.time_between_posts)
 
@@ -279,16 +277,16 @@ class Spoilers(UpdateNotifier):
 
         return file_handler
 
-    def handle_locale_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
+    def handle_locale_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1, total_spoilers=-1):
         return
     
-    async def handle_image_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
+    async def handle_image_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1, total_spoilers=-1):
         
         # Unpack our spoiler config
         spoiler_name, spoiler_file_path, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter = self.unpack_spoiler_config(config)
 
         # Log that we're handling a music spoiler
-        print("{time} | SPOILERS: Handling image spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+        print("{time} | SPOILERS: Handling Image spoiler with category \"{spoiler_name}\"".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
 
         # We're handling a spoiler chain here
         if type(spoiler_data) == list:
@@ -366,8 +364,9 @@ class Spoilers(UpdateNotifier):
 
                     # Reply to the former tweet in the chain
                     in_reply_to_status_id = None
-                    if total_chains > 1 and chain_index != 0 and self.last_tweet_id:
-                        in_reply_to_status_id = self.last_tweet_id
+                    last_tweet_id = self.last_tweet_ids.get(bot_globals.CHANNEL_IMAGES)
+                    if total_chains > 1 and chain_index != 0 and last_tweet_id:
+                        in_reply_to_status_id = last_tweet_id
 
                     # Add counter to descriptions if the chain is more than 1 tweet
                     twitter_post_description = spoiler_post_description
@@ -375,7 +374,7 @@ class Spoilers(UpdateNotifier):
                         chain_counter = bot_globals.twitter_description_extension.format(current=(chain_index + 1), total=total_chains)
                         twitter_post_description = spoiler_post_description + chain_counter
                     
-                    await self.post_spoiler_to_twitter(chained_image_name, spoiler_name, twitter_post_description, in_reply_to_status_id)
+                    await self.post_spoiler_to_twitter(chained_image_name, spoiler_name, bot_globals.CHANNEL_IMAGES, twitter_post_description, in_reply_to_status_id)
 
                 # Delete our file from cache
                 os.remove(chained_image_name)
@@ -412,7 +411,7 @@ class Spoilers(UpdateNotifier):
                         # Reply to the former tweet in the chain
                         in_reply_to_status_id = None
                         if file_index != 0:
-                            in_reply_to_status_id = self.last_tweet_id
+                            in_reply_to_status_id = self.last_tweet_ids.get(bot_globals.CHANNEL_IMAGES)
 
                         # Add counter to descriptions if the chain is more than 1 tweet
                         twitter_post_description = spoiler_post_description
@@ -420,7 +419,7 @@ class Spoilers(UpdateNotifier):
                             chain_counter = bot_globals.twitter_description_extension.format(current=(file_index + 1), total=len(spoiler_data))
                             twitter_post_description = spoiler_post_description + chain_counter
 
-                        await self.post_spoiler_to_twitter(file_name, spoiler_name, twitter_post_description, in_reply_to_status_id)
+                        await self.post_spoiler_to_twitter(file_name, spoiler_name, bot_globals.CHANNEL_IMAGES, twitter_post_description, in_reply_to_status_id)
 
                     # Delete our file from cache
                     os.remove(file_name)
@@ -444,18 +443,18 @@ class Spoilers(UpdateNotifier):
 
             # Tweet out the spoiler!
             if spoiler_post_to_twitter:
-                await self.post_spoiler_to_twitter(file_name, spoiler_name, spoiler_post_description)
+                await self.post_spoiler_to_twitter(file_name, spoiler_name, bot_globals.CHANNEL_IMAGES, spoiler_post_description)
 
             # Delete our file from cache
             os.remove(file_name)
 
-    async def handle_music_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1):
+    async def handle_music_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1, total_spoilers=-1):
 
         # Unpack our spoiler config
         spoiler_name, spoiler_file_path, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter = self.unpack_spoiler_config(config)
 
         # Log that we're handling a music spoiler
-        print("{time} | SPOILERS: Handling music spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+        print("{time} | SPOILERS: Handling Music spoiler with category \"{spoiler_name}\"".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
 
         # We're handling a spoiler chain here
         if type(spoiler_data) == list:
@@ -479,10 +478,43 @@ class Spoilers(UpdateNotifier):
 
                     await self.post_spoiler_to_discord(file_name, spoiler_name, discord_post_description, spoiler_channel_to_post, spoiler_channel_ids)
 
-                # Delete our file from cache
-                os.remove(file_name)
+                    # Tweet out the spoiler!
+                    if spoiler_post_to_twitter:
 
-                await asyncio.sleep(bot_globals.time_between_posts)
+                        # Add counter to descriptions if the chain is more than 1 tweet
+                        twitter_post_description = spoiler_post_description
+                        current_chain_index = (chain_index * bot_globals.spoiler_divide_amount) + file_index
+                        chain_counter = bot_globals.twitter_description_extension.format(current=current_chain_index + 1, total=total_spoilers)
+                        twitter_post_description = spoiler_post_description + chain_counter
+
+                        # Generate video path
+                        video_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, os.path.basename(file_name).replace(".ogg", ".mp4"))
+
+                        # All links in the chain should start out as NOT READY, except for the very first
+                        current_status = bot_globals.CHAIN_STATUS_NOT_READY
+                        if file_index == 0 and chain_index == 0:
+                            current_status = bot_globals.CHAIN_STATUS_WAITING
+
+                        # Create an entry for our spoiler name if it doesn't already exist
+                        if not self.chained_tweet_status.get(spoiler_name):
+                            self.chained_tweet_status[spoiler_name] = {}
+
+                        # Add info regarding this link of the chain
+                        self.chained_tweet_status[spoiler_name][current_chain_index] = [current_status, [video_path, spoiler_name, twitter_post_description]]
+                        
+                        # Thread the creation of the video- it'll take a while so we don't want it to hold us up
+                        p = threading.Thread(target=self.create_twitter_video, args=(file_name, spoiler_name, twitter_post_description, current_chain_index))
+                        p.start()
+
+                # Delete our file from cache
+                # We deal with the file later if posted to Twitter
+                if not spoiler_post_to_twitter:
+                    os.remove(file_name)
+
+                time_between_posts = bot_globals.time_between_posts
+                if spoiler_post_to_twitter:
+                    time_between_posts = 3.0
+                await asyncio.sleep(time_between_posts)
 
         # Otherwise we're spoiling a single file
         else:
@@ -501,76 +533,177 @@ class Spoilers(UpdateNotifier):
             # Create a video and post it to twitter
             if spoiler_post_to_twitter:
 
+
                 # Thread the creation of the video- it'll take a while so we don't want it to hold us up
-                p = threading.Thread(target=self.twitter_video_callback, args=(file_name, spoiler_name, spoiler_post_description))
+                p = threading.Thread(target=self.create_twitter_video, args=(file_name, spoiler_name, spoiler_post_description))
                 p.start()
-                p.join()
 
             else:
 
                 # Delete our file from cache
                 os.remove(file_name)
 
-    def twitter_video_callback(self, file_name, spoiler_name, spoiler_post_description=None):
+    def create_twitter_video(self, file_name, spoiler_name, spoiler_post_description, current_chain_index=-1):
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-        loop.run_until_complete(self.post_twitter_video(file_name, spoiler_name, spoiler_post_description))
+        loop.run_until_complete(self.ready_twitter_video(file_name, spoiler_name, spoiler_post_description, current_chain_index))
         loop.close()
 
-    async def post_twitter_video(self, file_name, spoiler_name, spoiler_post_description=None):
+    async def ready_twitter_video(self, file_name, spoiler_name, spoiler_post_description, current_chain_index=-1):
 
-        # Create the music video
+        # Generate video path
         video_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, os.path.basename(file_name).replace(".ogg", ".mp4"))
 
-        # Saves us having to re-render something we have done prior
-        if not os.path.exists(video_path):
-            await self.create_music_video(file_name)
+        # Render out a video if we don't already have it saved
+        if os.path.exists(video_path):
+            success = True
+        else:
+            success, shortened = await self.create_music_video(file_name)
 
-        # Tweet it out
-        await self.post_spoiler_to_twitter(video_path, spoiler_name, spoiler_post_description)
+        # If we're shortened, add that to the description
+        if shortened:
+            spoiler_post_description += bot_globals.video_overtime_description
+
+        ready = current_chain_index == -1
+
+        # Grab chain info if we're part of a chain
+        if current_chain_index != -1:
+            chain_status = self.chained_tweet_status.get(spoiler_name)
+            current_link_data = chain_status.get(current_chain_index)
+            current_status = current_link_data[bot_globals.LINK_DATA_STATUS]
+            ready = current_status == bot_globals.CHAIN_STATUS_WAITING
+
+        # Post videos right away if they're un-chained or ready
+        if ready:
+
+            # Only post if the render was successful
+            if success:
+
+                # Post on Twitter
+                await self.post_twitter_video(video_path, spoiler_name, spoiler_post_description, current_chain_index)
+
+                # Delete the file
+                #os.remove(video_path)
+
+            return
+
+        # See if we're allowed to post the next video in our chain
+        # We should wait until the prior one has finished uploading to Twitter
+        # Grab info for the previous link in the chain
+        previous_link_data = chain_status.get(current_chain_index - 1)
+        previous_status = previous_link_data[bot_globals.LINK_DATA_STATUS]
+        current_config = current_link_data[bot_globals.LINK_DATA_CONFIG]
+
+        # Save new description if shortened
+        if shortened:
+            current_config[bot_globals.LINK_CONFIG_DESCRIPTION] = spoiler_post_description
+            current_link_data[bot_globals.LINK_DATA_CONFIG] = current_config
+            chain_status[current_chain_index] = current_link_data
+            self.chained_tweet_status[spoiler_name] = chain_status
+
+        # We aren't ready yet
+        if success and previous_status != bot_globals.CHAIN_STATUS_COMPLETE:
+
+            # Put us in a waiting state
+            current_link_data[bot_globals.LINK_DATA_STATUS] = bot_globals.CHAIN_STATUS_WAITING
+            chain_status[current_chain_index] = current_link_data
+            self.chained_tweet_status[spoiler_name] = chain_status
+            return
+
+        # We're ready to Tweet it out
+        elif success and previous_status == bot_globals.CHAIN_STATUS_COMPLETE:
+
+            await self.post_twitter_video(*current_config, current_chain_index=current_chain_index, reply_to_status=True)
+
+    async def post_twitter_video(self, video_path, spoiler_name, spoiler_post_description, current_chain_index, reply_to_status=False):
+
+        # Grab last tweet ID if we need it
+        in_reply_to_status_id = None
+        if reply_to_status:
+            in_reply_to_status_id = self.last_tweet_ids[bot_globals.CHANNEL_MUSIC]
+
+        # Post the tweet
+        await self.post_spoiler_to_twitter(video_path, spoiler_name, bot_globals.CHANNEL_MUSIC, spoiler_post_description, in_reply_to_status_id)
 
         # Delete the file
         #os.remove(video_path)
 
+        if current_chain_index != -1:
+
+            # Grab info for the current and next link in the chain
+            chain_status = self.chained_tweet_status.get(spoiler_name)
+            current_link_data = chain_status.get(current_chain_index)
+            next_link_data = chain_status.get(current_chain_index + 1)
+
+            # Mark our link as complete
+            current_link_data[bot_globals.LINK_DATA_STATUS] = bot_globals.CHAIN_STATUS_COMPLETE
+            chain_status[current_chain_index] = current_link_data
+            self.chained_tweet_status[spoiler_name] = chain_status
+
+            # The next video in the chain is ready to be posted
+            if next_link_data:
+                ready, config = next_link_data
+                if ready == bot_globals.CHAIN_STATUS_WAITING:
+                    await self.post_twitter_video(*config, current_chain_index + 1, True)
+
     async def create_music_video(self, file_name):
 
         abbreviated_file_name = os.path.basename(file_name)
+
+        print("{time} | SPOILERS: Generating video from file name \"{spoiler_name}\"".format(time=self.get_formatted_time(), spoiler_name=abbreviated_file_name))
 
         # Grab world prefix from file name
         world_prefix = abbreviated_file_name[:abbreviated_file_name.index("_")]
 
         # Format header and footer based on file name
         thumbnail_header = re.sub('([A-Z])', r' \1', abbreviated_file_name.replace("{world_prefix}_".format(world_prefix=world_prefix), "").replace("_", "").replace(".ogg", "")).upper()
-        thumbnail_footer = bot_globals.prefix_to_world.get(world_prefix).upper()
+        thumbnail_footer = bot_globals.prefix_to_world.get(world_prefix, "Unknown").upper()
 
         # Create a thumbnail for the video
-        await self.create_video_thumbnail(thumbnail_header=thumbnail_header, thumbnail_footer=thumbnail_footer)
+        await self.create_video_thumbnail(file_name=abbreviated_file_name, thumbnail_header=thumbnail_header, thumbnail_footer=thumbnail_footer)
 
         # Load audio
         audio_clip = AudioFileClip(file_name)
-        new_audioclip = CompositeAudioClip([audio_clip])
         duration = audio_clip.duration
 
-        # Create a video using the thumbnail
-        my_clip = ImageClip(os.path.join(bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path))
-
-        # Shorten longer videos because Twitter does not allow them
+        # Shorten longer tracks because Twitter does not allow them
+        shortened = False
         total_duration = duration + 0.5
         if total_duration > bot_globals.twitter_video_limit:
+            shortened = True
             total_duration = bot_globals.twitter_video_limit - 1
+
+        new_audioclip = CompositeAudioClip([audio_clip])
+
+        # Create a video using the thumbnail
+        my_clip = ImageClip(os.path.join(bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path.format(file_name=abbreviated_file_name)))
+        my_clip = my_clip.resize(height=bot_globals.video_dimension)
+
+        # Apply the audio clip
+        my_clip = my_clip.set_audio(new_audioclip)
         my_clip = my_clip.set_duration(total_duration)
 
-        my_clip.audio = new_audioclip
+        # Fade out audio if we had to trim our audio earlier
+        if shortened:
+            my_clip = my_clip.audio_fadeout(bot_globals.video_fade_duration)
 
         # Write to file
-        my_clip.write_videofile(os.path.join(bot_globals.resources_path, bot_globals.video_path, os.path.basename(file_name).replace(".ogg", ".mp4")), fps=30, audio_codec="aac", threads=4)
+        my_clip.write_videofile(os.path.join(bot_globals.resources_path, bot_globals.video_path, os.path.basename(file_name).replace(".ogg", ".mp4")), fps=24, audio_codec="aac", logger=None, threads=4)
 
         # Delete our audio file from cache
+        my_clip.close()
+        audio_clip.close()
+        new_audioclip.close()
         os.remove(file_name)
 
-    async def create_video_thumbnail(self, thumbnail_header, thumbnail_footer):
+        # Log and acknowledge success
+        print("{time} | SPOILERS: Exported video from file name \"{spoiler_name}\"".format(time=self.get_formatted_time(), spoiler_name=abbreviated_file_name))
+
+        return True, shortened
+
+    async def create_video_thumbnail(self, file_name, thumbnail_header, thumbnail_footer):
 
         # Open our thumbnail template
         template_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_template_path)
@@ -597,7 +730,7 @@ class Spoilers(UpdateNotifier):
             editing_template.text((x, y), text_to_place, color, font=font)
 
         # Save our thumbnail
-        output_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path)
+        output_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path.format(file_name=file_name))
         template.save(output_path)
 
     def unpack_spoiler_config(self, config):
@@ -644,14 +777,16 @@ class Spoilers(UpdateNotifier):
             await discord_channel.send(file=file_to_send)
 
         # Log it
-        print("{time} | SPOILERS: Posted Image spoiler with name of {spoiler_name} on Discord".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+        print("{time} | SPOILERS: Posted spoiler \"{spoiler_name}\" on Discord".format(time=self.get_formatted_time(), spoiler_name=os.path.basename(file_name)))
 
-    async def post_spoiler_to_twitter(self, file_name, spoiler_name, spoiler_post_description=None, in_reply_to_status_id=None):
+    async def post_spoiler_to_twitter(self, file_name, spoiler_name, spoiler_type, spoiler_post_description=None, in_reply_to_status_id=None):
 
         if self.twitter_post_override:
             return
+
+        media_id = file_name
         
-        # Publish the tweet
+        # Format description
         if spoiler_post_description:
             twitter_description = self.format_twitter_description(spoiler_post_description)
         else:
@@ -660,16 +795,21 @@ class Spoilers(UpdateNotifier):
         # Handle uploading MP4s
         if file_name.endswith(".mp4"):
             video_id: int = self.twitter_api.UploadMediaChunked(media = file_name, media_category = 'tweet_video')
-            await asyncio.sleep(10)
-            file_name = video_id
 
-        status = self.twitter_api.PostUpdate(status=twitter_description, media=file_name, in_reply_to_status_id=in_reply_to_status_id)
+            # Sleep so that our uploaded video has some time to process
+            # We're using time.sleep() here because asyncio.sleep() doesn't work in a thread
+            time.sleep(bot_globals.twitter_video_process_time)
+
+            media_id = video_id
+
+        # Publish the tweet
+        status = self.twitter_api.PostUpdate(status=twitter_description, media=media_id, in_reply_to_status_id=in_reply_to_status_id)
 
         # Store the ID of the last tweet made
-        self.last_tweet_id = status.id
+        self.last_tweet_ids[spoiler_type] = status.id
 
         # Log it
-        print("{time} | SPOILERS: Tweeted Image spoiler with name of {spoiler_name}".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+        print("{time} | SPOILERS: Tweeted spoiler \"{spoiler_name}\"".format(time=self.get_formatted_time(), spoiler_name=os.path.basename(file_name)))
 
     def format_twitter_description(self, description, current=1, total=1):
 

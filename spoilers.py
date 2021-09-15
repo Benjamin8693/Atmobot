@@ -7,7 +7,7 @@ import twitter
 from wizdiff.delta import FileDelta
 from wizdiff.update_notifier import UpdateNotifier
 from wizdiff.utils import get_revision_from_url
-from wizwalker.file_readers.wad import Wad
+#from wizwalker.file_readers.wad import Wad
 
 # Local packages
 import bot_globals
@@ -1114,7 +1114,7 @@ class Spoilers(UpdateNotifier):
         await discord_channel.send("Second stage done! The next may take around 30 seconds.")
 
         # Unpacking wads
-        root_wad = Wad(path="archive/{revision}/_Wads/Root.wad".format(revision=revision))
+        #root_wad = Wad(path="archive/{revision}/_Wads/Root.wad".format(revision=revision))
         await root_wad.open()
 
         await root_wad.unarchive("archive/{revision}/Root".format(revision=revision))

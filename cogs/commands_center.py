@@ -1,13 +1,9 @@
 # 3rd-Party Packages
-import asyncio
-from re import sub
-from discord import Embed, Color, file
-import discord
+from discord import Color, File, Embed
 from discord.ext import commands
 from discord.ext.commands.core import command
 from discord_components import Button, ButtonStyle, InteractionType
 from discord_slash import cog_ext
-from discord_slash.context import SlashContext
 from discord_slash.utils.manage_commands import create_choice, create_option
 
 # Local packages
@@ -17,7 +13,9 @@ import bot_globals
 import datetime
 import os
 import random
+import sys
 import time
+import traceback
 import typing
 import uuid
 
@@ -67,49 +65,99 @@ class CommandsCenter(commands.Cog):
 
         self.message_history = {}
 
-    @cog_ext.cog_slash(name=bot_globals.command_quote_name, description=bot_globals.command_quote_description, guild_ids=subscribed_guilds)
+    @commands.Cog.listener()
+    async def on_slash_command_error(self, ctx, error):
+        await self.handle_error(ctx, error)
+
+    async def cog_command_error(self, ctx, error):
+        await self.handle_error(ctx, error)
+
+    async def handle_error(self, ctx, error):
+
+        # Errors to ignore
+        ignored = (commands.CommandNotFound, )
+        error = getattr(error, 'original', error)
+        if isinstance(error, ignored):
+            return
+
+        # Cooldown error
+        if isinstance(error, commands.CommandOnCooldown):
+            cooldown_embed = Embed(title=f"You are on cooldown.", description=f"Try again in {error.retry_after:.2f}s.", color=Color.red())
+            await ctx.send(embed=cooldown_embed)
+
+        # Print traceback
+        else:
+            print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+            traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
+    async def get_full_username(self, user):
+        user_name = user.name
+        user_discriminator = user.discriminator
+
+        full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
+        return full_username
+
+    author_choices = []
+    for author_name in list(bot_globals.command_quote_authors.keys()):
+        choice = create_choice(name=author_name.capitalize(), value=author_name)
+        author_choices.append(choice)
+    author_option = create_option(name=bot_globals.command_quote_arg_author_name, description=bot_globals.command_quote_arg_author_description, option_type=3, required=True, choices=author_choices)
+    @cog_ext.cog_slash(name=bot_globals.command_quote_name, description=bot_globals.command_quote_description, guild_ids=subscribed_guilds, options=[author_option])
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
-    async def quote(self, ctx):
+    async def quote(self, ctx, author: str):
+
+        # Grab author details
+        author_data = bot_globals.command_quote_authors.get(author)
+        author_id = author_data[bot_globals.COMMAND_QUOTE_AUTHOR_ID]
+        date_range = author_data[bot_globals.COMMAND_QUOTE_DATE_RANGE]
+        author_object = self.bot.get_user(author_id)
+        author_username = await self.get_full_username(author_object)
 
         # Logging
-        print("{time} | QUOTE: {user} requested quote".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+        print("{time} | QUOTE: {user} requested quote of user {author}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), author=author_username))
 
-        author = 310684137403056128
+        # Generate chat history for the author if it doesn't exist
         if author not in self.message_history:
 
             history = []
             self.message_history[author] = history
 
-            await ctx.send("Generating Quote library. This could take a few minutes.")
+            # Notify that we're generating the quote library
+            await ctx.send("Generating Quote library for {author_name}. This could take a few minutes.".format(author_name=author_username))
 
-            reference_channel = self.bot.get_channel(389266925185662986)
-            async for message in reference_channel.history(limit=10000, before=datetime.datetime(2021, 5, 12).replace(tzinfo=None)):
+            # Grab the past 10,000 messages from the quote channel
+            reference_channel = self.bot.get_channel(bot_globals.command_quote_channel_id)
+            if date_range:
+                reference_time = datetime.datetime(*date_range)
+            else:
+                reference_time = datetime.datetime.now()
+            async for message in reference_channel.history(limit=bot_globals.command_quote_message_limit, before=reference_time.replace(tzinfo=None)):
                 if message.author.id == author:
                     if len(message.content) > 10 and (not "<@" in message.content) and (not "<:" in message.content):
                         history.append(message.content)
 
+            # Add them to history
             self.message_history[author] = history
 
+            # Quote library finished generating
             print("{time} | QUOTE: Quote library generated".format(time=await self.bot.get_formatted_time()))
             return
 
+        # Grab chat history from this author
         history = self.message_history.get(author)
 
+        # We don't have any chat history to grab a quote from quite yet
         if not history:
             await ctx.send("Quote library has not yet finished generating. Check back in a few minutes.")
             print("{time} | QUOTE: Still generating quote library".format(time=await self.bot.get_formatted_time()))
             return
 
+        # Pick a random messgae from the history and send it
         random_message = random.choice(history)
-        await ctx.send("\"{message}\"".format(message=random_message))
+        await ctx.send("{author_name}: \"{message}\"".format(author_name=author_username, message=random_message))
 
         # Log the result
-        print("{time} | QUOTE: Quote \"{quote}\" posted".format(time=await self.bot.get_formatted_time(), quote=random_message))
-
-    @quote.error
-    async def quote_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            await self.handle_cooldown_message(ctx, error)
+        print("{time} | QUOTE: Quote \"{quote}\" from {author_name} posted".format(time=await self.bot.get_formatted_time(), quote=random_message, author_name=author_username))
 
     @cog_ext.cog_slash(name=bot_globals.command_days_name, description=bot_globals.command_days_description, guild_ids=subscribed_guilds)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
@@ -128,11 +176,6 @@ class CommandsCenter(commands.Cog):
 
         # Log the result
         print("{time} | DAYS: {days} days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), days=diff.days))
-
-    @days.error
-    async def days_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            await self.handle_cooldown_message(ctx, error)
 
     @cog_ext.cog_slash(name=bot_globals.command_testrealm_name, description=bot_globals.command_testrealm_description, guild_ids=subscribed_guilds)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
@@ -156,11 +199,6 @@ class CommandsCenter(commands.Cog):
         # Log the result
         print("{time} | TESTREALM: Test Realm information posted".format(time=await self.bot.get_formatted_time()))
 
-    @testrealm.error
-    async def testrealm_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            await self.handle_cooldown_message(ctx, error)
-
     header_option = create_option(name=bot_globals.command_thumbnail_arg_header_name, description=bot_globals.command_thumbnail_arg_header_description, option_type=3, required=True)
     footer_option = create_option(name=bot_globals.command_thumbnail_arg_footer_name, description=bot_globals.command_thumbnail_arg_footer_description, option_type=3, required=True)
     @cog_ext.cog_slash(name=bot_globals.command_thumbnail_name, description=bot_globals.command_thumbnail_description, guild_ids=subscribed_guilds, options=[header_option, footer_option])
@@ -175,7 +213,7 @@ class CommandsCenter(commands.Cog):
 
         await self.bot.spoilers.create_video_thumbnail(file_name, header.upper(), footer.upper())
         file_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path.format(file_name=file_name))
-        file_to_send = discord.File(file_path)
+        file_to_send = File(file_path)
         await ctx.send(file=file_to_send)
 
         # Delete the file
@@ -184,21 +222,11 @@ class CommandsCenter(commands.Cog):
         # Log the result
         print("{time} | THUMBNAIL: Custom thumbnail with header {thumbnail_header} and footer {thumbnail_footer} uploaded".format(time=await self.bot.get_formatted_time(), thumbnail_header=header, thumbnail_footer=footer))
 
-    @thumbnail.error
-    async def thumbnail_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            await self.handle_cooldown_message(ctx, error)
-
     @commands.command()
     @commands.has_permissions(administrator=True)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
     async def spoilers(self, ctx):
         await self.bot.spoilers.test_file_update()
-
-    @spoilers.error
-    async def spoilers_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            await self.handle_cooldown_message(ctx, error)
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
@@ -221,11 +249,6 @@ class CommandsCenter(commands.Cog):
 
         # Log the result
         print("{time} | CLEAR: Cleared {amount} messages from {channel_name}".format(time=await self.bot.get_formatted_time(), amount=amount, channel_name=ctx.message.channel.name))
-
-    @clear.error
-    async def clear_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            await self.handle_cooldown_message(ctx, error)
 
     @cog_ext.cog_slash(name=bot_globals.command_uptime_name, description=bot_globals.command_uptime_description, guild_ids=subscribed_guilds)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
@@ -250,11 +273,6 @@ class CommandsCenter(commands.Cog):
         # Log the result
         print("{time} | UPTIME: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(time=await self.bot.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
-    @uptime.error
-    async def uptime_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            await self.handle_cooldown_message(ctx, error)
-
     @cog_ext.cog_slash(name=bot_globals.command_meme_name, description=bot_globals.command_meme_description, guild_ids=subscribed_guilds)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
     async def meme(self, ctx):
@@ -271,16 +289,11 @@ class CommandsCenter(commands.Cog):
 
         # Generate a file path and send the file
         file_path = os.path.join(current_path, random_file)
-        file_to_send = discord.File(file_path)
+        file_to_send = File(file_path)
         await ctx.send(file=file_to_send)
 
         # Log the result
         print("{time} | MEME: Random meme '{file_path}' uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
-
-    @meme.error
-    async def meme_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            await self.handle_cooldown_message(ctx, error)
 
     def get_directories_from_path(self, current_path, return_as_strings=False):
         directories_to_return = []
@@ -357,32 +370,15 @@ class CommandsCenter(commands.Cog):
 
         # Generate a file path and send the file
         file_path = os.path.join(current_path, directory, random_file)
-        file_to_send = discord.File(file_path)
+        file_to_send = File(file_path)
         await ctx.send(file=file_to_send)
 
         # Log the result
         print("{time} | DEEPFAKE: Deepfake '{file_path}' uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
 
-    @deepfake.error
-    async def deepfake_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            await self.handle_cooldown_message(ctx, error)
-
-    async def get_full_username(self, user):
-        user_name = user.name
-        user_discriminator = user.discriminator
-
-        full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
-        return full_username
-
-    async def handle_cooldown_message(self, ctx, error):
-
-        # Make and send embed
-        em = discord.Embed(title=f"You are on cooldown.",description=f"Try again in {error.retry_after:.2f}s.", color=Color.red())
-        await ctx.send(embed=em)
-
     @commands.command()
     @commands.has_permissions(administrator=True)
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
     async def website(self, ctx):
         website_change = await self.bot.checker.check_url_status()
 

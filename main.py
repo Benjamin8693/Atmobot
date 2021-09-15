@@ -1,8 +1,6 @@
 # 3rd-Party Packages
-from sys import exc_info
 from discord import Intents
 from discord.ext import commands
-from discord.ext.commands import bot
 from discord_components import DiscordComponents
 from discord_slash import SlashCommand
 
@@ -12,7 +10,6 @@ import checker
 import spoilers
 
 # Built-in packages
-import asyncio
 import datetime
 import json
 import os

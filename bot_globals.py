@@ -102,6 +102,17 @@ extended_command_cooldown = 1
 
 command_quote_name = "quote"
 command_quote_description = "Posts a random quote."
+command_quote_arg_author_name = "author"
+command_quote_arg_author_description = "Choose an author to retrieve a quote from."
+command_quote_authors = {"chris": (310684137403056128, (2021, 5, 12)),
+                         "alphastaire": (169587016684666880, None),
+                         "benjamin": (104405233987235840, None)}
+
+COMMAND_QUOTE_AUTHOR_ID = 0
+COMMAND_QUOTE_DATE_RANGE = 1
+
+command_quote_channel_id = 389266925185662986
+command_quote_message_limit = 10000
 
 command_days_name = "days"
 command_days_description = "Displays the amount of days left until Test Realm Watch begins."

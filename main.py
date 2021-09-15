@@ -33,6 +33,11 @@ class Atmobot(commands.Bot):
 
         self.load_settings()
 
+        # We HAVE to load the command center & slash commands here, or else it won't work properly
+        SlashCommand(self, sync_commands=True)
+        print("{time} | STARTUP: Loading Commands Center".format(time=datetime.datetime.now().strftime("%H:%M:%S")))
+        self.load_extension("cogs.commands_center")
+
     # Used to load the settings file
     def load_settings(self):
 
@@ -98,7 +103,10 @@ class Atmobot(commands.Bot):
 
             # Simulate a file update
             # TODO: Remove this
-            await self.spoilers.test_file_update()
+            #await self.spoilers.test_file_update()
+            #await self.spoilers.text_compare_demo()
+            #await self.spoilers.update_loop()
+            #self.spoilers.init_db()
 
         else:
 
@@ -119,10 +127,6 @@ class Atmobot(commands.Bot):
         print("{time} | STARTUP: Loading Patch Checker".format(time=await self.get_formatted_time()))
         self.checker = checker.Checker(self)
         await self.checker.startup()
-
-        # Hub for all our command logic
-        print("{time} | STARTUP: Loading Commands Center".format(time=await self.get_formatted_time()))
-        self.load_extension("cogs.commands_center")
 
         # Automatic spoiler system
         print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))
@@ -184,6 +188,5 @@ def _prefix_callable(bot, msg):
 
 # Run the bot
 atmobot = Atmobot(command_prefix=_prefix_callable, case_insensitive=True, description=bot_globals.bot_description, intents=Intents.all())
-slash = SlashCommand(atmobot, sync_commands=True)
 token = atmobot.bot_settings.get("bot_token", "")
 atmobot.run(token)

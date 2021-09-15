@@ -3,12 +3,15 @@ default_settings = {
     "game_id": 0,
     "bot_token": "ODYxNDQ4NjI2NTU4MjA1OTUy.YOJ8jQ.kql-_eSMOcC7QnUYvRXtg4NFvl0",
     "subscribed_guilds": [231218732440092675],
+    "bot_channel_id": 372517147068596225,
     "last_startup": "",
     "revision_info_live": [],
     "revision_info_test": [],
     "fetch_revision_on_startup": False,
     "twitter_api_keys": ["KMHnLXsOx4Ov8Y4GxF0mBTFph", "kksTCeqwGAtipvbyqYXH1dEQLzhMAO1ivmu3z7bAT0W5S2W1MN", "1431849304600178689-rqAp9UinhhKWGO7nB6xaKDQyfOuJXS", "lRAT0SHWiRBtamdsqzyhGQGOvsbSqlfCYSTHZ4X618e6s", "AAAAAAAAAAAAAAAAAAAAAH27TAEAAAAAocKtOIzTQrUkW3JvJjXVOnnBujM%3DbOkZvWFKu1SpsxC09lbVE8gFlr3EjQCQaZTlTdL1c9BIzFRfVo"],
-    "spoiler_channel_ids": [880314524425678918, 880314326014111744, 880314379797680149]
+    "spoiler_channel_ids": [880314524425678918, 880314326014111744, 880314379797680149],
+    "spoiler_announcement": "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].",
+    "spoiler_goodbye:": "Thats all for now!\n\nSee you next time!"
 }
 
 # Name of the settings file
@@ -89,9 +92,40 @@ patcher_tips = {200: "The Patcher is online",
 # Paths to our resource folders
 resources_path = "resources"
 deepfakes_path = "deepfakes"
+memes_path = "memes"
 video_path = "video"
+locale_path = "locale"
 
-# Slash command information
+# Commands
+default_command_cooldown = 15
+extended_command_cooldown = 1
+
+command_quote_name = "quote"
+command_quote_description = "Posts a random quote."
+
+command_days_name = "days"
+command_days_description = "Displays the amount of days left until Test Realm Watch begins."
+command_days_formatted = "There are {days} days until Test Realm Watch (October 18th)."
+
+command_testrealm_name = "testrealm"
+command_testrealm_description = "Details when Test Realm is likely to arrive, and why."
+command_testrealm_embed_title = "When is Test Realm coming?"
+command_testrealm_embed_intro_title = "We don't know"
+command_testrealm_embed_intro_description = "But we can certainly make an educated guess. By taking a look at prior Test Realm release dates, we can estimate when this one may release. We typically reference every Test Realm since 2015, when the 3-updates-a-year cycle began."
+command_testrealm_embed_historicals_title = "Prior release dates"
+command_testrealm_embed_historicals_description = "2015 - Polaris: Monday, 10/26 @ 9:15 AM\n2016 - Mirage: Wednesday, 11/9 @ 5:00 PM\n2017 - Empyrea Part 1: Wednesday, 10/18 @ 4:37 PM\n2018 - Empyrea Part 2: Thursday, 10/18 @ 9:50 AM\n2019 - Catacombs: Wednesday, 10/23 @ 1:22 PM\n2020 - Karamelle: Wednesday, 10/28 @ 10:59 AM"
+command_testrealm_embed_summary_title = "Summary"
+command_testrealm_embed_summary_description = "Earliest Date: October 18th\nLatest Date: November 9th\nEarliest Time: 9:15 AM PST\nLatest Time: 5:00 PM PST\n\nMost popular day: Wednesday\nLeast popular day: Tuesday\nPossible days: Monday through Thursday\n\nEarliest FULL world update: October 26th\nLast year's date: October 28th"
+command_testrealm_embed_estimation_title = "Estimation"
+command_testrealm_embed_estimation_description = "We will go into Test Realm watch on Monday, October 18th. This day, and every weekday thereafter (excluding Friday), is likely for Test Realm to release.\n\nAtmobot (me) will also be checking for any Test Realm activity on a regular basis. As soon as there any activity, everyone who has the \"Test Realm Notifications\" role will be notified!"
+
+command_thumbnail_name = "thumbnail"
+command_thumbnail_description = "Creates a thumbnail in the same style as a Wizard101 Music upload from The Atmoplex."
+command_thumbnail_arg_header_name = "header"
+command_thumbnail_arg_header_description = "The thumbnail header. Typically the name of a song."
+command_thumbnail_arg_footer_name = "footer"
+command_thumbnail_arg_footer_description = "The thumbnail footer. Typically the name of a world."
+
 command_uptime_name = "uptime"
 command_uptime_description = "Displays how long Atmobot has been online for."
 
@@ -154,6 +188,8 @@ thumbnail_template_path = "thumbnail_template.png"
 thumbnail_font_path = "thumbnail_font.ttf"
 thumbnail_output_path = "video_thumbnail_{file_name}.png"
 
+thumbnail_command_name = "command_{}"
+
 thumbnail_font_size = 130
 thumbnail_header_offset = 272
 thumbnail_header_color = (239, 238, 41)
@@ -188,7 +224,8 @@ prefix_to_world = {
     "MR": "Mirage",
     "EM": "Empyrea",
     "KM": "Karamelle",
-    "LM": "Lemuria"
+    "LM": "Lemuria",
+    "YG": "Yago"
 }
 
 twitter_video_limit = 140
@@ -213,3 +250,16 @@ LINK_CONFIG_NAME = 1
 LINK_CONFIG_DESCRIPTION = 2
 
 next_video_signal = "video_next_up"
+
+locale_template_path = "locale_template.png"
+locale_path_old = "old"
+
+locale_divide_amount = 12
+
+locale_header_offset_x = 532
+locale_header_offset_y = 454
+
+locale_line_offset_x = 250
+locale_line_offset_x_secondary = 1075
+locale_line_offset_y = 175
+locale_line_offset_y_lower = 125

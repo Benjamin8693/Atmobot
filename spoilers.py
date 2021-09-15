@@ -3,7 +3,6 @@ from discord import Embed, File, Color, file
 from moviepy.editor import *
 from PIL import Image, ImageFont, ImageDraw
 from numpy import broadcast_to
-from pydispatch import dispatcher
 import twitter
 from wizdiff.delta import FileDelta
 from wizdiff.update_notifier import UpdateNotifier
@@ -15,6 +14,7 @@ import bot_globals
 
 # Built-in packages
 import asyncio
+import difflib
 import errno
 import datetime
 import json
@@ -87,15 +87,38 @@ class Spoilers(UpdateNotifier):
     def get_formatted_time(self):
         return datetime.datetime.now().strftime("%H:%M:%S")
 
+    async def update_loop(self):
+
+        print("{time} | SPOILERS: Starting revision check loop.".format(time=await self.bot.get_formatted_time()))
+
+        while True:
+
+            try:
+                file_list_url, base_url = self.webdriver.get_patch_urls()
+                revision = get_revision_from_url(file_list_url)
+
+                if self.db.check_if_new_revision(revision):
+                    await self.test_file_update(revision, file_list_url, base_url)
+
+                else:
+                    print("{time} | SPOILERS: No new revision found.".format(time=await self.bot.get_formatted_time()))
+            except:
+                print("{time} | SPOILERS: Patch server timed out and caused an exception.".format(time=await self.bot.get_formatted_time()))
+
+            print("{time} | SPOILERS: Sleeping for 120 seconds.".format(time=await self.bot.get_formatted_time()))
+            await asyncio.sleep(120)
+
     async def test_file_update(self):
 
-        # Send a message to Twitter and Discord announcing that Spoilers are incoming
+        print("{time} | SPOILERS: File updated detected! Spoilers inbound.".format(time=await self.bot.get_formatted_time()))
 
+        # Discord channel to send our announcement in
         discord_channel = self.bot.get_channel(880314326014111744)
 
+        # Embed structure to work with
         greetings_embed = Embed(title=bot_globals.spoilers_incoming_discord_title, color=Color.green())
 
-        # Disclaimer so people don't flip their shit and take the bot as gospel
+        # Add information about Atmobot
         greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_information_title, value=bot_globals.spoilers_incoming_discord_information, inline=False)
         greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_coming_soon_title, value=bot_globals.spoilers_incoming_discord_coming_soon, inline=False)
 
@@ -109,10 +132,26 @@ class Spoilers(UpdateNotifier):
         # Send the embed
         await discord_channel.send(embed=greetings_embed)
 
+        # Grab the announcement message for Twitter
+        announcement_text = self.bot.bot_settings.get("spoiler_announcement")
+
+        # Post it to Twitter
+        if announcement_text:
+            self.twitter_api.PostUpdate(status=announcement_text, media="resources/greetings.png")
+
         # Process the revision through WizDiff
         file_list_url, base_url = self.webdriver.get_patch_urls()
         revision = get_revision_from_url(file_list_url)
         await self.new_revision(revision, file_list_url, base_url)
+
+        # Grab the goodbye message for Twitter
+        goodbye_text = self.bot.bot_settings.get("spoiler_goodbye")
+
+        # Post it to Twitter
+        if goodbye_text:
+            self.twitter_api.PostUpdate(status=goodbye_text, media="resources/goodbye.png")
+
+        print("{time} | SPOILERS: Update has been spoiled. Until next time!".format(time=await self.bot.get_formatted_time()))
 
     async def notify_wad_file_update(self, delta: FileDelta):
 
@@ -208,7 +247,7 @@ class Spoilers(UpdateNotifier):
 
                 # Handle locale files
                 if file_handler == bot_globals.CHANNEL_LOCALE:
-                    self.handle_locale_spoiler(spoiler_data=inner_file_info.name, config=config)
+                    await self.handle_locale_spoiler(spoiler_data=inner_file_info.name, config=config)
 
                 # Handle image files
                 elif file_handler == bot_globals.CHANNEL_IMAGES:
@@ -246,13 +285,9 @@ class Spoilers(UpdateNotifier):
                 # Looks like we're by ourself, so we actually shouldn't be treated as a chain from here on out
                 if len(spoiler_chains) == 1 and len(chain) == 1:
                     chain = chain.pop(0)
-    
-                # Handle locale files
-                if file_handler == bot_globals.CHANNEL_LOCALE:
-                    self.handle_locale_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains, total_spoilers=total_spoilers)
 
                 # Handle image files
-                elif file_handler == bot_globals.CHANNEL_IMAGES:
+                if file_handler == bot_globals.CHANNEL_IMAGES:
                     await self.handle_image_spoiler(spoiler_data=chain, config=chained_config, chain_index=chain_index, total_chains=total_chains, total_spoilers=total_spoilers)
 
                 # Handle music files
@@ -277,15 +312,167 @@ class Spoilers(UpdateNotifier):
 
         return file_handler
 
-    def handle_locale_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1, total_spoilers=-1):
-        return
+    async def handle_locale_spoiler(self, spoiler_data, config):
+
+        # Unpack our spoiler config
+        spoiler_name, spoiler_file_path, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter = self.unpack_spoiler_config(config)
+
+        # Log that we're handling a locale spoiler
+        print("{time} | SPOILERS: Handling Locale spoiler with category \"{spoiler_name}\"".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+
+        # Path to our new and old locale files
+        file_name = "cache/" + os.path.basename(spoiler_data)
+        old_file_name = os.path.join(bot_globals.resources_path, bot_globals.locale_path, bot_globals.locale_path_old, os.path.basename(spoiler_data))
+
+        # Open the files for comparison
+        with open(file_name, "r") as new_file:
+            with open(old_file_name, "r") as old_file:
+                # Find the differences between the two files
+                file_difference = difflib.ndiff(old_file.readlines(), new_file.readlines())
+
+        new_lines = []
+        file_difference = tuple(x for x in file_difference)
+
+        idx = 0
+        fdiff_size = len(file_difference)
+        while idx < fdiff_size:
+            line = file_difference[idx]
+            if line.startswith("- "):
+                if idx + 1 < fdiff_size and file_difference[idx + 1].startswith("? "):
+                    # this chunk is a change, so ignore this and the next 3 lines
+                    idx += 4
+                    continue
+            elif line.startswith("+ "):
+                new_lines.append(line)
+
+            # always iterate after new item or no change
+            idx += 1
+
+        # Parse them into a nice list
+        parsed_lines = []
+        for line in new_lines:
+
+            # We only care about additions
+            #if not line.startswith("+ "):
+            #    continue
+
+            # Remove anything unnecessary 
+            line = line.replace("+ ", "").replace("\x00", "").replace("\n", "")
+            
+            # Lines that are pure whitespace or digits don't matter
+            # Also, we don't care about duplicates either
+            if line.isspace() or line.isdigit() or (line in parsed_lines) or not line:
+                continue
+
+            parsed_lines.append(line)
+
+        # Output path
+        image_name = os.path.basename(spoiler_data).replace(".lang", ".png")
+        output_path = os.path.join(bot_globals.resources_path, bot_globals.locale_path, image_name)
+
+        # Divide our new lines up- we can't have too many in one image
+        line_chains = list(self.divide_spoilers(parsed_lines, bot_globals.locale_divide_amount))
+
+        # Handle each chain individually
+        for chain in line_chains:
+
+            chain_index = line_chains.index(chain)
+
+            # Now to create an image showcasing all of the new locale changes
+            # First, we need to open up the template image we're working with
+            template_path = os.path.join(bot_globals.resources_path, bot_globals.locale_path, bot_globals.locale_template_path)
+            template = Image.open(template_path)
+
+            # Begin editing the template
+            editing_template = ImageDraw.Draw(template)
+
+            # Before anything we need to generate a header so that we know which locale file this is referencing
+            # Set the font to work with
+            font_path = os.path.join(bot_globals.resources_path, bot_globals.thumbnail_font_path)
+            font_size = 72
+            font = ImageFont.truetype(font_path, font_size)
+
+            # Generate header based off of the spoiler name
+            locale_title = spoiler_name.upper()
+
+            # Calculate coordinates to place header
+            width, height = editing_template.textsize(locale_title, font=font)
+            x = ((bot_globals.thumbnail_dimensions[0] - width) / 2 + bot_globals.locale_header_offset_x)
+            y = ((bot_globals.thumbnail_dimensions[1] - height) / 2 + bot_globals.locale_header_offset_y)
+
+            # Place the header on template
+            editing_template.text((x, y), locale_title, bot_globals.thumbnail_header_color, font=font)
+
+            # Now set up the font for our individual lines
+            font_size = 48
+            font = ImageFont.truetype(font_path, font_size)
+
+            # Coordinates to begin placing our lines
+            x_offset = bot_globals.locale_line_offset_x
+            y_offset = bot_globals.locale_line_offset_y
+
+            # Iterate over every line in the chain
+            cutoff = (bot_globals.locale_divide_amount / 2) - 1
+            for line in chain:
+
+                # Place our line at the specified position
+                editing_template.text((x_offset, y_offset), line, bot_globals.thumbnail_footer_color, font=font, align="left")
+
+                # Reset our position now that we're in the second column
+                index = chain.index(line)
+                if index == cutoff:
+                    x_offset = bot_globals.locale_line_offset_x_secondary
+                    y_offset = bot_globals.locale_line_offset_y
+
+                # The next line should be a bit lower
+                else:
+                    y_offset += bot_globals.locale_line_offset_y_lower
+
+            # We're done adding all the line, so now we can export the image
+            template.save(output_path)
+
+            # Post the spoiler to Discord if we have channel IDs
+            spoiler_channel_ids = self.bot.bot_settings.get("spoiler_channel_ids")
+            if spoiler_channel_ids:
+
+                # Only send the description a single time on Discord
+                discord_post_description = spoiler_post_description
+                if chain_index != 0:
+                    discord_post_description = None
+
+                await self.post_spoiler_to_discord(output_path, spoiler_name, discord_post_description, spoiler_channel_to_post, spoiler_channel_ids)
+
+            # Tweet out the spoiler!
+            if spoiler_post_to_twitter:
+
+                # Reply to the former tweet in the chain
+                in_reply_to_status_id = None
+                last_tweet_id = self.last_tweet_ids.get(bot_globals.CHANNEL_LOCALE)
+                if chain_index != 0 and last_tweet_id:
+                    in_reply_to_status_id = last_tweet_id
+
+                # Add counter to descriptions if the chain is more than 1 tweet
+                twitter_post_description = spoiler_post_description
+                if len(line_chains) > 1:
+                    chain_counter = bot_globals.twitter_description_extension.format(current=(chain_index + 1), total=len(line_chains))
+                    twitter_post_description = spoiler_post_description + chain_counter
+
+                await self.post_spoiler_to_twitter(output_path, spoiler_name, bot_globals.CHANNEL_LOCALE, twitter_post_description, in_reply_to_status_id)
+
+            await asyncio.sleep(bot_globals.time_between_posts)
+
+        # Delete our files from cache
+        if os.path.exists(file_name):
+            os.remove(file_name)
+        if os.path.exists(output_path):
+            os.remove(output_path)
     
     async def handle_image_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1, total_spoilers=-1):
         
         # Unpack our spoiler config
         spoiler_name, spoiler_file_path, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter = self.unpack_spoiler_config(config)
 
-        # Log that we're handling a music spoiler
+        # Log that we're handling a image spoiler
         print("{time} | SPOILERS: Handling Image spoiler with category \"{spoiler_name}\"".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
 
         # We're handling a spoiler chain here
@@ -557,10 +744,10 @@ class Spoilers(UpdateNotifier):
         video_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, os.path.basename(file_name).replace(".ogg", ".mp4"))
 
         # Render out a video if we don't already have it saved
-        if os.path.exists(video_path):
-            success = True
-        else:
-            success, shortened = await self.create_music_video(file_name)
+        #if os.path.exists(video_path):
+        #    success = True
+        #else:
+        success, shortened = await self.create_music_video(file_name)
 
         # If we're shortened, add that to the description
         if shortened:
@@ -713,7 +900,7 @@ class Spoilers(UpdateNotifier):
         editing_template = ImageDraw.Draw(template)
 
         # Set the font to work with
-        font_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_font_path)
+        font_path = os.path.join(bot_globals.resources_path, bot_globals.thumbnail_font_path)
         font = ImageFont.truetype(font_path, bot_globals.thumbnail_font_size)
 
         # Place both our header and footer
@@ -833,6 +1020,83 @@ class Spoilers(UpdateNotifier):
     def safe_open_w(self, path):
         self.mkdir_p(os.path.dirname(path))
         return open(path, 'wb+')
+
+    async def text_compare_demo(self):
+
+        # Open our old and new file
+        file1 = open("resources/locale/QuestTitleOld.lang", "r")
+        file2 = open("resources/locale/QuestTitleNew.lang", "r")
+
+        # Find the differences
+        diff = difflib.ndiff(file1.readlines(), file2.readlines())
+
+        # Parse the differences into a nice list
+        new_zones = []
+        for line in diff:
+
+            # We only care about additions
+            if not line.startswith("+ "):
+                continue
+
+            # Remove anything unnecessary 
+            line = line.replace("+ ", "")
+            line = line.replace("\x00", "")
+            line = line.replace("\n", "")
+            
+            # Whitespace additions don't matter
+            if line.isspace() or not line:
+                continue
+
+            # Nor do digits
+            if line.isdigit():
+                continue
+
+            if line in new_zones:
+                continue
+
+            new_zones.append(line)
+
+        # Open our template
+        template_path = os.path.join(bot_globals.resources_path, bot_globals.locale_path, bot_globals.locale_template_path)
+        template = Image.open(template_path)
+
+        # Begin editing the template
+        editing_template = ImageDraw.Draw(template)
+
+        # Set the font to work with
+        font_path = os.path.join(bot_globals.resources_path, bot_globals.thumbnail_font_path)
+        font = ImageFont.truetype(font_path, 84)
+        x_offset = 532
+        y_offset = 454
+        color = (239, 238, 41)
+        locale_title = "QUEST TITLES"
+        width, height = editing_template.textsize(locale_title, font=font)
+        x = ((1920 - width) / 2 + x_offset)
+        y = ((1080 - height) / 2 + y_offset)
+
+        editing_template.text((x, y), locale_title, color, font=font)
+
+        font = ImageFont.truetype(font_path, 48)
+        x_offset = 250
+        y_offset = 175
+        color = (255, 255, 255)
+        for line in new_zones[:12]:
+
+            index = new_zones.index(line)
+
+            width, height = editing_template.textsize(line, font=font)
+
+            editing_template.text((x_offset, y_offset), line, color, font=font, align="left")
+
+            y_offset += 125
+
+            if index == 5:
+                y_offset = 175
+                x_offset += 825
+
+        # Save our thumbnail
+        output_path = os.path.join(bot_globals.resources_path, bot_globals.locale_path, "locale_test.png")
+        template.save(output_path)
 
     async def wad_download_demo(self):
 

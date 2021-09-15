@@ -110,7 +110,7 @@ class CommandsCenter(commands.Cog):
         author_data = bot_globals.command_quote_authors.get(author)
         author_id = author_data[bot_globals.COMMAND_QUOTE_AUTHOR_ID]
         date_range = author_data[bot_globals.COMMAND_QUOTE_DATE_RANGE]
-        author_username = author.upper()
+        author_username = author.capitalize()
 
         # Logging
         print("{time} | QUOTE: {user} requested quote of user {author}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), author=author_username))

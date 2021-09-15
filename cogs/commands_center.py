@@ -110,8 +110,7 @@ class CommandsCenter(commands.Cog):
         author_data = bot_globals.command_quote_authors.get(author)
         author_id = author_data[bot_globals.COMMAND_QUOTE_AUTHOR_ID]
         date_range = author_data[bot_globals.COMMAND_QUOTE_DATE_RANGE]
-        author_object = self.bot.get_user(author_id)
-        author_username = await self.get_full_username(author_object)
+        author_username = author.upper()
 
         # Logging
         print("{time} | QUOTE: {user} requested quote of user {author}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), author=author_username))
@@ -132,7 +131,7 @@ class CommandsCenter(commands.Cog):
             else:
                 reference_time = datetime.datetime.now()
             async for message in reference_channel.history(limit=bot_globals.command_quote_message_limit, before=reference_time.replace(tzinfo=None)):
-                if message.author.id == author:
+                if message.author.id == author_id:
                     if len(message.content) > 10 and (not "<@" in message.content) and (not "<:" in message.content):
                         history.append(message.content)
 

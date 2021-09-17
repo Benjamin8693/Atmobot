@@ -54,7 +54,7 @@ class CommandsCooldown:
 class CommandsCenter(commands.Cog):
 
     # TODO: Research a way so that it pulls these from the config
-    subscribed_guilds = [602983865237372958] # 231218732440092675
+    subscribed_guilds = [231218732440092675, 602983865237372958]
     bot_channel_id = 372517147068596225
 
     def __init__(self, bot):
@@ -97,6 +97,19 @@ class CommandsCenter(commands.Cog):
 
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
+
+    @cog_ext.cog_slash(name=bot_globals.command_remco_name, description=bot_globals.command_remco_description, guild_ids=subscribed_guilds)
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
+    async def remco(self, ctx):
+
+        # Logging
+        print("{time} | REMCO: {user} requested Remco ascii art".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+        
+        # Send the amount of days
+        await ctx.send(bot_globals.command_remco_art)
+
+        # Log the result
+        print("{time} | REMCO: Ascii art posted".format(time=await self.bot.get_formatted_time()))
 
     author_choices = []
     for author_name in list(bot_globals.command_quote_authors.keys()):

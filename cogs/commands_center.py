@@ -1,6 +1,7 @@
 # 3rd-Party Packages
 from discord import Color, File, Embed
 from discord.ext import commands
+from discord.ext.commands import bot
 from discord.ext.commands.core import command
 from discord_components import Button, ButtonStyle, InteractionType
 from discord_slash import cog_ext
@@ -153,7 +154,7 @@ class CommandsCenter(commands.Cog):
 
         # Pick a random messgae from the history and send it
         random_message = random.choice(history)
-        await ctx.send("{author_name}: \"{message}\"".format(author_name=author_username, message=random_message))
+        await ctx.send("**{author_name}:** \"{message}\"".format(author_name=author_username, message=random_message))
 
         # Log the result
         print("{time} | QUOTE: Quote \"{quote}\" from {author_name} posted".format(time=await self.bot.get_formatted_time(), quote=random_message, author_name=author_username))
@@ -200,9 +201,10 @@ class CommandsCenter(commands.Cog):
 
     header_option = create_option(name=bot_globals.command_thumbnail_arg_header_name, description=bot_globals.command_thumbnail_arg_header_description, option_type=3, required=True)
     footer_option = create_option(name=bot_globals.command_thumbnail_arg_footer_name, description=bot_globals.command_thumbnail_arg_footer_description, option_type=3, required=True)
-    @cog_ext.cog_slash(name=bot_globals.command_thumbnail_name, description=bot_globals.command_thumbnail_description, guild_ids=subscribed_guilds, options=[header_option, footer_option])
+    game_option = create_option(name=bot_globals.command_thumbnail_arg_game_name, description=bot_globals.command_thumbnail_arg_game_description, option_type=3, required=False, choices=list(bot_globals.longhand_to_game.keys()))
+    @cog_ext.cog_slash(name=bot_globals.command_thumbnail_name, description=bot_globals.command_thumbnail_description, guild_ids=subscribed_guilds, options=[header_option, footer_option, game_option])
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
-    async def thumbnail(self, ctx, header: str, footer: str):
+    async def thumbnail(self, ctx, header: str, footer: str, game: str):
 
         # Logging
         print("{time} | THUMBNAIL: {user} requested custom thumbnail with title {thumbnail_header} and footer {thumbnail_footer}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), thumbnail_header=header, thumbnail_footer=footer))
@@ -210,7 +212,8 @@ class CommandsCenter(commands.Cog):
         # Send the uptime
         file_name = bot_globals.thumbnail_command_name.format(str(uuid.uuid4())[:8])
 
-        await self.bot.spoilers.create_video_thumbnail(file_name, header.upper(), footer.upper())
+        game_id = bot_globals.longhand_to_game.get(game)
+        await self.bot.spoilers.create_video_thumbnail(file_name, header.upper(), footer.upper(), game_id=game_id)
         file_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path.format(file_name=file_name))
         file_to_send = File(file_path)
         await ctx.send(file=file_to_send)

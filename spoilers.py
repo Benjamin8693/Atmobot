@@ -890,10 +890,13 @@ class Spoilers(UpdateNotifier):
 
         return True, shortened
 
-    async def create_video_thumbnail(self, file_name, thumbnail_header, thumbnail_footer):
+    async def create_video_thumbnail(self, file_name, thumbnail_header, thumbnail_footer, game_id=None):
 
         # Open our thumbnail template
-        template_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_template_path)
+        if game_id == None:
+            game_id = self.bot.bot_settings.get("game_id", -1)
+        template_name = bot_globals.thumbnail_template_path.get(game_id)
+        template_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, template_name)
         template = Image.open(template_path)
 
         # Begin editing the template

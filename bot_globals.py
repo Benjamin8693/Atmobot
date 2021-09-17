@@ -63,6 +63,8 @@ PIRATE101 = 1
 game_longhands = {GAME_UNKNOWN: "",
                   WIZARD101: "Wizard101",
                   PIRATE101: "Pirate101"}
+longhand_to_game = {"Wizard101": WIZARD101,
+                    "Pirate101": PIRATE101}
 
 game_shorthands = {GAME_UNKNOWN: "",
                    WIZARD101: "Wiz",
@@ -136,6 +138,8 @@ command_thumbnail_arg_header_name = "header"
 command_thumbnail_arg_header_description = "The thumbnail header. Typically the name of a song."
 command_thumbnail_arg_footer_name = "footer"
 command_thumbnail_arg_footer_description = "The thumbnail footer. Typically the name of a world."
+command_thumbnail_arg_game_name = "game"
+command_thumbnail_arg_game_description = "Which game the thumbnail is for."
 
 command_uptime_name = "uptime"
 command_uptime_description = "Displays how long Atmobot has been online for."
@@ -195,7 +199,9 @@ spoiler_divide_amount = 16
 twitter_description_format = "[BOT] {description}"
 twitter_description_extension = " [{current}/{total}]"
 
-thumbnail_template_path = "thumbnail_template.png"
+thumbnail_template_path = {GAME_UNKNOWN: "thumbnail_template_wizard.png",
+                           WIZARD101: "thumbnail_template_wizard.png",
+                           PIRATE101: "thumbnail_template_pirate.png"}
 thumbnail_font_path = "thumbnail_font.ttf"
 thumbnail_output_path = "video_thumbnail_{file_name}.png"
 

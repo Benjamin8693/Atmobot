@@ -54,7 +54,7 @@ class CommandsCooldown:
 class CommandsCenter(commands.Cog):
 
     # TODO: Research a way so that it pulls these from the config
-    subscribed_guilds = [231218732440092675, 602983865237372958]
+    subscribed_guilds = [602983865237372958] # 231218732440092675
     bot_channel_id = 372517147068596225
 
     def __init__(self, bot):
@@ -204,7 +204,7 @@ class CommandsCenter(commands.Cog):
     game_option = create_option(name=bot_globals.command_thumbnail_arg_game_name, description=bot_globals.command_thumbnail_arg_game_description, option_type=3, required=False, choices=list(bot_globals.longhand_to_game.keys()))
     @cog_ext.cog_slash(name=bot_globals.command_thumbnail_name, description=bot_globals.command_thumbnail_description, guild_ids=subscribed_guilds, options=[header_option, footer_option, game_option])
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
-    async def thumbnail(self, ctx, header: str, footer: str, game: str):
+    async def thumbnail(self, ctx, header: str, footer: str, game: str = None):
 
         # Logging
         print("{time} | THUMBNAIL: {user} requested custom thumbnail with title {thumbnail_header} and footer {thumbnail_footer}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), thumbnail_header=header, thumbnail_footer=footer))
@@ -212,7 +212,9 @@ class CommandsCenter(commands.Cog):
         # Send the uptime
         file_name = bot_globals.thumbnail_command_name.format(str(uuid.uuid4())[:8])
 
-        game_id = bot_globals.longhand_to_game.get(game)
+        game_id = None
+        if game:
+            game_id = bot_globals.longhand_to_game.get(game)
         await self.bot.spoilers.create_video_thumbnail(file_name, header.upper(), footer.upper(), game_id=game_id)
         file_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path.format(file_name=file_name))
         file_to_send = File(file_path)

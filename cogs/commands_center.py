@@ -54,7 +54,7 @@ class CommandsCooldown:
 class CommandsCenter(commands.Cog):
 
     # TODO: Research a way so that it pulls these from the config
-    subscribed_guilds = [231218732440092675, 602983865237372958]
+    subscribed_guilds = [602983865237372958] # 231218732440092675
     bot_channel_id = 372517147068596225
 
     def __init__(self, bot):

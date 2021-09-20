@@ -94,12 +94,9 @@ class PrivateCommands(commands.Cog):
         for command in commands_to_run:
             output = subprocess.getoutput(command)
             final_ouput += output
-
-        if not final_ouput:
-            final_ouput = "Command run with no output."
+            final_ouput += "\n"
 
         await ctx.send(final_ouput)
-        await ctx.send("Atmobot up-to-date.")
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

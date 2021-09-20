@@ -1,12 +1,13 @@
 # 3rd-Party Packages
 from discord import Color, Embed
 from discord.ext import commands
-from discord_slash.utils.manage_commands import create_choice, create_option
+from discord_components import Button, ButtonStyle, InteractionType
 
 # Local packages
 import bot_globals
 
 # Built-in packages
+import subprocess
 import sys
 import traceback
 import typing
@@ -50,13 +51,63 @@ class PrivateCommands(commands.Cog):
         return full_username
 
     @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def reactbutton(self, ctx):
+        
+        # Embed header
+        initial_embed = Embed(title="Test Realm Notifications", color=Color.blurple())
+
+        # Disclaimer so people don't flip their shit and take the bot as gospel
+        initial_embed.add_field(name="About",
+                                value=f"Anyone with the \"Test Realm Status\" role will be pinged in the event of any Test Realm news. Click the button below to add or remove the role from yourself.",
+                                inline=False)
+
+        # Explains what the patcher status actually is
+        initial_embed.add_field(name="Warning",
+                                value=f"Most pings will be automaticaly sent by Atmobot. There is a possibility something could go wrong, resulting in inaccurate notifications. If this happens, please bear with us!",
+                                inline=False)
+
+        # Buttons to check the patcher status (technically there are two, but one is always invisible)
+        get_role_button = Button(style=ButtonStyle.blue, label="Toggle Role")
+
+        # Send the embed
+        message = await ctx.send(embed=initial_embed, components=[get_role_button])
+
+        # We only care about button presses in the channel our message was sent in
+        def check(response):
+            return response.channel == ctx.channel
+
+        # Wait for the button press
+        res = await self.bot.wait_for("button_click", check=check)
+
+        # Handle the patcher button
+        if res.component.label.startswith("Patcher"):
+
+            return
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def run(self, ctx, *args):
+
+        command =  " ".join(args[:])
+
+        if not command:
+            await ctx.send("No command specified.")
+            return
+        
+        output = subprocess.getoutput(command)
+        if not output:
+            output = "Command run with no output."
+        await ctx.send(output)
+
+    @commands.command()
     @commands.has_permissions(administrator=True)
     async def spoilers(self, ctx):
         await self.bot.spoilers.test_file_update()
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def clear(self, ctx, amount: typing.Optional[str] = "1"):
+    async def clear(self, ctx, amount: str = "1"):
 
         # Logging
         print("{time} | CLEAR: {user} requested to clear {amount} messages from {channel_name}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), amount=amount, channel_name=ctx.message.channel.name))

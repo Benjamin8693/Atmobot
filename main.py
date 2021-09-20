@@ -165,7 +165,7 @@ class LogOutput:
         self.log.flush()
         self.orig.flush()
 
-log_name = "logs/atmobot-log-{}.log".format(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+log_name = "logs/atmobot-log-{timestamp}.log".format(timestamp=datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 log = open(log_name, "ab")
 logOut = LogOutput(sys.__stdout__, log)
 logErr = LogOutput(sys.__stderr__, log)

@@ -18,7 +18,7 @@ import uuid
 
 class CommandsCooldown:
 
-    def __init__(self, rate, per, alter_rate, alter_per, bucket, bot_channel_id):
+    def __init__(self, rate, per, alter_rate, alter_per, bucket, bot_channel_id, nitro_role_id):
 
         self.default_mapping = commands.CooldownMapping.from_cooldown(rate, per, bucket)
         self.alter_mapping = commands.CooldownMapping.from_cooldown(alter_rate, alter_per, bucket)
@@ -26,17 +26,25 @@ class CommandsCooldown:
         self._bucket_type = bucket
 
         self.bot_channel_id = bot_channel_id
+        self.nitro_role_id = nitro_role_id
 
     def __call__(self, ctx):
 
         # Match the channel sent to the appropriate cooldown
         current_channel = ctx.channel.id
+        role_ids = (x.id for x in ctx.author.roles)
 
         try:
-            if current_channel == self.bot_channel_id:
+
+            # Bot commmands channel gets a lower cooldown
+            # Also give an exception to Nitro Boosters
+            if (current_channel == self.bot_channel_id) or (self.nitro_role_id in role_ids):
                 bucket = self.alter_mapping.get_bucket(ctx)
+
+            # Everything else gets a regular cooldown
             else:
                 bucket = self.default_mapping.get_bucket(ctx)
+
         except Exception as e:
             print(e)
 
@@ -50,7 +58,8 @@ class CommandsCooldown:
 class PublicCommands(commands.Cog):
 
     subscribed_guilds = settings.get("subscribed_guilds", [])
-    bot_channel_id = settings.get("subscribed_guilds", [])
+    bot_channel_id = settings.get("bot_channel_id", 0)
+    nitro_role_id = settings.get("nitro_role_id", 0)
 
     def __init__(self, bot):
 
@@ -92,7 +101,7 @@ class PublicCommands(commands.Cog):
         return full_username
 
     @cog_ext.cog_slash(name=bot_globals.command_remco_name, description=bot_globals.command_remco_description, guild_ids=subscribed_guilds)
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id, nitro_role_id))
     async def remco(self, ctx):
 
         # Logging
@@ -110,7 +119,7 @@ class PublicCommands(commands.Cog):
         author_choices.append(choice)
     author_option = create_option(name=bot_globals.command_quote_arg_author_name, description=bot_globals.command_quote_arg_author_description, option_type=3, required=True, choices=author_choices)
     @cog_ext.cog_slash(name=bot_globals.command_quote_name, description=bot_globals.command_quote_description, guild_ids=subscribed_guilds, options=[author_option])
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id, nitro_role_id))
     async def quote(self, ctx, author: str):
 
         # Grab author details
@@ -166,7 +175,7 @@ class PublicCommands(commands.Cog):
         print("{time} | QUOTE: Quote \"{quote}\" from {author_name} posted".format(time=await self.bot.get_formatted_time(), quote=random_message, author_name=author_username))
 
     @cog_ext.cog_slash(name=bot_globals.command_days_name, description=bot_globals.command_days_description, guild_ids=subscribed_guilds)
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id, nitro_role_id))
     async def days(self, ctx):
 
         # Logging
@@ -184,7 +193,7 @@ class PublicCommands(commands.Cog):
         print("{time} | DAYS: {days} days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), days=diff.days))
 
     @cog_ext.cog_slash(name=bot_globals.command_testrealm_name, description=bot_globals.command_testrealm_description, guild_ids=subscribed_guilds)
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id, nitro_role_id))
     async def testrealm(self, ctx):
 
         # Logging
@@ -209,7 +218,7 @@ class PublicCommands(commands.Cog):
     footer_option = create_option(name=bot_globals.command_thumbnail_arg_footer_name, description=bot_globals.command_thumbnail_arg_footer_description, option_type=3, required=True)
     game_option = create_option(name=bot_globals.command_thumbnail_arg_game_name, description=bot_globals.command_thumbnail_arg_game_description, option_type=3, required=False, choices=list(bot_globals.longhand_to_game.keys()))
     @cog_ext.cog_slash(name=bot_globals.command_thumbnail_name, description=bot_globals.command_thumbnail_description, guild_ids=subscribed_guilds, options=[header_option, footer_option, game_option])
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id, nitro_role_id))
     async def thumbnail(self, ctx, header: str, footer: str, game: str = None):
 
         # Logging
@@ -233,7 +242,7 @@ class PublicCommands(commands.Cog):
         print("{time} | THUMBNAIL: Custom thumbnail with header {thumbnail_header} and footer {thumbnail_footer} uploaded".format(time=await self.bot.get_formatted_time(), thumbnail_header=header, thumbnail_footer=footer))
 
     @cog_ext.cog_slash(name=bot_globals.command_uptime_name, description=bot_globals.command_uptime_description, guild_ids=subscribed_guilds)
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id, nitro_role_id))
     async def uptime(self, ctx):
 
         # Logging
@@ -250,13 +259,13 @@ class PublicCommands(commands.Cog):
         seconds_formatted = elasped_time.seconds % 60
 
         # Send the uptime
-        await ctx.send("Atmobot uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.".format(days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
+        await ctx.send("Bot Uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.".format(days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
         # Log the result
         print("{time} | UPTIME: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(time=await self.bot.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
     @cog_ext.cog_slash(name=bot_globals.command_meme_name, description=bot_globals.command_meme_description, guild_ids=subscribed_guilds)
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id, nitro_role_id))
     async def meme(self, ctx):
 
         # Logging
@@ -297,7 +306,7 @@ class PublicCommands(commands.Cog):
         directory_choices.append(choice)
     directory_option = create_option(name=bot_globals.command_deepfake_arg_directory_name, description=bot_globals.command_deepfake_arg_directory_description, option_type=3, required=False, choices=directory_choices)
     @cog_ext.cog_slash(name=bot_globals.command_deepfake_name, description=bot_globals.command_deepfake_description, guild_ids=subscribed_guilds, options=[directory_option])
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id))
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, bot_channel_id, nitro_role_id))
     async def deepfake(self, ctx, directory: typing.Optional[str] = None):
 
         # Logging

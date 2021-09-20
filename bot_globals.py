@@ -4,6 +4,7 @@ default_settings = {
     "bot_token": "",
     "subscribed_guilds": [0],
     "bot_channel_id": 0,
+    "nitro_role_id": 0,
     "deprecated_commands": False,
     "last_startup": "",
     "revision_info_live": [],

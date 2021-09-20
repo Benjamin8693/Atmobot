@@ -87,6 +87,22 @@ class PrivateCommands(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
+    async def update(self, ctx):
+
+        final_ouput = ""
+        commands_to_run = ("git pull", "sudo pm2 restart Atmobot")
+        for command in commands_to_run:
+            output = subprocess.getoutput(command)
+            final_ouput += output
+
+        if not final_ouput:
+            final_ouput = "Command run with no output."
+
+        await ctx.send(final_ouput)
+        await ctx.send("Atmobot up-to-date.")
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def run(self, ctx, *args):
 
         command =  " ".join(args[:])

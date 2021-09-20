@@ -8,6 +8,7 @@ from discord_slash import SlashCommand
 import bot_globals
 import checker
 import spoilers
+import utils
 
 # Built-in packages
 import datetime
@@ -22,18 +23,26 @@ class Atmobot(commands.Bot):
         commands.Bot.__init__(self, command_prefix=command_prefix, case_insensitive=case_insensitive, description=description, intents=intents)
         
         self.startup_time = datetime.datetime.now()
-        self.bot_settings = None
-
         self.started = False
-
         self.checker = None
 
         self.load_settings()
 
-        # We HAVE to load the command center & slash commands here, or else it won't work properly
+        # We HAVE to load our Cogs here, or else it won't work properly
         SlashCommand(self, sync_commands=True)
-        print("{time} | STARTUP: Loading Commands Center".format(time=datetime.datetime.now().strftime("%H:%M:%S")))
-        self.load_extension("cogs.commands_center")
+
+        # Public commands
+        print("{time} | STARTUP: Loading Public Commands".format(time=utils.get_formatted_time()))
+        self.load_extension("cogs.public_commands")
+
+        # Private commands
+        print("{time} | STARTUP: Loading Private Commands".format(time=utils.get_formatted_time()))
+        self.load_extension("cogs.private_commands")
+
+        # Deprecated commands
+        if settings.get("deprecated_commands", False):
+            print("{time} | STARTUP: Loading Deprecated Commands".format(time=utils.get_formatted_time()))
+            self.load_extension("cogs.deprecated_commands")
 
     # Used to load the settings file
     def load_settings(self):
@@ -45,17 +54,17 @@ class Atmobot(commands.Bot):
 
         # Load our settings
         with open(bot_globals.settings_path) as data:
-            self.bot_settings = json.load(data)
+            __builtins__.settings = json.load(data)
 
         # Make sure our settings are up-to-date
         changed = False
         for setting in list(bot_globals.default_settings.keys()):
 
             # Add a setting if we're missing it
-            if setting not in self.bot_settings:
+            if setting not in settings:
                 changed = True
                 value = bot_globals.default_settings.get(setting)
-                self.bot_settings[setting] = value
+                settings[setting] = value
 
         if changed:
             self.save_settings()
@@ -63,11 +72,11 @@ class Atmobot(commands.Bot):
     async def update_setting(self, setting_name, variable_to_replace):
 
         # We typically shouldn't be updating a setting that doesn't already exist
-        if setting_name not in self.bot_settings:
+        if setting_name not in settings:
             print("Updated setting '{}' that does not exist!".format(setting_name))
 
         # Update the setting
-        self.bot_settings[setting_name] = variable_to_replace
+        settings[setting_name] = variable_to_replace
 
         # Save our settings
         self.save_settings()
@@ -76,10 +85,10 @@ class Atmobot(commands.Bot):
 
         # Write to the settings file
         with open(bot_globals.settings_path, "w") as data:
-            json.dump(self.bot_settings, data, indent=4)
+            json.dump(settings, data, indent=4)
 
     async def get_formatted_time(self):
-        return datetime.datetime.now().strftime("%H:%M:%S")
+        return utils.get_formatted_time()
 
     # Runs when the bot has readied up
     async def on_ready(self):
@@ -90,7 +99,7 @@ class Atmobot(commands.Bot):
             await self.startup()
 
             # Log that our bot is actually running
-            game_longhand = bot_globals.game_longhands.get(self.bot_settings.get("game_id", -1))
+            game_longhand = bot_globals.game_longhands.get(settings.get("game_id", -1))
             print(bot_globals.startup_message.format(header="=" * 52,
                                                      username=self.user.name,
                                                      id=self.user.id,
@@ -185,5 +194,5 @@ def _prefix_callable(bot, msg):
 
 # Run the bot
 atmobot = Atmobot(command_prefix=_prefix_callable, case_insensitive=True, description=bot_globals.bot_description, intents=Intents.all())
-token = atmobot.bot_settings.get("bot_token", "")
+token = settings.get("bot_token", "")
 atmobot.run(token)

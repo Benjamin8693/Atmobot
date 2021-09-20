@@ -1,15 +1,16 @@
 # Default settings
 default_settings = {
     "game_id": 0,
-    "bot_token": "ODYxNDQ4NjI2NTU4MjA1OTUy.YOJ8jQ.kql-_eSMOcC7QnUYvRXtg4NFvl0",
-    "subscribed_guilds": [231218732440092675],
-    "bot_channel_id": 372517147068596225,
+    "bot_token": "",
+    "subscribed_guilds": [0],
+    "bot_channel_id": 0,
+    "deprecated_commands": False,
     "last_startup": "",
     "revision_info_live": [],
     "revision_info_test": [],
     "fetch_revision_on_startup": False,
-    "twitter_api_keys": ["KMHnLXsOx4Ov8Y4GxF0mBTFph", "kksTCeqwGAtipvbyqYXH1dEQLzhMAO1ivmu3z7bAT0W5S2W1MN", "1431849304600178689-rqAp9UinhhKWGO7nB6xaKDQyfOuJXS", "lRAT0SHWiRBtamdsqzyhGQGOvsbSqlfCYSTHZ4X618e6s", "AAAAAAAAAAAAAAAAAAAAAH27TAEAAAAAocKtOIzTQrUkW3JvJjXVOnnBujM%3DbOkZvWFKu1SpsxC09lbVE8gFlr3EjQCQaZTlTdL1c9BIzFRfVo"],
-    "spoiler_channel_ids": [880314524425678918, 880314326014111744, 880314379797680149],
+    "twitter_api_keys": ["", "", "", "", ""],
+    "spoiler_channel_ids": [0, 0, 0],
     "spoiler_announcement": "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].",
     "spoiler_goodbye:": "Thats all for now!\n\nSee you next time!"
 }

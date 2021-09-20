@@ -35,7 +35,7 @@ class Checker:
             self.url_cache[url] = [url_request, url_hash]
 
         # Get live and test revisions
-        if self.bot.bot_settings.get("fetch_revision_on_startup", False):
+        if settings.get("fetch_revision_on_startup", False):
 
             print("{time} | CHECKER: Fetching Live Realm revision".format(time=await self.bot.get_formatted_time()))
             live_revision = await self.grab_revision(bot_globals.LIVE_REALM)
@@ -54,11 +54,11 @@ class Checker:
 
         else:
 
-            live_revision = self.bot.bot_settings.get("revision_info_live", [])
+            live_revision = settings.get("revision_info_live", [])
             if live_revision:
                 live_revision = await self.full_revision(live_revision)
 
-            test_revision = self.bot.bot_settings.get("revision_info_test", [])
+            test_revision = settings.get("revision_info_test", [])
             if test_revision:
                 test_revision = await self.full_revision(test_revision)
 
@@ -95,14 +95,14 @@ class Checker:
     async def most_recent_revision(self):
 
         # Live revision info
-        live_revision = self.bot.bot_settings.get("revision_info_live")
+        live_revision = settings.get("revision_info_live")
         if live_revision:
             live_revision_number = await self.revision_to_int(live_revision[bot_globals.REVISION_NUMBER])
         else:
             live_revision_number = bot_globals.fallback_revision
 
         # Test revision info
-        test_revision = self.bot.bot_settings.get("revision_info_test")
+        test_revision = settings.get("revision_info_test")
         if test_revision:
             test_revision_number = await self.revision_to_int(test_revision[bot_globals.REVISION_NUMBER])
         else:
@@ -115,14 +115,14 @@ class Checker:
 
     async def most_recent_version(self, next_version=True):
 
-        live_revision = self.bot.bot_settings.get("revision_info_live")
+        live_revision = settings.get("revision_info_live")
         if live_revision:
             live_version = live_revision[bot_globals.REVISION_VERSION]
         else:
             live_version = bot_globals.fallback_version
         live_version = int("".join(x for x in live_version if x.isdigit()))
 
-        test_revision = self.bot.bot_settings.get("revision_info_test")
+        test_revision = settings.get("revision_info_test")
         if test_revision:
             test_version = test_revision[bot_globals.REVISION_VERSION]
         else:
@@ -269,7 +269,7 @@ class Checker:
         # Grab revision from settings if we didn't provide it
         if not revision:
             setting_name = "revision_info_{service}".format(service=service_name if service_name else "live")
-            revision = self.bot.bot_settings.get(setting_name, [])
+            revision = settings.get(setting_name, [])
 
         # TODO: Automatically request/bruteforce revision via URL if we STILL don't have it
 

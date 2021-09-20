@@ -2,9 +2,9 @@
 default_settings = {
     "game_id": 0,
     "bot_token": "",
-    "subscribed_guilds": [0],
-    "bot_channel_id": 0,
-    "nitro_role_id": 0,
+    "subscribed_guild_ids": [0],
+    "cooldown_exempt_channel_ids": [0],
+    "cooldown_exempt_role_ids": [0],
     "deprecated_commands": False,
     "last_startup": "",
     "revision_info_live": [],

@@ -13,9 +13,6 @@ import typing
 
 class PrivateCommands(commands.Cog):
 
-    subscribed_guilds = settings.get("subscribed_guilds", [])
-    bot_channel_id = settings.get("subscribed_guilds", [])
-
     def __init__(self, bot):
 
         self.bot = bot

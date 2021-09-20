@@ -18,6 +18,8 @@ class PrivateCommands(commands.Cog):
 
         self.bot = bot
 
+        self.wait_for_button_press()
+
     @commands.Cog.listener()
     async def on_slash_command_error(self, ctx, error):
         await self.handle_error(ctx, error)
@@ -57,37 +59,39 @@ class PrivateCommands(commands.Cog):
         # Embed header
         initial_embed = Embed(title="Test Realm Notifications", color=Color.blurple())
 
-        # Disclaimer so people don't flip their shit and take the bot as gospel
+        # Describe what this role is for
         initial_embed.add_field(name="About",
                                 value=f"Anyone with the \"Test Realm Status\" role will be pinged in the event of any Test Realm news. Click the button below to add or remove the role from yourself.",
                                 inline=False)
 
-        # Explains what the patcher status actually is
+        # Warn people that it may not always be accurate
         initial_embed.add_field(name="Warning",
-                                value=f"Most pings will be automaticaly sent by Atmobot. There is a possibility something could go wrong, resulting in inaccurate notifications. If this happens, please bear with us!",
+                                value=f"Most pings will be automatically sent by Atmobot. There is a possibility something could go wrong, resulting in inaccurate notifications. If this happens, please bear with us!",
                                 inline=False)
 
-        # Buttons to check the patcher status (technically there are two, but one is always invisible)
+        # Button that toggles the role on a user
         get_role_button = Button(style=ButtonStyle.blue, label="Toggle Role")
 
         # Send the embed
-        message = await ctx.send(embed=initial_embed, components=[get_role_button])
+        await ctx.send(embed=initial_embed, components=[get_role_button])
 
-        # We only care about button presses in the channel our message was sent in
-        def check(response):
-            return response.channel == ctx.channel
+    async def wait_for_button_press(self):
 
         # Wait for the button press
-        res = await self.bot.wait_for("button_click", check=check)
+        res = await self.bot.wait_for("button_click")
 
-        # Handle the patcher button
-        if res.component.label.startswith("Patcher"):
-
+        # Handle buttons pressed with the name "Toggle Role"
+        if res.component.label.startswith("Toggle Role"):
+            print("button pressed!")
             return
+
+        await self.wait_for_button_press()
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def update(self, ctx):
+
+        await ctx.send("Updating Atmobot.")
 
         final_ouput = ""
         commands_to_run = ("git pull", "sudo pm2 restart Atmobot")

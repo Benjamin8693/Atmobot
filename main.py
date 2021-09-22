@@ -165,12 +165,12 @@ class Atmobot(commands.Bot):
             # We already have this role, so we want to remove it
             if role_id in role_ids:
                 await author.remove_roles(role)
-                await channel.send("Removed Role, {}".format(author.mention), delete_after=2)
+                await response.respond(content="Removed Test Realm Notifications Role.")
 
             # We actually don't have the role, so add it
             else:
                 await author.add_roles(role)
-                await channel.send("Added role, {}".format(author.mention), delete_after=2)
+                await response.respond(content="Added Test Realm Notifications Role.")
 
         await self.wait_for_button_press()
 

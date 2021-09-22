@@ -11,6 +11,7 @@ import spoilers
 import utils
 
 # Built-in packages
+import asyncio
 import datetime
 import json
 import os
@@ -126,6 +127,9 @@ class Atmobot(commands.Bot):
         # Setup the Discord Components library
         DiscordComponents(self)
 
+        # Wait for button presses
+        asyncio.ensure_future(self.wait_for_button_press())
+
         # Update startup time
         await self.update_setting("last_startup", self.startup_time.strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -138,6 +142,37 @@ class Atmobot(commands.Bot):
         print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))
         self.spoilers = spoilers.Spoilers(self)
         await self.spoilers.startup()
+
+    async def wait_for_button_press(self):
+
+        # Wait for the button press
+        response = await self.wait_for("button_click")
+
+        # Handle buttons differently
+        button_name = response.component.label
+        
+        # Test Realm notification role toggle
+        if button_name == "Toggle Role":
+
+            author = response.guild.get_member(response.author.id)
+            channel = response.channel
+
+            role_ids = (role.id for role in author.roles)
+            role_id = 886396512018501733
+            guild = response.guild
+            role = guild.get_role(role_id)
+
+            # We already have this role, so we want to remove it
+            if role_id in role_ids:
+                await author.remove_roles(role)
+                await channel.send("Removed Role, {}".format(author.mention), delete_after=2)
+
+            # We actually don't have the role, so add it
+            else:
+                await author.add_roles(role)
+                await channel.send("Added role, {}".format(author.mention), delete_after=2)
+
+        await self.wait_for_button_press()
 
 # Setup logging
 if not os.path.exists("logs/"):

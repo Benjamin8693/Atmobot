@@ -18,8 +18,6 @@ class PrivateCommands(commands.Cog):
 
         self.bot = bot
 
-        self.wait_for_button_press()
-
     @commands.Cog.listener()
     async def on_slash_command_error(self, ctx, error):
         await self.handle_error(ctx, error)
@@ -74,18 +72,6 @@ class PrivateCommands(commands.Cog):
 
         # Send the embed
         await ctx.send(embed=initial_embed, components=[get_role_button])
-
-    async def wait_for_button_press(self):
-
-        # Wait for the button press
-        res = await self.bot.wait_for("button_click")
-
-        # Handle buttons pressed with the name "Toggle Role"
-        if res.component.label.startswith("Toggle Role"):
-            print("button pressed!")
-            return
-
-        await self.wait_for_button_press()
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

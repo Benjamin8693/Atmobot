@@ -104,7 +104,7 @@ class PrivateCommands(commands.Cog):
         await ctx.send(output)
 
     @commands.command()
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(manage_messages=True)
     async def spoilers(self, ctx):
         await self.bot.spoilers.test_file_update()
 

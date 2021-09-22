@@ -31,17 +31,21 @@ class Spoilers(UpdateNotifier):
     def __init__(self, bot):
 
         UpdateNotifier.__init__(self)
-        
+
+        # Bot and Twitter API references
         self.bot = bot
         self.twitter_api = None
 
+        # Keep track of spoiler data
+        self.important_update = False
+        self.posted_introduction = False
         self.spoiler_config = {}
         self.chained_spoilers = {}
-
         self.last_tweet_ids = {bot_globals.CHANNEL_IMAGES: 0, bot_globals.CHANNEL_MUSIC: 0, bot_globals.CHANNEL_LOCALE: 0}
         self.chained_tweet_status = {}
 
-        self.discord_post_override = False
+        # Force disable Discord or Twitter posts
+        self.discord_post_override = True
         self.twitter_post_override = False
 
     async def startup(self):
@@ -91,67 +95,88 @@ class Spoilers(UpdateNotifier):
 
         print("{time} | SPOILERS: Starting revision check loop.".format(time=await self.bot.get_formatted_time()))
 
-        while True:
+        update = False
+        while not update:
 
             try:
                 file_list_url, base_url = self.webdriver.get_patch_urls()
                 revision = get_revision_from_url(file_list_url)
 
                 if self.db.check_if_new_revision(revision):
+                    print("{time} | SPOILERS: New revision found! Running file update protocol.".format(time=await self.bot.get_formatted_time()))
                     await self.test_file_update(revision, file_list_url, base_url)
-
+                    update = True
                 else:
                     print("{time} | SPOILERS: No new revision found.".format(time=await self.bot.get_formatted_time()))
             except:
                 print("{time} | SPOILERS: Patch server timed out and caused an exception.".format(time=await self.bot.get_formatted_time()))
 
-            print("{time} | SPOILERS: Sleeping for 120 seconds.".format(time=await self.bot.get_formatted_time()))
-            await asyncio.sleep(120)
+            if not update:
+                print("{time} | SPOILERS: Sleeping for 120 seconds.".format(time=await self.bot.get_formatted_time()))
+                await asyncio.sleep(120)
 
     async def test_file_update(self):
 
-        print("{time} | SPOILERS: File updated detected! Spoilers inbound.".format(time=await self.bot.get_formatted_time()))
-
-        # Discord channel to send our announcement in
-        discord_channel = self.bot.get_channel(880314326014111744)
-
-        # Embed structure to work with
-        greetings_embed = Embed(title=bot_globals.spoilers_incoming_discord_title, color=Color.green())
-
-        # Add information about Atmobot
-        greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_information_title, value=bot_globals.spoilers_incoming_discord_information, inline=False)
-        greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_coming_soon_title, value=bot_globals.spoilers_incoming_discord_coming_soon, inline=False)
-
-        spoiler_channel_ids = settings.get("spoiler_channel_ids")
-        images_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_IMAGES]).mention
-        music_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_MUSIC]).mention
-        locale_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_LOCALE]).mention
-        formatted_channels = bot_globals.spoilers_incoming_discord_channels.format(images_channel=images_channel, music_channel=music_channel, locale_channel=locale_channel)
-        greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_channels_title, value=formatted_channels, inline=False)
-
-        # Send the embed
-        await discord_channel.send(embed=greetings_embed)
-
-        # Grab the announcement message for Twitter
-        announcement_text = settings.get("spoiler_announcement")
-
-        # Post it to Twitter
-        if announcement_text:
-            self.twitter_api.PostUpdate(status=announcement_text, media="resources/greetings.png")
+        print("{time} | SPOILERS: File updated detected! Handling new revision.".format(time=await self.bot.get_formatted_time()))
 
         # Process the revision through WizDiff
         file_list_url, base_url = self.webdriver.get_patch_urls()
         revision = get_revision_from_url(file_list_url)
         await self.new_revision(revision, file_list_url, base_url)
 
-        # Grab the goodbye message for Twitter
-        goodbye_text = settings.get("spoiler_goodbye")
+        if self.important_update:
 
-        # Post it to Twitter
-        if goodbye_text:
-            self.twitter_api.PostUpdate(status=goodbye_text, media="resources/goodbye.png")
+            if not self.twitter_post_override:
 
-        print("{time} | SPOILERS: Update has been spoiled. Until next time!".format(time=await self.bot.get_formatted_time()))
+                # Grab the goodbye message for Twitter
+                goodbye_text = settings.get("spoiler_goodbye")
+
+                # Post it to Twitter
+                if goodbye_text:
+                    self.twitter_api.PostUpdate(status=goodbye_text, media="resources/goodbye.png")
+
+                print("{time} | SPOILERS: Update has been spoiled. Until next time!".format(time=await self.bot.get_formatted_time()))
+
+        else:
+
+            print("{time} | SPOILERS: Attempted to spoil an update but nothing of interest was added!".format(time=await self.bot.get_formatted_time()))
+
+    async def post_introduction(self):
+
+        self.posted_introduction = True
+
+        print("{time} | SPOILERS: New files of interest detected! Posting Atmobot introduction.".format(time=await self.bot.get_formatted_time()))
+
+        if not self.discord_post_override:
+
+            # Discord channel to send our announcement in
+            discord_channel = self.bot.get_channel(880314326014111744)
+
+            # Embed structure to work with
+            greetings_embed = Embed(title=bot_globals.spoilers_incoming_discord_title, color=Color.green())
+
+            # Add information about Atmobot
+            greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_information_title, value=bot_globals.spoilers_incoming_discord_information, inline=False)
+            greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_coming_soon_title, value=bot_globals.spoilers_incoming_discord_coming_soon, inline=False)
+
+            spoiler_channel_ids = settings.get("spoiler_channel_ids")
+            images_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_IMAGES]).mention
+            music_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_MUSIC]).mention
+            locale_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_LOCALE]).mention
+            formatted_channels = bot_globals.spoilers_incoming_discord_channels.format(images_channel=images_channel, music_channel=music_channel, locale_channel=locale_channel)
+            greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_channels_title, value=formatted_channels, inline=False)
+
+            # Send the embed
+            await discord_channel.send(embed=greetings_embed)
+
+        if not self.twitter_post_override:
+
+            # Grab the announcement message for Twitter
+            announcement_text = settings.get("spoiler_announcement")
+
+            # Post it to Twitter
+            if announcement_text:
+                self.twitter_api.PostUpdate(status=announcement_text, media="resources/greetings.png")
 
     async def notify_wad_file_update(self, delta: FileDelta):
 
@@ -191,6 +216,11 @@ class Spoilers(UpdateNotifier):
 
             # Okay, now we know this is a file we should spoil
             # Let's handle it then pass it off to one of our spoiler components
+
+            # Deal with introducing ourselves to Discord and Twitter
+            self.important_update = True
+            if not self.posted_introduction:
+                await self.post_introduction()
 
             # Don't process this file any further if it should be excluded
             exclusions = config[bot_globals.SPOILER_FILE_EXCLUSIONS]

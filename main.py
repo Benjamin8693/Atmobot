@@ -110,7 +110,7 @@ class Atmobot(commands.Bot):
 
             # Simulate a file update
             # TODO: Remove this
-            #await self.spoilers.test_file_update()
+            await self.spoilers.test_file_update()
             #await self.spoilers.text_compare_demo()
             #await self.spoilers.update_loop()
             #self.spoilers.init_db()

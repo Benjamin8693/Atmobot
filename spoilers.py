@@ -45,7 +45,7 @@ class Spoilers(UpdateNotifier):
         self.chained_tweet_status = {}
 
         # Force disable Discord or Twitter posts
-        self.discord_post_override = True
+        self.discord_post_override = False
         self.twitter_post_override = False
 
     async def startup(self):

@@ -180,6 +180,8 @@ class Spoilers(UpdateNotifier):
 
     async def notify_wad_file_update(self, delta: FileDelta):
 
+        print("file update in wad! {}".format(delta))
+
         # We want a raw wad name
         delta_name = delta.name.replace("Data/GameData/", "").replace(".wad", "")
 

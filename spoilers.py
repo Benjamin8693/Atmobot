@@ -46,7 +46,6 @@ class Spoilers(UpdateNotifier):
 
         # Force disable Discord or Twitter posts
         self.discord_post_override = False
-        self.discord_post_override = True
         self.twitter_post_override = False
 
     async def startup(self):
@@ -133,8 +132,13 @@ class Spoilers(UpdateNotifier):
                 goodbye_text = settings.get("spoiler_goodbye")
 
                 # Post it to Twitter
+                print("asking if we need to post")
                 if goodbye_text:
+                    print("posting to twitterrrr")
                     self.twitter_api.PostUpdate(status=goodbye_text, media="resources/goodbye.png")
+
+                    print("posting test greeting")
+                    self.twitter_api.PostUpdate(status=goodbye_text, media="resources/greetings.png")
 
                 print("{time} | SPOILERS: Update has been spoiled. Until next time!".format(time=await self.bot.get_formatted_time()))
 

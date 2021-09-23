@@ -46,6 +46,7 @@ class Spoilers(UpdateNotifier):
 
         # Force disable Discord or Twitter posts
         self.discord_post_override = False
+        self.discord_post_override = True
         self.twitter_post_override = False
 
     async def startup(self):
@@ -355,8 +356,8 @@ class Spoilers(UpdateNotifier):
         old_file_name = os.path.join(bot_globals.resources_path, bot_globals.locale_path, bot_globals.locale_path_old, os.path.basename(spoiler_data))
 
         # Open the files for comparison
-        with open(file_name, "rb") as new_file:
-            with open(old_file_name, "rb") as old_file:
+        with open(file_name, "r", encoding="utf8", errors='ignore') as new_file:
+            with open(old_file_name, "r", encoding="utf8", errors='ignore') as old_file:
                 # Find the differences between the two files
                 file_difference = difflib.ndiff(old_file.readlines(), new_file.readlines())
 

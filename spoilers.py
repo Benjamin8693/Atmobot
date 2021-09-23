@@ -22,6 +22,7 @@ import os
 import re
 import threading
 import time
+import traceback
 import urllib.request
 import zlib
 
@@ -200,6 +201,19 @@ class Spoilers(UpdateNotifier):
         # Iterate over all the changed files
         all_changed_files = delta.changed_inner_files + delta.created_inner_files
         for inner_file_info in all_changed_files:
+            await self.handle_changed_files(inner_file_info, paths_of_interest, delta)
+        #await asyncio.gather(*[self.handle_changed_files(inner_file_info, paths_of_interest, delta) for inner_file_info in all_changed_files], return_exceptions=True)
+
+        # Now we can handle the chained files
+        # Iterate over all the file directories
+        all_chained_spoilers = list(self.chained_spoilers.keys())
+        for chained_file_path in all_chained_spoilers:
+            await self.handle_chained_files(chained_file_path)
+        #await asyncio.gather(*[self.handle_chained_files(chained_file_path) for chained_file_path in all_chained_spoilers], return_exceptions=True)
+
+    async def handle_changed_files(self, inner_file_info, paths_of_interest, delta):
+
+        try:
 
             # Check if one of our paths of interest matches
             file_path = None
@@ -212,7 +226,7 @@ class Spoilers(UpdateNotifier):
 
             # We aren't a match, so continue with the next file in line
             if not file_path or not config:
-                continue
+                return
 
             # Okay, now we know this is a file we should spoil
             # Let's handle it then pass it off to one of our spoiler components
@@ -232,7 +246,7 @@ class Spoilers(UpdateNotifier):
                         break
 
                 if exclude_file:
-                    continue
+                    return
 
             # Get the size of the file data depending on whether it's compressed
             if inner_file_info.is_compressed:
@@ -289,9 +303,12 @@ class Spoilers(UpdateNotifier):
 
                 await asyncio.sleep(bot_globals.time_between_posts)
 
-        # Now we can handle the chained files
-        # Iterate over all the file directories
-        for chained_file_path in list(self.chained_spoilers.keys()):
+        except Exception:
+            print(traceback.format_exc())
+
+    async def handle_chained_files(self, chained_file_path):
+
+        try:
 
             chained_spoilers = self.chained_spoilers.get(chained_file_path)
 
@@ -328,6 +345,9 @@ class Spoilers(UpdateNotifier):
 
             # Remove file path from chained spoilers since we're now done with it
             del self.chained_spoilers[chained_file_path]
+
+        except Exception:
+            print(traceback.format_exc())
 
     def determine_file_handler(self, file_name):
         file_handler = bot_globals.CHANNEL_INVALID

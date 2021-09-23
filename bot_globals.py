@@ -13,7 +13,7 @@ default_settings = {
     "twitter_api_keys": ["", "", "", "", ""],
     "spoiler_channel_ids": [0, 0, 0],
     "spoiler_announcement": "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].",
-    "spoiler_goodbye:": "Thats all for now!\n\nSee you next time!"
+    "spoiler_goodbye": "Thats all for now!\n\nSee you next time!"
 }
 
 # Name of the settings file

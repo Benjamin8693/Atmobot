@@ -110,6 +110,11 @@ class PrivateCommands(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
+    async def updateloop(self, ctx):
+        await self.bot.spoilers.update_loop()
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def clear(self, ctx, amount: str = "1"):
 
         # Logging

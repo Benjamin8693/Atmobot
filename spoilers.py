@@ -105,7 +105,7 @@ class Spoilers(UpdateNotifier):
 
                 if self.db.check_if_new_revision(revision):
                     print("{time} | SPOILERS: New revision found! Running file update protocol.".format(time=await self.bot.get_formatted_time()))
-                    await self.test_file_update(revision, file_list_url, base_url)
+                    await self.test_file_update()
                     update = True
                 else:
                     print("{time} | SPOILERS: No new revision found.".format(time=await self.bot.get_formatted_time()))

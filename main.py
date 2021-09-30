@@ -20,8 +20,8 @@ import sys
 # Atmobot
 class Atmobot(commands.Bot):
 
-    def __init__(self, command_prefix, case_insensitive, description, intents):
-        commands.Bot.__init__(self, command_prefix=command_prefix, case_insensitive=case_insensitive, description=description, intents=intents)
+    def __init__(self, command_prefix, case_insensitive, description, intents, help_command):
+        commands.Bot.__init__(self, command_prefix=command_prefix, case_insensitive=case_insensitive, description=description, intents=intents, help_command=help_command)
         
         self.startup_time = datetime.datetime.now()
         self.started = False
@@ -228,6 +228,6 @@ def _prefix_callable(bot, msg):
     return prefixes
 
 # Run the bot
-atmobot = Atmobot(command_prefix=_prefix_callable, case_insensitive=True, description=bot_globals.bot_description, intents=Intents.all())
+atmobot = Atmobot(command_prefix=_prefix_callable, case_insensitive=True, description=bot_globals.bot_description, intents=Intents.all(), help_command=None)
 token = settings.get("bot_token", "")
 atmobot.run(token)

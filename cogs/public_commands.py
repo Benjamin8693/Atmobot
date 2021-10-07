@@ -99,6 +99,28 @@ class PublicCommands(commands.Cog):
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
 
+    @cog_ext.cog_slash(name=bot_globals.command_hero101_name, description=bot_globals.command_hero101_description, guild_ids=subscribed_guild_ids)
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
+    async def hero101(self, ctx):
+
+        # Logging
+        print("{time} | HERO101: {user} requested a Hero101 asset.".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+
+        # Path to get our Hero101 assets from
+        current_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.hero101_path)
+
+        # Pick a random file
+        all_files = [x for x in list(os.scandir(current_path)) if x.is_file()]
+        random_file = random.choice(all_files).name
+
+        # Generate a file path and send the file
+        file_path = os.path.join(current_path, random_file)
+        file_to_send = File(file_path)
+        await ctx.send(file=file_to_send)
+
+        # Log the result
+        print("{time} | HERO101: Random Hero101 asset '{file_path}' uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
+
     @cog_ext.cog_slash(name=bot_globals.command_remco_name, description=bot_globals.command_remco_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def remco(self, ctx):

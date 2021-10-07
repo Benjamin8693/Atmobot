@@ -101,12 +101,16 @@ patcher_tips = {200: "The Patcher is online",
 resources_path = "resources"
 deepfakes_path = "deepfakes"
 memes_path = "memes"
+hero101_path = "hero"
 video_path = "video"
 locale_path = "locale"
 
 # Commands
 default_command_cooldown = 15
 extended_command_cooldown = 1
+
+command_hero101_name = "hero101"
+command_hero101_description = "Posts something random related to Hero101."
 
 command_remco_name = "remco"
 command_remco_description = "Posts Remco."

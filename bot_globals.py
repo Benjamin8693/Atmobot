@@ -128,7 +128,7 @@ command_quote_message_limit = 10000
 
 command_days_name = "days"
 command_days_description = "Displays the amount of days left until Test Realm Watch begins."
-command_days_formatted = "There are {days} days until Test Realm Watch (October 18th)."
+command_days_formatted = "There are {days} days until Test Realm Watch (October 25th)."
 
 command_testrealm_name = "testrealm"
 command_testrealm_description = "Details when Test Realm is likely to arrive, and why."

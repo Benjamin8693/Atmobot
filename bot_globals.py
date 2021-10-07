@@ -211,7 +211,8 @@ twitter_description_extension = " [{current}/{total}]"
 
 thumbnail_template_path = {GAME_UNKNOWN: "thumbnail_template_wizard.png",
                            WIZARD101: "thumbnail_template_wizard.png",
-                           PIRATE101: "thumbnail_template_pirate.png"}
+                           PIRATE101: "thumbnail_template_pirate.png",
+                           HERO101: "thumbnail_template_hero.png"}
 thumbnail_font_path = "thumbnail_font.ttf"
 thumbnail_output_path = "video_thumbnail_{file_name}.png"
 

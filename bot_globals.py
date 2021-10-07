@@ -61,16 +61,20 @@ server_options = {SERVER_UNKNOWN: "",
 GAME_UNKNOWN = -1
 WIZARD101 = 0
 PIRATE101 = 1
+HERO101 = 2
 
 game_longhands = {GAME_UNKNOWN: "",
                   WIZARD101: "Wizard101",
-                  PIRATE101: "Pirate101"}
+                  PIRATE101: "Pirate101",
+                  HERO101: "Hero101"}
 longhand_to_game = {"Wizard101": WIZARD101,
-                    "Pirate101": PIRATE101}
+                    "Pirate101": PIRATE101,
+                    "Hero101": HERO101}
 
 game_shorthands = {GAME_UNKNOWN: "",
                    WIZARD101: "Wiz",
-                   PIRATE101: "Pirate"}
+                   PIRATE101: "Pirate",
+                   HERO101: "Hero"}
 
 # Revision handling
 REVISION_UNKNOWN = -1

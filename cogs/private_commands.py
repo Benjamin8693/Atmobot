@@ -153,9 +153,7 @@ class PrivateCommands(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def initdb(self, ctx):
-        self.bot.spoilers.db.init_database()
-        self.bot.spoilers.add_revision(self.base_revision)
-        self.bot.spoilers._fill_db(self.test_file_list_url.format(revision=self.base_revision), self.test_base_url.format(revision=self.base_revision), self.base_revision)
+        self.bot.spoilers.init_db()
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

@@ -472,6 +472,8 @@ class Spoilers(UpdateNotifier):
             # Now set up the font for our individual lines
             font_size = 48
             font = ImageFont.truetype(font_path, font_size)
+            smaller_font_size = 40
+            smaller_font = ImageFont.truetype(font_path, smaller_font_size)
 
             # Coordinates to begin placing our lines
             x_offset = bot_globals.locale_line_offset_x
@@ -482,7 +484,10 @@ class Spoilers(UpdateNotifier):
             for line in chain:
 
                 # Place our line at the specified position
-                editing_template.text((x_offset, y_offset), line, bot_globals.thumbnail_footer_color, font=font, align="left")
+                font_to_use = font
+                if len(line) >= 30:
+                    font_to_use = smaller_font
+                editing_template.text((x_offset, y_offset), line, bot_globals.thumbnail_footer_color, font=font_to_use, align="left")
 
                 # Reset our position now that we're in the second column
                 index = chain.index(line)

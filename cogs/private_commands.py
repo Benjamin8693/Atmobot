@@ -18,6 +18,8 @@ class PrivateCommands(commands.Cog):
 
         self.bot = bot
 
+        self.tweet_queue = {}
+
     @commands.Cog.listener()
     async def on_slash_command_error(self, ctx, error):
         await self.handle_error(ctx, error)
@@ -49,6 +51,51 @@ class PrivateCommands(commands.Cog):
 
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def tweet(self, ctx, content: str = "", link: str = ""):
+
+        print("{time} | TWEET: {user} submitted tweet draft with content {content} and link {link}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), content=content, link=link))
+
+        authorized_poster_ids = settings.get("authorized_poster_ids", [])
+        if ctx.author.id not in authorized_poster_ids:
+            print("{time} | TWEET: {user} attempted to draft tweet but is not authorized".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+            await ctx.send("Unauthorized poster.")
+            return
+        
+        # Embed header
+        initial_embed = Embed(title="Proposed Tweet", color=Color.orange())
+
+        # Contents of the proposed tweet
+        initial_embed.add_field(name="Content", value=content, inline=False)
+
+        # List all of the image links that would go out with this tweet
+        if link:
+            initial_embed.add_field(name="Attached Image Link", value=link, inline=False)
+
+        initial_embed.add_field(name="Author", value=await self.get_full_username(ctx.author), inline=False)
+
+        vote_string = ""
+        for poster in authorized_poster_ids:
+
+            poster_name = await self.get_full_username(ctx.message.guild.get_member(poster))
+            vote_string += "{poster_name} - Awaiting Response".format(poster_name=poster_name)
+
+            index = authorized_poster_ids.index(poster)
+            if index + 1 != len(authorized_poster_ids):
+                vote_string += "\n"
+
+        initial_embed.add_field(name="Votes", value=vote_string, inline=False)
+
+        # Button to approve the tweet
+        approve_button = Button(style=ButtonStyle.green, label="Approve Tweet")
+
+        # Button to deny the tweet
+        deny_button = Button(style=ButtonStyle.red, label="Deny Tweet")
+
+        # Send the embed
+        await ctx.send(embed=initial_embed, components=[approve_button, deny_button])
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

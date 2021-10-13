@@ -155,7 +155,6 @@ class Atmobot(commands.Bot):
         if button_name == "Toggle Role":
 
             author = response.guild.get_member(response.author.id)
-            channel = response.channel
 
             role_ids = (role.id for role in author.roles)
             role_id = 886396512018501733
@@ -171,6 +170,14 @@ class Atmobot(commands.Bot):
             else:
                 await author.add_roles(role)
                 await response.respond(content="Added Test Realm Notifications Role.")
+
+        # Approve proposed tweet
+        elif button_name == "Approve Tweet":
+            return
+
+        # Deny proposed tweet
+        elif button_name == "Deny Tweet":
+            return
 
         await self.wait_for_button_press()
 

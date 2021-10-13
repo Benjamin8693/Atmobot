@@ -11,6 +11,7 @@ default_settings = {
     "revision_info_test": [],
     "fetch_revision_on_startup": False,
     "twitter_api_keys": ["", "", "", "", ""],
+    "authorized_poster_ids": [],
     "spoiler_channel_ids": [0, 0, 0],
     "spoiler_announcement": "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].",
     "spoiler_goodbye": "Thats all for now!\n\nSee you next time!"
@@ -144,7 +145,7 @@ command_testrealm_embed_historicals_description = "2015 - Polaris: Monday, 10/26
 command_testrealm_embed_summary_title = "Summary"
 command_testrealm_embed_summary_description = "Earliest Date: October 18th\nLatest Date: November 9th\nEarliest Time: 9:15 AM PST\nLatest Time: 5:00 PM PST\n\nMost popular day: Wednesday\nLeast popular day: Tuesday\nPossible days: Monday through Thursday\n\nEarliest FULL world update: October 26th\nLast year's date: October 28th"
 command_testrealm_embed_estimation_title = "Estimation"
-command_testrealm_embed_estimation_description = "We will go into Test Realm watch on Monday, October 18th. This day, and every weekday thereafter (excluding Friday), is likely for Test Realm to release.\n\nAtmobot (me) will also be checking for any Test Realm activity on a regular basis. As soon as there any activity, everyone who has the \"Test Realm Notifications\" role will be notified!"
+command_testrealm_embed_estimation_description = "Because of the teaser schedule this year, we think Test Realm will be a bit later than usual, possibly dropping in November. As a result, we will go into Test Realm watch on Monday, October 25th. This day, and every weekday thereafter (excluding Friday), is likely for Test Realm to release.\n\nAtmobot will check for any Test Realm activity on a regular basis. As soon as there any activity, everyone who has the \"Test Realm Notifications\" role will be notified!"
 
 command_thumbnail_name = "thumbnail"
 command_thumbnail_description = "Creates a thumbnail in the same style as a Wizard101 Music upload from The Atmoplex."

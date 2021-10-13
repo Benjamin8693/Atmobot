@@ -102,7 +102,7 @@ class Spoilers(UpdateNotifier):
     async def update_loop(self, state = True):
 
         state_name = "Enabling" if state else "Disabling"
-        print("{time} | SPOILERS: {state} revision check loop.".format(time=await self.bot.get_formatted_time(), state=state_name))
+        print("{time} | SPOILERS: {state} revision check loop".format(time=await self.bot.get_formatted_time(), state=state_name))
 
         self.state = state
 
@@ -115,21 +115,21 @@ class Spoilers(UpdateNotifier):
                     revision = get_revision_from_url(file_list_url)
 
                     if self.db.check_if_new_revision(revision):
-                        print("{time} | SPOILERS: New revision found! Running file update protocol.".format(time=await self.bot.get_formatted_time()))
+                        print("{time} | SPOILERS: New revision found! Running file update protocol".format(time=await self.bot.get_formatted_time()))
                         await self.test_file_update()
                         update = True
                     else:
-                        print("{time} | SPOILERS: No new revision found.".format(time=await self.bot.get_formatted_time()))
+                        print("{time} | SPOILERS: No new revision found".format(time=await self.bot.get_formatted_time()))
                 except:
-                    print("{time} | SPOILERS: Patch server timed out and caused an exception.".format(time=await self.bot.get_formatted_time()))
+                    print("{time} | SPOILERS: Patch server timed out and caused an exception".format(time=await self.bot.get_formatted_time()))
 
                 if not update:
-                    print("{time} | SPOILERS: Sleeping for 120 seconds.".format(time=await self.bot.get_formatted_time()))
+                    print("{time} | SPOILERS: Sleeping for 120 seconds".format(time=await self.bot.get_formatted_time()))
                     await asyncio.sleep(120)
 
     async def test_file_update(self):
 
-        print("{time} | SPOILERS: File updated detected! Handling new revision.".format(time=await self.bot.get_formatted_time()))
+        print("{time} | SPOILERS: File updated detected! Handling new revision".format(time=await self.bot.get_formatted_time()))
 
         # Process the revision through WizDiff
         file_list_url, base_url = self.webdriver.get_patch_urls()
@@ -147,17 +147,17 @@ class Spoilers(UpdateNotifier):
                 if goodbye_text:
                     self.twitter_api.PostUpdate(status=goodbye_text, media="resources/goodbye.png")
 
-                print("{time} | SPOILERS: Update has been spoiled. Until next time!".format(time=await self.bot.get_formatted_time()))
+                print("{time} | SPOILERS: Update has been spoiled. Until next time".format(time=await self.bot.get_formatted_time()))
 
         else:
 
-            print("{time} | SPOILERS: Attempted to spoil an update but nothing of interest was added!".format(time=await self.bot.get_formatted_time()))
+            print("{time} | SPOILERS: Attempted to spoil an update but nothing of interest was added".format(time=await self.bot.get_formatted_time()))
 
     async def post_introduction(self):
 
         self.posted_introduction = True
 
-        print("{time} | SPOILERS: New files of interest detected! Posting Atmobot introduction.".format(time=await self.bot.get_formatted_time()))
+        print("{time} | SPOILERS: New files of interest detected! Posting Atmobot introduction".format(time=await self.bot.get_formatted_time()))
 
         if not self.discord_post_override:
 
@@ -683,7 +683,7 @@ class Spoilers(UpdateNotifier):
         else:
 
             # Format proper file name
-            file_name = "cache/" + os.path.basename(spoiler_data)
+            file_name = "cache/chained/" + os.path.basename(spoiler_data)
 
             # Convert .DDS files to .PNG
             if spoiler_data.endswith(".dds"):

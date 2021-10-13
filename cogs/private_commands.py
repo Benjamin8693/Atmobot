@@ -152,6 +152,13 @@ class PrivateCommands(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
+    async def initdb(self, ctx):
+        self.spoilers.db.init_database()
+        self.spoilers.add_revision(self.base_revision)
+        self.spoilers._fill_db(self.test_file_list_url.format(revision=self.base_revision), self.test_base_url.format(revision=self.base_revision), self.base_revision)
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def spoilers(self, ctx):
 
         print("{time} | SPOILERS: {user} requested to toggle spoilers check".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))

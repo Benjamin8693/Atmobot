@@ -153,12 +153,21 @@ class PrivateCommands(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def spoilers(self, ctx):
-        await self.bot.spoilers.test_file_update()
+
+        print("{time} | SPOILERS: {user} requested to toggle spoilers check".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+
+        state = await self.bot.spoilers.get_state()
+        state_name = "enabled" if state else "disabled"
+
+        print("{time} | SPOILERS: Spoilers mode has been {state}".format(time=await self.bot.get_formatted_time(), state=state_name))
+        await ctx.send("{state} spoilers mode.".format(state=state_name.capitalize()))
+
+        await self.bot.spoilers.update_loop(not state)
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def updateloop(self, ctx):
-        await self.bot.spoilers.update_loop()
+    async def testspoil(self, ctx):
+        await self.bot.spoilers.test_file_update()
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

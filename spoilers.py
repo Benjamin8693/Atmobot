@@ -1,4 +1,5 @@
 # 3rd-Party Packages
+import backoff
 from discord import Embed, File, Color, file
 from moviepy.editor import *
 from PIL import Image, ImageFont, ImageDraw
@@ -20,6 +21,7 @@ import datetime
 import json
 import os
 import re
+import requests
 import threading
 import time
 import traceback
@@ -36,6 +38,8 @@ class Spoilers(UpdateNotifier):
         # Bot and Twitter API references
         self.bot = bot
         self.twitter_api = None
+
+        self.state = False
 
         # Keep track of spoiler data
         self.important_update = False
@@ -92,29 +96,36 @@ class Spoilers(UpdateNotifier):
     def get_formatted_time(self):
         return datetime.datetime.now().strftime("%H:%M:%S")
 
-    async def update_loop(self):
+    async def get_state(self):
+        return self.state
 
-        print("{time} | SPOILERS: Starting revision check loop.".format(time=await self.bot.get_formatted_time()))
+    async def update_loop(self, state = True):
 
-        update = False
-        while not update:
+        state_name = "Enabling" if state else "Disabling"
+        print("{time} | SPOILERS: {state} revision check loop.".format(time=await self.bot.get_formatted_time(), state=state_name))
 
-            try:
-                file_list_url, base_url = self.webdriver.get_patch_urls()
-                revision = get_revision_from_url(file_list_url)
+        self.state = state
 
-                if self.db.check_if_new_revision(revision):
-                    print("{time} | SPOILERS: New revision found! Running file update protocol.".format(time=await self.bot.get_formatted_time()))
-                    await self.test_file_update()
-                    update = True
-                else:
-                    print("{time} | SPOILERS: No new revision found.".format(time=await self.bot.get_formatted_time()))
-            except:
-                print("{time} | SPOILERS: Patch server timed out and caused an exception.".format(time=await self.bot.get_formatted_time()))
+        if state:
+            update = False
+            while (not update) and self.state:
 
-            if not update:
-                print("{time} | SPOILERS: Sleeping for 120 seconds.".format(time=await self.bot.get_formatted_time()))
-                await asyncio.sleep(120)
+                try:
+                    file_list_url, base_url = self.webdriver.get_patch_urls()
+                    revision = get_revision_from_url(file_list_url)
+
+                    if self.db.check_if_new_revision(revision):
+                        print("{time} | SPOILERS: New revision found! Running file update protocol.".format(time=await self.bot.get_formatted_time()))
+                        await self.test_file_update()
+                        update = True
+                    else:
+                        print("{time} | SPOILERS: No new revision found.".format(time=await self.bot.get_formatted_time()))
+                except:
+                    print("{time} | SPOILERS: Patch server timed out and caused an exception.".format(time=await self.bot.get_formatted_time()))
+
+                if not update:
+                    print("{time} | SPOILERS: Sleeping for 120 seconds.".format(time=await self.bot.get_formatted_time()))
+                    await asyncio.sleep(120)
 
     async def test_file_update(self):
 
@@ -269,7 +280,7 @@ class Spoilers(UpdateNotifier):
                 self.chained_spoilers[file_path] = chained_spoilers
 
             # Download the file!
-            file_data = self.webdriver.get_url_data(delta.url, data_range=(inner_file_info.file_offset, inner_file_info.file_offset + data_size))
+            file_data = await self.download_file(delta.url, data_range=(inner_file_info.file_offset, inner_file_info.file_offset + data_size))
 
             # Decompress if compressed
             if inner_file_info.is_compressed:
@@ -348,6 +359,11 @@ class Spoilers(UpdateNotifier):
 
         except Exception:
             print(traceback.format_exc())
+
+    @backoff.on_exception(backoff.expo, requests.exceptions.HTTPError, max_time=60)
+    async def download_file(self, url, data_range):
+        file_data = self.webdriver.get_url_data(url, data_range=data_range)
+        return file_data
 
     def determine_file_handler(self, file_name):
         file_handler = bot_globals.CHANNEL_INVALID

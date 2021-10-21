@@ -8,3 +8,7 @@ This will remain a solo project, but feel free to submit a pull request if you'd
 Please do NOT submit any issues or ask for support, as it will not be provided.
 
 I understand some of the code here may not be the best, but I went through quite a learning curve with this project- so please go easy on me!
+
+# Credits
+Benjamin - Lead Developer
+Gustavo - Text Comparison Code

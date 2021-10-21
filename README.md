@@ -11,4 +11,7 @@ I understand some of the code here may not be the best, but I went through quite
 
 # Credits
 Benjamin - Lead Developer
-Gustavo - Text Comparison Code
+
+Starrfox - Creating various useful libraries that makes this bot possible
+
+Gustavo - Assistance with text comparison code

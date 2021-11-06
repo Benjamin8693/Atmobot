@@ -133,7 +133,8 @@ command_quote_message_limit = 10000
 
 command_days_name = "days"
 command_days_description = "Displays the amount of days left until Test Realm Watch begins."
-command_days_formatted = "There are {days} days until Test Realm Watch (October 25th)."
+command_days_formatted = "There are {days} days until Test Realm Watch (November 8th)."
+command_days_watch = "Test Realm Watch has begun! Test Realm is likely to occur any time Monday through Thursday, anywhere from 9:00 AM PST until 5:00 PM PST."
 
 command_testrealm_name = "testrealm"
 command_testrealm_description = "Details when Test Realm is likely to arrive, and why."
@@ -145,7 +146,7 @@ command_testrealm_embed_historicals_description = "2015 - Polaris: Monday, 10/26
 command_testrealm_embed_summary_title = "Summary"
 command_testrealm_embed_summary_description = "Earliest Date: October 18th\nLatest Date: November 9th\nEarliest Time: 9:15 AM PST\nLatest Time: 5:00 PM PST\n\nMost popular day: Wednesday\nLeast popular day: Tuesday\nPossible days: Monday through Thursday\n\nEarliest FULL world update: October 26th\nLast year's date: October 28th"
 command_testrealm_embed_estimation_title = "Estimation"
-command_testrealm_embed_estimation_description = "Because of the teaser schedule this year, we think Test Realm will be a bit later than usual, possibly dropping in November. As a result, we will go into Test Realm watch on Monday, October 25th. This day, and every weekday thereafter (excluding Friday), is likely for Test Realm to release.\n\nAtmobot will check for any Test Realm activity on a regular basis. As soon as there any activity, everyone who has the \"Test Realm Notifications\" role will be notified!"
+command_testrealm_embed_estimation_description = "We think Test Realm will release on Wednesday, November 10th. On Monday, November 8th, we will go into Test Realm Watch and check for any activity with Kingsisle's Test Realm related servers. If anything is detected, everyone who has the \"Test Realm Notifications\" role will be notified!"
 
 command_thumbnail_name = "thumbnail"
 command_thumbnail_description = "Creates a thumbnail in the same style as a Wizard101 Music upload from The Atmoplex."

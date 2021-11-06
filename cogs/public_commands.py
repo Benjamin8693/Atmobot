@@ -203,12 +203,15 @@ class PublicCommands(commands.Cog):
         print("{time} | DAYS: {user} requested days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         today = datetime.date.today()
-        future = datetime.date(2021, 10, 25)
+        future = datetime.date(2021, 11, 8)
         diff = future - today
-        
-        # Send the amount of days
-        formatted_days = bot_globals.command_days_formatted.format(days=diff.days)
-        await ctx.send(formatted_days)
+
+        if diff > 0:
+            # Send the amount of days
+            formatted_days = bot_globals.command_days_formatted.format(days=diff.days)
+            await ctx.send(formatted_days)
+        else:
+            await ctx.send(bot_globals.command_days_watch)
 
         # Log the result
         print("{time} | DAYS: {days} days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), days=diff.days))

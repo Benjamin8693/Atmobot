@@ -206,7 +206,7 @@ class PublicCommands(commands.Cog):
         future = datetime.date(2021, 11, 8)
         diff = future - today
 
-        if diff > 0:
+        if diff.days > 0:
             # Send the amount of days
             formatted_days = bot_globals.command_days_formatted.format(days=diff.days)
             await ctx.send(formatted_days)

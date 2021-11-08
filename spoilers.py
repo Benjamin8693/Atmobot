@@ -140,9 +140,9 @@ class Spoilers(UpdateNotifier):
         #file_list_url, base_url = self.webdriver.get_patch_urls()
         #revision = get_revision_from_url(file_list_url)
 
-        revision = "709145"
+        revision = "V_r709145.WizardDev"
         file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Mac/LatestFileList.bin"
-        base_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Mac/"
+        base_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/LatestBuild/"
 
         await self.new_revision(revision, file_list_url, base_url)
 

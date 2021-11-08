@@ -50,7 +50,7 @@ class Spoilers(UpdateNotifier):
         self.chained_tweet_status = {}
 
         # Force disable Discord or Twitter posts
-        self.discord_post_override = False
+        self.discord_post_override = True
         self.twitter_post_override = False
 
     async def startup(self):
@@ -131,10 +131,24 @@ class Spoilers(UpdateNotifier):
 
         print("{time} | SPOILERS: File updated detected! Handling new revision".format(time=await self.bot.get_formatted_time()))
 
+        # Disable all commands until we're done
+        #for command in self.bot.commands:
+        #    print("command is {}".format(command))
+        #    command.update(enable=False)
+
         # Process the revision through WizDiff
-        file_list_url, base_url = self.webdriver.get_patch_urls()
-        revision = get_revision_from_url(file_list_url)
+        #file_list_url, base_url = self.webdriver.get_patch_urls()
+        #revision = get_revision_from_url(file_list_url)
+
+        revision = "709145"
+        file_list_url = "testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Mac/LatestFileList.bin"
+        base_url = "testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Mac/"
+
         await self.new_revision(revision, file_list_url, base_url)
+
+        # Re-enable commands
+        #for command in self.bot.commands:
+        #    command.update(enable=True)
 
         if self.important_update:
 

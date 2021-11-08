@@ -141,7 +141,7 @@ class Spoilers(UpdateNotifier):
         #revision = get_revision_from_url(file_list_url)
 
         revision = "V_r709145.WizardDev"
-        file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Mac/LatestFileList.bin"
+        file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Windows/LatestFileList.bin"
         base_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/LatestBuild/"
 
         await self.new_revision(revision, file_list_url, base_url)

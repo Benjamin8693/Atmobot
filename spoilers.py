@@ -50,7 +50,7 @@ class Spoilers(UpdateNotifier):
         self.chained_tweet_status = {}
 
         # Force disable Discord or Twitter posts
-        self.discord_post_override = True
+        self.discord_post_override = False
         self.twitter_post_override = False
 
     async def startup(self):
@@ -141,8 +141,8 @@ class Spoilers(UpdateNotifier):
         #revision = get_revision_from_url(file_list_url)
 
         revision = "709145"
-        file_list_url = "testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Mac/LatestFileList.bin"
-        base_url = "testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Mac/"
+        file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Mac/LatestFileList.bin"
+        base_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Mac/"
 
         await self.new_revision(revision, file_list_url, base_url)
 

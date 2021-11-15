@@ -1,6 +1,7 @@
 # 3rd-Party Packages
 import backoff
 from discord import Embed, File, Color, file
+from discord.ext.commands import bot
 from moviepy.editor import *
 from PIL import Image, ImageFont, ImageDraw
 from numpy import broadcast_to
@@ -41,6 +42,9 @@ class Spoilers(UpdateNotifier):
 
         self.state = False
 
+        # Revision info we're currently working with
+        self.revision_data = None
+
         # Keep track of spoiler data
         self.important_update = False
         self.posted_introduction = False
@@ -50,7 +54,7 @@ class Spoilers(UpdateNotifier):
         self.chained_tweet_status = {}
 
         # Force disable Discord or Twitter posts
-        self.discord_post_override = False
+        self.discord_post_override = True
         self.twitter_post_override = False
 
     async def startup(self):
@@ -111,11 +115,23 @@ class Spoilers(UpdateNotifier):
             while (not update) and self.state:
 
                 try:
-                    file_list_url, base_url = self.webdriver.get_patch_urls()
-                    revision = get_revision_from_url(file_list_url)
 
-                    if self.db.check_if_new_revision(revision):
-                        print("{time} | SPOILERS: New revision found! Running file update protocol".format(time=await self.bot.get_formatted_time()))
+                    revision = None
+
+                    # Bruteforce the revision
+                    most_recent_version = await self.bot.checker.most_recent_revision()
+                    version_list = [bot_globals.fallback_version_dev, most_recent_version]
+                    revisions = await self.bot.checker.revision_bruteforcer.start(revision_start=most_recent_version, revision_range=bot_globals.default_revision_range, version_list=version_list)
+                    
+                    # We only care about the most recent revision
+                    if revisions:
+                        revision = revisions.pop()
+
+                    formatted_revision = "{}.{}".format(revision[bot_globals.REVISION_NUMBER], revision[bot_globals.REVISION_VERSION])
+
+                    if self.db.check_if_new_revision(formatted_revision):
+                        print("{time} | SPOILERS: New revision {revision} found! Running file update protocol".format(time=await self.bot.get_formatted_time(), revision=formatted_revision))
+                        self.revision_data = formatted_revision
                         await self.test_file_update()
                         update = True
                     else:
@@ -124,12 +140,12 @@ class Spoilers(UpdateNotifier):
                     print("{time} | SPOILERS: Patch server timed out and caused an exception".format(time=await self.bot.get_formatted_time()))
 
                 if not update:
-                    print("{time} | SPOILERS: Sleeping for 120 seconds".format(time=await self.bot.get_formatted_time()))
-                    await asyncio.sleep(120)
+                    print("{time} | SPOILERS: Sleeping for 300 seconds".format(time=await self.bot.get_formatted_time()))
+                    await asyncio.sleep(300)
 
     async def test_file_update(self):
 
-        print("{time} | SPOILERS: File updated detected! Handling new revision".format(time=await self.bot.get_formatted_time()))
+        print("{time} | SPOILERS: File updated detected! Handling revision {revision}".format(time=await self.bot.get_formatted_time(), revision=self.revision_data))
 
         # Disable all commands until we're done
         #for command in self.bot.commands:
@@ -140,11 +156,10 @@ class Spoilers(UpdateNotifier):
         #file_list_url, base_url = self.webdriver.get_patch_urls()
         #revision = get_revision_from_url(file_list_url)
 
-        revision = "V_r709145.WizardDev"
-        file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/Windows/LatestFileList.bin"
-        base_url = "http://testversionec.us.wizard101.com/WizPatcher/V_r709145.WizardDev/LatestBuild/"
+        file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/{}/Windows/LatestFileList.bin".format(self.revision_data)
+        base_url = "http://testversionec.us.wizard101.com/WizPatcher/{}/LatestBuild/".format(self.revision_data)
 
-        await self.new_revision(revision, file_list_url, base_url)
+        await self.new_revision(self.revision_data, file_list_url, base_url)
 
         # Re-enable commands
         #for command in self.bot.commands:
@@ -176,7 +191,10 @@ class Spoilers(UpdateNotifier):
         if not self.discord_post_override:
 
             # Discord channel to send our announcement in
-            discord_channel = self.bot.get_channel(880314326014111744)
+            discord_channel = self.bot.get_channel(726683024795893780)
+
+            # Ping all Test Realm Notifications members
+            await discord_channel.send("<@&886396512018501733>")
 
             # Embed structure to work with
             greetings_embed = Embed(title=bot_globals.spoilers_incoming_discord_title, color=Color.green())
@@ -279,11 +297,11 @@ class Spoilers(UpdateNotifier):
             else:
                 data_size = inner_file_info.size
 
-            # Determine if this is a chained spoiler
+            # Determine if this has the possibility of being a chained spoiler
             chained = False
             if file_path.endswith("/"):
 
-                # We're chained
+                # We may be chained
                 chained = True
 
                 # Add this file's name to the chained spoiler list
@@ -302,8 +320,6 @@ class Spoilers(UpdateNotifier):
 
             # Save file into cache
             cache_path = "cache/"
-            if chained:
-                cache_path += "chained/"
             file_name = "{cache_path}/{file_name}".format(cache_path=cache_path, file_name=os.path.basename(inner_file_info.name))
             with self.safe_open_w(file_name) as fp:
                 fp.write(file_data)
@@ -571,7 +587,7 @@ class Spoilers(UpdateNotifier):
 
                 # Convert to PNG and update the file name in our spoiler data
                 if spoiler.endswith(".dds"):
-                    file_name = self.convert_to_png("cache/chained/{file_name}".format(file_name=os.path.basename(spoiler)))
+                    file_name = self.convert_to_png("cache/{file_name}".format(file_name=os.path.basename(spoiler)))
                     spoiler_data[index] = file_name
 
             # If we have 5 or more images in the chain, we want to combine them
@@ -581,7 +597,7 @@ class Spoilers(UpdateNotifier):
 
                 # Open all of the images we're going to chain together
                 files_to_chain = [f for f in spoiler_data]
-                images_to_chain = [Image.open(file_to_chain) for file_to_chain in files_to_chain]
+                images_to_chain = [Image.open("cache/{file_name}".format(file_name=os.path.basename(file_to_chain))) for file_to_chain in files_to_chain]
 
                 # Grab their widths and heights to determine our final image size
                 widths, heights = zip(*(image_to_chain.size for image_to_chain in images_to_chain))
@@ -617,7 +633,7 @@ class Spoilers(UpdateNotifier):
                     os.remove(image_to_chain.filename)
 
                 # Save our new image
-                chained_image_name = "cache/chained/{spoiler_name}{chain_index}.png".format(spoiler_name=spoiler_name, chain_index=chain_index)
+                chained_image_name = "cache/{spoiler_name}{chain_index}.png".format(spoiler_name=spoiler_name, chain_index=chain_index)
                 chained_image.save(chained_image_name)
 
                 # Post the spoiler to Discord if we have channel IDs
@@ -660,7 +676,7 @@ class Spoilers(UpdateNotifier):
                     file_index = spoiler_data.index(file_name)
 
                     # Format proper file name
-                    file_name = "cache/chained/" + os.path.basename(file_name)
+                    file_name = "cache/" + os.path.basename(file_name)
 
                     # Convert .DDS files to .PNG
                     if file_name.endswith(".dds"):
@@ -702,7 +718,7 @@ class Spoilers(UpdateNotifier):
         else:
 
             # Format proper file name
-            file_name = "cache/chained/" + os.path.basename(spoiler_data)
+            file_name = "cache/" + os.path.basename(spoiler_data)
 
             # Convert .DDS files to .PNG
             if spoiler_data.endswith(".dds"):
@@ -737,7 +753,7 @@ class Spoilers(UpdateNotifier):
                 file_index = spoiler_data.index(file_name)
 
                 # Format proper file name
-                file_name = "cache/chained/" + os.path.basename(file_name)
+                file_name = "cache/" + os.path.basename(file_name)
 
                 # Post the spoiler to Discord if we have channel IDs
                 spoiler_channel_ids = settings.get("spoiler_channel_ids")
@@ -793,7 +809,7 @@ class Spoilers(UpdateNotifier):
 
             # Format proper file name
             if total_chains == 1:
-                file_name = "cache/chained/" + os.path.basename(spoiler_data)
+                file_name = "cache/" + os.path.basename(spoiler_data)
             else:
                 file_name = "cache/" + os.path.basename(spoiler_data)
 

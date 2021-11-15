@@ -82,13 +82,13 @@ REVISION_UNKNOWN = -1
 REVISION_NUMBER = 0
 REVISION_VERSION = 1
 
-fallback_revision = 702000
+fallback_revision = 709411
 fallback_version = "Wizard_1_460"
 fallback_version_dev = "WizardDev"
 
 version_empty = "Wizard_{}_{}"
 
-default_revision_range = 25
+default_revision_range = 1000
 
 # Fallback .WAD file used for testing
 fallback_wad = "Root"
@@ -133,7 +133,7 @@ command_quote_message_limit = 10000
 
 command_days_name = "days"
 command_days_description = "Displays the amount of days left until Test Realm Watch begins."
-command_days_formatted = "There are {days} days until Test Realm Watch (November 8th)."
+command_days_formatted = "There are {days} days until Test Realm Watch (April 4th)."
 command_days_watch = "Test Realm Watch has begun! Test Realm is likely to occur any time Monday through Thursday, anywhere from 9:00 AM PST until 5:00 PM PST."
 
 command_testrealm_name = "testrealm"
@@ -172,9 +172,9 @@ command_deepfake_arg_directory_description = "Choose a specific category to retr
 spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."
 spoilers_incoming_discord_title = "Atmobot"
 spoilers_incoming_discord_information_title = "Hello! I am Atmobot"
-spoilers_incoming_discord_information = "I am a bot created by the Atmoplex team for the purpose of spoiling Test Realm when it releases. The Test Realm patcher just updated, so it's time for me to spoil a few things automatically!\n\nThis does **NOT** mean for certain that Test Realm is releasing today- but it's very likely!"
+spoilers_incoming_discord_information = "I am a bot created by the Atmoplex team for the purpose of spoiling Test Realm. Test Realm has just updated, so it's time for me to spoil a few things automatically!"
 spoilers_incoming_discord_coming_soon_title = "So what now?"
-spoilers_incoming_discord_coming_soon = "Within the next minute, I will begin posting in three new channels that have opened up. There will be about one file posted every 10 seconds, give or take.\n\nIn the meantime, the Atmoplex team is datamining the update manually. Whatever is missed by Atmobot will be later posted to Twitter. Enjoy these automatic spoilers, and get excited for Test Realm!"
+spoilers_incoming_discord_coming_soon = "Within the next minute, I will begin posting in the spoilers category of this server. There will be about one file posted every 10 seconds, give or take.\n\nIn the meantime, the Atmoplex team is datamining the update manually. Whatever is missed by Atmobot will be later posted to Twitter. Enjoy these automatic spoilers!"
 spoilers_incoming_discord_channels_title = "New Channels"
 spoilers_incoming_discord_channels = "{images_channel} - Icons of new spells, equipment, furniture, spells, NPCs, and more.\n\n{music_channel} - All of the new soundtracks, excluding ambient music and cues.\n\n{locale_channel} - A collection of new zone names, mob names, and more."
 

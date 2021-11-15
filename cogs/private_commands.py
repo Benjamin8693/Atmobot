@@ -54,6 +54,22 @@ class PrivateCommands(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
+    async def testping(self, ctx):
+
+        await ctx.send("<@&886396512018501733>")
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def bruteforce(self, ctx):
+
+        most_recent_version = await self.bot.checker.most_recent_revision()
+        version_list = [bot_globals.fallback_version_dev, most_recent_version]
+        revision = await self.bot.checker.revision_bruteforcer.start(revision_start=most_recent_version, revision_range=bot_globals.default_revision_range, version_list=version_list)
+        
+        await ctx.send("Revision is {}".format(revision))
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def tweet(self, ctx, content: str = "", link: str = ""):
 
         print("{time} | TWEET: {user} submitted tweet draft with content {content} and link {link}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), content=content, link=link))

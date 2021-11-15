@@ -203,7 +203,7 @@ class PublicCommands(commands.Cog):
         print("{time} | DAYS: {user} requested days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         today = datetime.date.today()
-        future = datetime.date(2021, 11, 8)
+        future = datetime.date(2022, 4, 4)
         diff = future - today
 
         if diff.days > 0:

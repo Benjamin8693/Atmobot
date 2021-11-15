@@ -157,7 +157,7 @@ class Atmobot(commands.Bot):
             author = response.guild.get_member(response.author.id)
 
             role_ids = (role.id for role in author.roles)
-            role_id = 886396512018501733
+            role_id = 729523418164232264
             guild = response.guild
             role = guild.get_role(role_id)
 

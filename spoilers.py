@@ -59,6 +59,9 @@ class Spoilers(UpdateNotifier):
 
     async def startup(self):
 
+        # Temp disable the spoilers section of the bot until fixes can be made
+        return
+
         # Load our spoilers config
         self.load_spoilers()
         

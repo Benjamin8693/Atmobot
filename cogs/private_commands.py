@@ -52,6 +52,30 @@ class PrivateCommands(commands.Cog):
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
 
+    #@cog_ext.cog_slash(name=bot_globals.command_testrealm_name, description=bot_globals.command_testrealm_description, guild_ids=subscribed_guild_ids)
+    #@commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def testrealm(self, ctx):
+
+        # Logging
+        print("{time} | TESTREALM: {user} requested Test Realm information".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+
+        # Embed structure to work with
+        test_embed = Embed(title=bot_globals.command_testrealm_embed_title, color=Color.gold())
+
+        # Add information about Test Realm
+        test_embed.add_field(name=bot_globals.command_testrealm_embed_intro_title, value=bot_globals.command_testrealm_embed_intro_description, inline=False)
+        test_embed.add_field(name=bot_globals.command_testrealm_embed_historicals_title, value=bot_globals.command_testrealm_embed_historicals_description, inline=False)
+        test_embed.add_field(name=bot_globals.command_testrealm_embed_summary_title, value=bot_globals.command_testrealm_embed_summary_description, inline=False)
+        test_embed.add_field(name=bot_globals.command_testrealm_embed_estimation_title, value=bot_globals.command_testrealm_embed_estimation_description, inline=False)
+
+        # Send the embed
+        await ctx.send(embed=test_embed)
+
+        # Log the result
+        print("{time} | TESTREALM: Test Realm information posted".format(time=await self.bot.get_formatted_time()))
+
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def testping(self, ctx):

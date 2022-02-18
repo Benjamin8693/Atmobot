@@ -63,19 +63,23 @@ GAME_UNKNOWN = -1
 WIZARD101 = 0
 PIRATE101 = 1
 HERO101 = 2
+MGI = 3
 
 game_longhands = {GAME_UNKNOWN: "",
                   WIZARD101: "Wizard101",
                   PIRATE101: "Pirate101",
-                  HERO101: "Hero101"}
+                  HERO101: "Hero101",
+                  MGI: "Media Games Invest"}
 longhand_to_game = {"Wizard101": WIZARD101,
                     "Pirate101": PIRATE101,
-                    "Hero101": HERO101}
+                    "Hero101": HERO101,
+                    "Media Games Invest": MGI}
 
 game_shorthands = {GAME_UNKNOWN: "",
                    WIZARD101: "Wiz",
                    PIRATE101: "Pirate",
-                   HERO101: "Hero"}
+                   HERO101: "Hero",
+                   MGI: "MGI"}
 
 # Revision handling
 REVISION_UNKNOWN = -1
@@ -154,8 +158,8 @@ command_thumbnail_arg_header_name = "header"
 command_thumbnail_arg_header_description = "The thumbnail header. Typically the name of a song."
 command_thumbnail_arg_footer_name = "footer"
 command_thumbnail_arg_footer_description = "The thumbnail footer. Typically the name of a world."
-command_thumbnail_arg_game_name = "game"
-command_thumbnail_arg_game_description = "Which game the thumbnail is for."
+command_thumbnail_arg_type_name = "type"
+command_thumbnail_arg_type_description = "Which type of thumbnail is created."
 
 command_uptime_name = "uptime"
 command_uptime_description = "Displays how long Atmobot has been online for."
@@ -218,20 +222,28 @@ twitter_description_extension = " [{current}/{total}]"
 thumbnail_template_path = {GAME_UNKNOWN: "thumbnail_template_wizard.png",
                            WIZARD101: "thumbnail_template_wizard.png",
                            PIRATE101: "thumbnail_template_pirate.png",
-                           HERO101: "thumbnail_template_hero.png"}
+                           HERO101: "thumbnail_template_hero.png",
+                           MGI: "thumbnail_template_mgi.png"}
 thumbnail_font_path = "thumbnail_font.ttf"
+thumbnail_font_path_mgi = "thumbnail_font_mgi.ttf"
 thumbnail_output_path = "video_thumbnail_{file_name}.png"
 
 thumbnail_command_name = "command_{}"
 
 thumbnail_font_size = 130
+thumbnail_font_size_mgi = 70
 thumbnail_header_offset = 272
+thumbnail_header_offset_mgi = -70
 thumbnail_header_color = (239, 238, 41)
 thumbnail_footer_offset = 416
+thumbnail_footer_offset_mgi = 15
 thumbnail_footer_color = (255, 255, 255)
+thumbnail_xoffset_mgi = 40
 
 thumbnail_offsets = (thumbnail_header_offset, thumbnail_footer_offset)
+thumbnail_offsets_mgi = (thumbnail_header_offset_mgi, thumbnail_footer_offset_mgi)
 thumbnail_colors = (thumbnail_header_color, thumbnail_footer_color)
+thumbnail_colors_mgi = (thumbnail_footer_color, thumbnail_footer_color)
 
 thumbnail_dimensions = (1920, 1080)
 

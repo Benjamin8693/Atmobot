@@ -216,34 +216,12 @@ class PublicCommands(commands.Cog):
         # Log the result
         print("{time} | DAYS: {days} days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), days=diff.days))
 
-    @cog_ext.cog_slash(name=bot_globals.command_testrealm_name, description=bot_globals.command_testrealm_description, guild_ids=subscribed_guild_ids)
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
-    async def testrealm(self, ctx):
-
-        # Logging
-        print("{time} | TESTREALM: {user} requested Test Realm information".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
-
-        # Embed structure to work with
-        test_embed = Embed(title=bot_globals.command_testrealm_embed_title, color=Color.gold())
-
-        # Add information about Test Realm
-        test_embed.add_field(name=bot_globals.command_testrealm_embed_intro_title, value=bot_globals.command_testrealm_embed_intro_description, inline=False)
-        test_embed.add_field(name=bot_globals.command_testrealm_embed_historicals_title, value=bot_globals.command_testrealm_embed_historicals_description, inline=False)
-        test_embed.add_field(name=bot_globals.command_testrealm_embed_summary_title, value=bot_globals.command_testrealm_embed_summary_description, inline=False)
-        test_embed.add_field(name=bot_globals.command_testrealm_embed_estimation_title, value=bot_globals.command_testrealm_embed_estimation_description, inline=False)
-
-        # Send the embed
-        await ctx.send(embed=test_embed)
-
-        # Log the result
-        print("{time} | TESTREALM: Test Realm information posted".format(time=await self.bot.get_formatted_time()))
-
     header_option = create_option(name=bot_globals.command_thumbnail_arg_header_name, description=bot_globals.command_thumbnail_arg_header_description, option_type=3, required=True)
     footer_option = create_option(name=bot_globals.command_thumbnail_arg_footer_name, description=bot_globals.command_thumbnail_arg_footer_description, option_type=3, required=True)
-    game_option = create_option(name=bot_globals.command_thumbnail_arg_game_name, description=bot_globals.command_thumbnail_arg_game_description, option_type=3, required=False, choices=list(bot_globals.longhand_to_game.keys()))
+    game_option = create_option(name=bot_globals.command_thumbnail_arg_type_name, description=bot_globals.command_thumbnail_arg_type_description, option_type=3, required=False, choices=list(bot_globals.longhand_to_game.keys()))
     @cog_ext.cog_slash(name=bot_globals.command_thumbnail_name, description=bot_globals.command_thumbnail_description, guild_ids=subscribed_guild_ids, options=[header_option, footer_option, game_option])
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
-    async def thumbnail(self, ctx, header: str, footer: str, game: str = None):
+    async def thumbnail(self, ctx, header: str, footer: str, type: str = None):
 
         # Logging
         print("{time} | THUMBNAIL: {user} requested custom thumbnail with title {thumbnail_header} and footer {thumbnail_footer}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), thumbnail_header=header, thumbnail_footer=footer))
@@ -251,10 +229,16 @@ class PublicCommands(commands.Cog):
         # Send the uptime
         file_name = bot_globals.thumbnail_command_name.format(str(uuid.uuid4())[:8])
 
-        game_id = None
-        if game:
-            game_id = bot_globals.longhand_to_game.get(game)
-        await self.bot.spoilers.create_video_thumbnail(file_name, header.upper(), footer.upper(), game_id=game_id)
+        thumb_id = None
+        if type:
+            thumb_id = bot_globals.longhand_to_game.get(type)
+        if thumb_id == bot_globals.MGI:
+            formatted_header = header
+            formatted_footer = footer
+        else:
+            formatted_header = header.upper()
+            formatted_footer = footer.upper()
+        await self.bot.spoilers.create_video_thumbnail(file_name, formatted_header, formatted_footer, thumb_id=thumb_id)
         file_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path.format(file_name=file_name))
         file_to_send = File(file_path)
         await ctx.send(file=file_to_send)

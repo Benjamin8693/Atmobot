@@ -994,12 +994,12 @@ class Spoilers(UpdateNotifier):
 
         return True, shortened
 
-    async def create_video_thumbnail(self, file_name, thumbnail_header, thumbnail_footer, game_id=None):
+    async def create_video_thumbnail(self, file_name, thumbnail_header, thumbnail_footer, thumb_id=None):
 
         # Open our thumbnail template
-        if game_id == None:
-            game_id = settings.get("game_id", -1)
-        template_name = bot_globals.thumbnail_template_path.get(game_id)
+        if thumb_id == None:
+            thumb_id = settings.get("game_id", -1)
+        template_name = bot_globals.thumbnail_template_path.get(thumb_id)
         template_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, template_name)
         template = Image.open(template_path)
 
@@ -1007,20 +1007,34 @@ class Spoilers(UpdateNotifier):
         editing_template = ImageDraw.Draw(template)
 
         # Set the font to work with
-        font_path = os.path.join(bot_globals.resources_path, bot_globals.thumbnail_font_path)
-        font = ImageFont.truetype(font_path, bot_globals.thumbnail_font_size)
+        if thumb_id == bot_globals.MGI:
+            font_to_use = bot_globals.thumbnail_font_path_mgi
+            font_size = bot_globals.thumbnail_font_size_mgi
+        else:
+            font_to_use = bot_globals.thumbnail_font_path
+            font_size = bot_globals.thumbnail_font_size
+        font_path = os.path.join(bot_globals.resources_path, font_to_use)
+        font = ImageFont.truetype(font_path, font_size)
 
         # Place both our header and footer
         text_pieces = (thumbnail_header, thumbnail_footer)
         for text_to_place in text_pieces:
 
             index = text_pieces.index(text_to_place)
-            offset = bot_globals.thumbnail_offsets[index]
-            color = bot_globals.thumbnail_colors[index]
+            if thumb_id == bot_globals.MGI:
+                offsetY = bot_globals.thumbnail_offsets_mgi[index]
+                color = bot_globals.thumbnail_colors_mgi[index]
+            else:
+                offsetY = bot_globals.thumbnail_offsets[index]
+                color = bot_globals.thumbnail_colors[index]
 
             width, height = editing_template.textsize(text_to_place, font=font)
-            x = (bot_globals.thumbnail_dimensions[0] - width) / 2
-            y = ((bot_globals.thumbnail_dimensions[1] - height) / 2 + offset)
+
+            if thumb_id == bot_globals.MGI:
+                x = bot_globals.thumbnail_xoffset_mgi
+            else:
+                x = (bot_globals.thumbnail_dimensions[0] - width) / 2
+            y = ((bot_globals.thumbnail_dimensions[1] - height) / 2 + offsetY)
             editing_template.text((x, y), text_to_place, color, font=font)
 
         # Save our thumbnail

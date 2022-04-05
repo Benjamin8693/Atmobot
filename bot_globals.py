@@ -111,7 +111,7 @@ video_path = "video"
 locale_path = "locale"
 
 # Commands
-default_command_cooldown = 15
+default_command_cooldown = 5
 extended_command_cooldown = 1
 
 command_hero101_name = "hero101"
@@ -127,7 +127,8 @@ command_quote_arg_author_name = "author"
 command_quote_arg_author_description = "Choose an author to retrieve a quote from."
 command_quote_authors = {"chris": (310684137403056128, (2021, 5, 12)),
                          "alphastaire": (169587016684666880, None),
-                         "benjamin": (104405233987235840, None)}
+                         "benjamin": (104405233987235840, None),
+                         "lemon": (386646628754522114, None)}
 
 COMMAND_QUOTE_AUTHOR_ID = 0
 COMMAND_QUOTE_DATE_RANGE = 1
@@ -137,7 +138,7 @@ command_quote_message_limit = 10000
 
 command_days_name = "days"
 command_days_description = "Displays the amount of days left until Test Realm Watch begins."
-command_days_formatted = "There are {days} days until Test Realm Watch (April 4th)."
+command_days_formatted = "There are {days} days until Test Realm Watch (April 11th)."
 command_days_watch = "Test Realm Watch has begun! Test Realm is likely to occur any time Monday through Thursday, anywhere from 9:00 AM PST until 5:00 PM PST."
 
 command_testrealm_name = "testrealm"

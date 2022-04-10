@@ -1,3 +1,6 @@
+# Bot version
+version_number = "1.0.3"
+
 # Default settings
 default_settings = {
     "game_id": 0,

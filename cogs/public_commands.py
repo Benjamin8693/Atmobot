@@ -224,7 +224,7 @@ class PublicCommands(commands.Cog):
     async def thumbnail(self, ctx, header: str, footer: str, type: str = None):
 
         # Logging
-        print("{time} | THUMBNAIL: {user} requested custom thumbnail with title {thumbnail_header} and footer {thumbnail_footer}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), thumbnail_header=header, thumbnail_footer=footer))
+        print("{time} | THUMBNAIL: {user} requested custom thumbnail with header \"{thumbnail_header}\", footer \"{thumbnail_footer}\", and type \"{thumbnail_type}\"".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), thumbnail_header=header, thumbnail_footer=footer, thumbnail_type=type))
 
         # Capitalize our header and footer if the thumbnail type calls for it
         thumb_info = bot_globals.command_thumbnail_extras.get(type)
@@ -264,9 +264,14 @@ class PublicCommands(commands.Cog):
         hours_formatted = elasped_time.seconds // 3600
         minutes_formatted = elasped_time.seconds // 60 % 60
         seconds_formatted = elasped_time.seconds % 60
+        
+        newline = "\n"
+        version = "Version: {version}".format(version=bot_globals.version_number)
+        notes = "Release Notes:\n- Refactored the \"Thumbnail\" command.\n- Renamed the \"Uptime\" command to \"Stats\" and added additional information upon use."
+        uptime = "Uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.".format(version=bot_globals.version_number, days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted)
 
-        # Send the uptime
-        await ctx.send("Bot Uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.".format(days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
+        # Send the stats
+        await ctx.send(version + newline + notes + newline + newline + uptime)
 
         # Log the result
         print("{time} | STATS: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(time=await self.bot.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))

@@ -218,7 +218,7 @@ class PublicCommands(commands.Cog):
 
     header_option = create_option(name=bot_globals.command_thumbnail_arg_header_name, description=bot_globals.command_thumbnail_arg_header_description, option_type=3, required=True)
     footer_option = create_option(name=bot_globals.command_thumbnail_arg_footer_name, description=bot_globals.command_thumbnail_arg_footer_description, option_type=3, required=True)
-    game_option = create_option(name=bot_globals.command_thumbnail_arg_type_name, description=bot_globals.command_thumbnail_arg_type_description, option_type=3, required=False, choices=list(bot_globals.longhand_to_game.keys()))
+    game_option = create_option(name=bot_globals.command_thumbnail_arg_type_name, description=bot_globals.command_thumbnail_arg_type_description, option_type=3, required=False, choices=list(bot_globals.command_thumbnail_extras.keys()))
     @cog_ext.cog_slash(name=bot_globals.command_thumbnail_name, description=bot_globals.command_thumbnail_description, guild_ids=subscribed_guild_ids, options=[header_option, footer_option, game_option])
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def thumbnail(self, ctx, header: str, footer: str, type: str = None):
@@ -226,19 +226,18 @@ class PublicCommands(commands.Cog):
         # Logging
         print("{time} | THUMBNAIL: {user} requested custom thumbnail with title {thumbnail_header} and footer {thumbnail_footer}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), thumbnail_header=header, thumbnail_footer=footer))
 
-        # Send the uptime
-        file_name = bot_globals.thumbnail_command_name.format(str(uuid.uuid4())[:8])
+        # Capitalize our header and footer if the thumbnail type calls for it
+        thumb_info = bot_globals.command_thumbnail_extras.get(type)
+        capitalize = thumb_info[bot_globals.COMMAND_THUMBNAIL_UPPERCASE]
+        if capitalize:
+            header = header.upper()
+            footer = footer.upper()
 
-        thumb_id = None
-        if type:
-            thumb_id = bot_globals.longhand_to_game.get(type)
-        if thumb_id == bot_globals.MGI:
-            formatted_header = header
-            formatted_footer = footer
-        else:
-            formatted_header = header.upper()
-            formatted_footer = footer.upper()
-        await self.bot.spoilers.create_video_thumbnail(file_name, formatted_header, formatted_footer, thumb_id=thumb_id)
+        # Generate a thumbnail from the creator we have in our spoilers submodule
+        file_name = bot_globals.command_thumbnail_file_name.format(str(uuid.uuid4())[:8])
+        await self.bot.spoilers.create_video_thumbnail(file_name, header, footer, thumb_type=type)
+
+        # Upload our completed thumbnail so long as it successfully generated
         file_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path.format(file_name=file_name))
         file_to_send = File(file_path)
         await ctx.send(file=file_to_send)
@@ -249,12 +248,12 @@ class PublicCommands(commands.Cog):
         # Log the result
         print("{time} | THUMBNAIL: Custom thumbnail with header {thumbnail_header} and footer {thumbnail_footer} uploaded".format(time=await self.bot.get_formatted_time(), thumbnail_header=header, thumbnail_footer=footer))
 
-    @cog_ext.cog_slash(name=bot_globals.command_uptime_name, description=bot_globals.command_uptime_description, guild_ids=subscribed_guild_ids)
+    @cog_ext.cog_slash(name=bot_globals.command_stats_name, description=bot_globals.command_stats_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
-    async def uptime(self, ctx):
+    async def stats(self, ctx):
 
         # Logging
-        print("{time} | UPTIME: {user} requested bot uptime".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+        print("{time} | STATS: {user} requested bot stats".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         # Find how much time has elasped since we started the bot
         current_time = datetime.datetime.now()
@@ -270,7 +269,7 @@ class PublicCommands(commands.Cog):
         await ctx.send("Bot Uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.".format(days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
         # Log the result
-        print("{time} | UPTIME: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(time=await self.bot.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
+        print("{time} | STATS: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(time=await self.bot.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
     @cog_ext.cog_slash(name=bot_globals.command_meme_name, description=bot_globals.command_meme_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))

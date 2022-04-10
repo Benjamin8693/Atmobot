@@ -487,7 +487,7 @@ class Spoilers(UpdateNotifier):
 
             # Before anything we need to generate a header so that we know which locale file this is referencing
             # Set the font to work with
-            font_path = os.path.join(bot_globals.resources_path, bot_globals.thumbnail_font_path)
+            font_path = os.path.join(bot_globals.resources_path, bot_globals.font_atmoplex)
             font_size = 72
             font = ImageFont.truetype(font_path, font_size)
 
@@ -994,12 +994,18 @@ class Spoilers(UpdateNotifier):
 
         return True, shortened
 
-    async def create_video_thumbnail(self, file_name, thumbnail_header, thumbnail_footer, thumb_id=None):
+    async def create_video_thumbnail(self, file_name, thumbnail_header, thumbnail_footer, thumb_type=None):
 
-        # Open our thumbnail template
-        if thumb_id == None:
+        # If no thumbnail type was provided, use the game the bot is currently set up for
+        if not thumb_type:
             thumb_id = settings.get("game_id", -1)
-        template_name = bot_globals.thumbnail_template_path.get(thumb_id)
+            thumb_type = bot_globals.game_longhands.get(thumb_id)
+
+        # Info to help craft the thumbnail for this particular type
+        thumb_info = bot_globals.command_thumbnail_extras.get(thumb_type)
+        
+        # File path for the template we're going to load
+        template_name = bot_globals.thumbnail_template_name.format(thumb_type=thumb_info[bot_globals.COMMAND_THUMBNAIL_NAME])
         template_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, template_name)
         template = Image.open(template_path)
 
@@ -1007,37 +1013,39 @@ class Spoilers(UpdateNotifier):
         editing_template = ImageDraw.Draw(template)
 
         # Set the font to work with
-        if thumb_id == bot_globals.MGI:
-            font_to_use = bot_globals.thumbnail_font_path_mgi
-            font_size = bot_globals.thumbnail_font_size_mgi
-        else:
-            font_to_use = bot_globals.thumbnail_font_path
-            font_size = bot_globals.thumbnail_font_size
-        font_path = os.path.join(bot_globals.resources_path, font_to_use)
+        font_name = thumb_info[bot_globals.COMMAND_THUMBNAIL_FONT]
+        font_size = thumb_info[bot_globals.COMMAND_THUMBNAIL_FONT_SIZE]
+        font_path = os.path.join(bot_globals.resources_path, font_name)
         font = ImageFont.truetype(font_path, font_size)
+
+        # Offset and color info
+        thumbnail_offsets = (thumb_info[bot_globals.COMMAND_THUMBNAIL_HEADER_OFFSET], thumb_info[bot_globals.COMMAND_THUMBNAIL_FOOTER_OFFSET])
+        thumbnail_colors = (thumb_info[bot_globals.COMMAND_THUMBNAIL_HEADER_COLOR], thumb_info[bot_globals.COMMAND_THUMBNAIL_FOOTER_COLOR])
 
         # Place both our header and footer
         text_pieces = (thumbnail_header, thumbnail_footer)
         for text_to_place in text_pieces:
 
+            # Index
             index = text_pieces.index(text_to_place)
-            if thumb_id == bot_globals.MGI:
-                offsetY = bot_globals.thumbnail_offsets_mgi[index]
-                color = bot_globals.thumbnail_colors_mgi[index]
-            else:
-                offsetY = bot_globals.thumbnail_offsets[index]
-                color = bot_globals.thumbnail_colors[index]
 
+            # Set x and y coordinates
             width, height = editing_template.textsize(text_to_place, font=font)
-
-            if thumb_id == bot_globals.MGI:
-                x = bot_globals.thumbnail_xoffset_mgi
+            offsetX = thumb_info[bot_globals.COMMAND_THUMBNAIL_X_OFFSET]
+            if offsetX:
+                x = offsetX
             else:
                 x = (bot_globals.thumbnail_dimensions[0] - width) / 2
+            offsetY = thumbnail_offsets[index]
             y = ((bot_globals.thumbnail_dimensions[1] - height) / 2 + offsetY)
+
+            # Grab text color
+            color = thumbnail_colors[index]
+
+            # Place the text
             editing_template.text((x, y), text_to_place, color, font=font)
 
-        # Save our thumbnail
+        # Save the thumbnail
         output_path = os.path.join(bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path.format(file_name=file_name))
         template.save(output_path)
 
@@ -1185,7 +1193,7 @@ class Spoilers(UpdateNotifier):
         editing_template = ImageDraw.Draw(template)
 
         # Set the font to work with
-        font_path = os.path.join(bot_globals.resources_path, bot_globals.thumbnail_font_path)
+        font_path = os.path.join(bot_globals.resources_path, bot_globals.font_atmoplex)
         font = ImageFont.truetype(font_path, 84)
         x_offset = 532
         y_offset = 454

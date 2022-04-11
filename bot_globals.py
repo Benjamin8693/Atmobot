@@ -17,7 +17,6 @@ default_settings = {
     "authorized_poster_ids": [],
     "spoiler_channel_ids": [0, 0, 0],
     "spoiler_announcement_role_id": 0,
-    "spoiler_announcement_channel_id": 0,
     "spoiler_greetings": "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].",
     "spoiler_goodbye": "Thats all for now!\n\nSee you next time!"
 }
@@ -152,7 +151,7 @@ command_testrealm_embed_historicals_description = "2017: Wednesday, 3/22 @ 3:52 
 command_testrealm_embed_summary_title = "Summary"
 command_testrealm_embed_summary_description = "Earliest Date: March 19th\nLatest Date: April 5th\nEarliest Time: 7:00 AM PST\nLatest Time: 3:52 PM PST\n\nMost popular day: Monday\nLeast popular day: Tuesday/Thursday\nPossible days: Monday through Thursday\n\nLast year's date: April 5th"
 command_testrealm_embed_estimation_title = "Estimation"
-command_testrealm_embed_estimation_description = "We think Test Realm will release on Tuesday, April 12th. On Monday, April 12th, we will go into Test Realm Watch and check for any activity with Kingsisle's Test Realm related servers. If anything is detected, everyone who has the \"Test Realm Notifications\" role will be notified!"
+command_testrealm_embed_estimation_description = "We think Test Realm will release on Tuesday, April 12th. On Tuesday, April 12th, we will go into Test Realm Watch and check for any activity with Kingsisle's Test Realm related servers. If anything is detected, everyone who has the \"Test Realm Notifications\" role will be notified!"
 
 command_thumbnail_name = "thumbnail"
 command_thumbnail_description = "Creates a thumbnail in the same style as a Wizard101 Music upload from The Atmoplex."

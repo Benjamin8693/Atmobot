@@ -16,7 +16,9 @@ default_settings = {
     "twitter_api_keys": ["", "", "", "", ""],
     "authorized_poster_ids": [],
     "spoiler_channel_ids": [0, 0, 0],
-    "spoiler_announcement": "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].",
+    "spoiler_announcement_role_id": 0,
+    "spoiler_announcement_channel_id": 0,
+    "spoiler_greetings": "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].",
     "spoiler_goodbye": "Thats all for now!\n\nSee you next time!"
 }
 
@@ -81,8 +83,8 @@ REVISION_UNKNOWN = -1
 REVISION_NUMBER = 0
 REVISION_VERSION = 1
 
-fallback_revision = 709603
-fallback_version = "Wizard_1_460"
+fallback_revision = 713909
+fallback_version = "Wizard_1_470"
 fallback_version_dev = "WizardDev"
 
 version_empty = "Wizard_{}_{}"
@@ -137,20 +139,20 @@ command_quote_message_limit = 10000
 
 command_days_name = "days"
 command_days_description = "Displays the amount of days left until Test Realm Watch begins."
-command_days_formatted = "There are {days} days until Test Realm Watch (April 11th)."
-command_days_watch = "Test Realm Watch has begun! Test Realm is likely to occur any time Monday through Thursday, anywhere from 9:00 AM PST until 5:00 PM PST."
+command_days_formatted = "There {verb} **{days} day{s}** until Test Realm Watch ({date}).\nTest Realm Watch is the first day of the season in which Test Realm has a chance to release."
+command_days_watch = "**Test Realm Watch has begun!**\nTest Realm is likely to release any time **Monday through Thursday**, from **9:00 AM PST until 5:00 PM PST**."
 
 command_testrealm_name = "testrealm"
 command_testrealm_description = "Details when Test Realm is likely to arrive, and why."
 command_testrealm_embed_title = "When is Test Realm coming?"
 command_testrealm_embed_intro_title = "We don't know"
-command_testrealm_embed_intro_description = "But we can certainly make an educated guess. By taking a look at prior Test Realm release dates, we can estimate when this one may release. We typically reference every Test Realm since 2015, when the 3-updates-a-year cycle began."
+command_testrealm_embed_intro_description = "But we can certainly make an educated guess. By taking a look at prior Test Realm release dates, we can estimate when this one may release. Let's look at Spring Update releases from the last 5 years."
 command_testrealm_embed_historicals_title = "Prior release dates"
-command_testrealm_embed_historicals_description = "2015 - Polaris: Monday, 10/26 @ 9:15 AM\n2016 - Mirage: Wednesday, 11/9 @ 5:00 PM\n2017 - Empyrea Part 1: Wednesday, 10/18 @ 4:37 PM\n2018 - Empyrea Part 2: Thursday, 10/18 @ 9:50 AM\n2019 - Catacombs: Wednesday, 10/23 @ 1:22 PM\n2020 - Karamelle: Wednesday, 10/28 @ 10:59 AM"
+command_testrealm_embed_historicals_description = "2017: Wednesday, 3/22 @ 3:52 PM\n2018: Monday, 3/19 @ 10:06 AM\n2019: Tuesday, 4/3 @ 8:04 AM\n2020: Thursday, 4/2 @ 7:00 AM\n2021: Monday, 4/5 @ 7:00 AM"
 command_testrealm_embed_summary_title = "Summary"
-command_testrealm_embed_summary_description = "Earliest Date: October 18th\nLatest Date: November 9th\nEarliest Time: 9:15 AM PST\nLatest Time: 5:00 PM PST\n\nMost popular day: Wednesday\nLeast popular day: Tuesday\nPossible days: Monday through Thursday\n\nEarliest FULL world update: October 26th\nLast year's date: October 28th"
+command_testrealm_embed_summary_description = "Earliest Date: March 19th\nLatest Date: April 5th\nEarliest Time: 7:00 AM PST\nLatest Time: 3:52 PM PST\n\nMost popular day: Monday\nLeast popular day: Tuesday/Thursday\nPossible days: Monday through Thursday\n\nLast year's date: April 5th"
 command_testrealm_embed_estimation_title = "Estimation"
-command_testrealm_embed_estimation_description = "We think Test Realm will release on Wednesday, November 10th. On Monday, November 8th, we will go into Test Realm Watch and check for any activity with Kingsisle's Test Realm related servers. If anything is detected, everyone who has the \"Test Realm Notifications\" role will be notified!"
+command_testrealm_embed_estimation_description = "We think Test Realm will release on Tuesday, April 12th. On Monday, April 12th, we will go into Test Realm Watch and check for any activity with Kingsisle's Test Realm related servers. If anything is detected, everyone who has the \"Test Realm Notifications\" role will be notified!"
 
 command_thumbnail_name = "thumbnail"
 command_thumbnail_description = "Creates a thumbnail in the same style as a Wizard101 Music upload from The Atmoplex."
@@ -188,7 +190,7 @@ command_deepfake_arg_directory_name = "directory"
 command_deepfake_arg_directory_description = "Choose a specific category to retrieve a deepfake from."
 
 # Posted when a new test revision has been detected, and the bot is about to commence with auto-spoilers
-spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Lemuria Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."
+spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."
 spoilers_incoming_discord_title = "Atmobot"
 spoilers_incoming_discord_information_title = "Hello! I am Atmobot"
 spoilers_incoming_discord_information = "I am a bot created by the Atmoplex team for the purpose of spoiling Test Realm. Test Realm has just updated, so it's time for me to spoil a few things automatically!"
@@ -205,14 +207,16 @@ TWITTER_KEY_ACCESS_TOKEN_SECRET = 3
 TWITTER_KEY_BEAR = 4
 
 CHANNEL_INVALID = -1
-CHANNEL_LOCALE = 0
+CHANNEL_ANNOUNCEMENT = 0
 CHANNEL_IMAGES = 1
 CHANNEL_MUSIC = 2
+CHANNEL_LOCALE = 3
 
 spoilers_template = {
     "Root": [{"name": "Spell Preview Icons",
               "file_path": "GUI/DeckConfig/",
               "file_exclusions": ["Spell_Complete_BW"],
+              "file_inclusions": [],
               "channel_to_post": 1,
               "post_description": "Take a look at the new Spell Preview Icons!",
               "post_to_twitter": True}]
@@ -223,12 +227,13 @@ spoilers_path = "spoilers.json"
 SPOILER_NAME = 0
 SPOILER_FILE_PATH = 1
 SPOILER_FILE_EXCLUSIONS = 2
-SPOILER_CHANNEL_TO_POST = 3
-SPOILER_POST_DESCRIPTION = 4
-SPOILER_POST_TO_TWITTER = 5
+SPOILER_FILE_INCLUSIONS = 3
+SPOILER_CHANNEL_TO_POST = 4
+SPOILER_POST_DESCRIPTION = 5
+SPOILER_POST_TO_TWITTER = 6
 
 time_between_posts = 5
-spoiler_divide_threshold = 5
+spoiler_divide_threshold = 2
 spoiler_divide_amount = 16
 
 twitter_description_format = "[BOT] {description}"
@@ -271,7 +276,7 @@ twitter_video_process_time = 15
 video_dimension = 720
 video_fade_duration = 5
 
-video_overtime_description = " (Track shortened to adhere to Twitter's video limit. Full version uploaded later.)"
+video_overtime_description = "\n\n(Track shortened to adhere to Twitter's video limit. Full version uploaded later.)"
 
 CHAIN_STATUS_INVALID = -1
 CHAIN_STATUS_NOT_READY = 0

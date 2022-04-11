@@ -195,6 +195,30 @@ class PublicCommands(commands.Cog):
         # Log the result
         print("{time} | QUOTE: Quote \"{quote}\" from {author_name} posted".format(time=await self.bot.get_formatted_time(), quote=random_message, author_name=author_username))
 
+    @cog_ext.cog_slash(name=bot_globals.command_testrealm_name, description=bot_globals.command_testrealm_description, guild_ids=subscribed_guild_ids)
+    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
+    #@commands.command()
+    #@commands.has_permissions(manage_messages=True)
+    async def testrealm(self, ctx):
+
+        # Logging
+        print("{time} | TESTREALM: {user} requested Test Realm information".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+
+        # Embed structure to work with
+        test_embed = Embed(title=bot_globals.command_testrealm_embed_title, color=Color.gold())
+
+        # Add information about Test Realm
+        test_embed.add_field(name=bot_globals.command_testrealm_embed_intro_title, value=bot_globals.command_testrealm_embed_intro_description, inline=False)
+        test_embed.add_field(name=bot_globals.command_testrealm_embed_historicals_title, value=bot_globals.command_testrealm_embed_historicals_description, inline=False)
+        test_embed.add_field(name=bot_globals.command_testrealm_embed_summary_title, value=bot_globals.command_testrealm_embed_summary_description, inline=False)
+        test_embed.add_field(name=bot_globals.command_testrealm_embed_estimation_title, value=bot_globals.command_testrealm_embed_estimation_description, inline=False)
+
+        # Send the embed
+        await ctx.send(embed=test_embed)
+
+        # Log the result
+        print("{time} | TESTREALM: Test Realm information posted".format(time=await self.bot.get_formatted_time()))
+    
     @cog_ext.cog_slash(name=bot_globals.command_days_name, description=bot_globals.command_days_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def days(self, ctx):
@@ -203,18 +227,33 @@ class PublicCommands(commands.Cog):
         print("{time} | DAYS: {user} requested days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         today = datetime.date.today()
-        future = datetime.date(2022, 4, 11)
+        future = datetime.date(2022, 4, 12)
         diff = future - today
 
+        # Days plural
+        s = ""
+        verb = "is"
+        if diff.days > 1:
+            s = "s"
+            verb = "are"
+
+        # Format month and day
+        month_name = future.strftime("%B")
+        if 4 <= future.day <= 20 or 24 <= future.day <= 30:
+            day_suffix = "th"
+        else:
+            day_suffix = ["st", "nd", "rd"][future.day % 10 - 1]
+        formatted_day = "{month_name} {day}{day_suffix}".format(month_name=month_name, day=future.day, day_suffix=day_suffix)
+
+        # Send the amount of days
         if diff.days > 0:
-            # Send the amount of days
-            formatted_days = bot_globals.command_days_formatted.format(days=diff.days)
+            formatted_days = bot_globals.command_days_formatted.format(verb=verb, days=diff.days, s=s, date=formatted_day)
             await ctx.send(formatted_days)
         else:
             await ctx.send(bot_globals.command_days_watch)
 
         # Log the result
-        print("{time} | DAYS: {days} days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), days=diff.days))
+        print("{time} | DAYS: {days} day{s} until Test Realm Watch".format(time=await self.bot.get_formatted_time(), days=diff.days, s=s))
 
     header_option = create_option(name=bot_globals.command_thumbnail_arg_header_name, description=bot_globals.command_thumbnail_arg_header_description, option_type=3, required=True)
     footer_option = create_option(name=bot_globals.command_thumbnail_arg_footer_name, description=bot_globals.command_thumbnail_arg_footer_description, option_type=3, required=True)

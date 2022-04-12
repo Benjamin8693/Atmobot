@@ -165,8 +165,8 @@ class Spoilers(UpdateNotifier):
 
         if not forced_revision:
             forced_revision = self.revision_data
-        file_list_url = "http://versionec.us.wizard101.com/WizPatcher/{}/Windows/LatestFileList.bin".format(forced_revision)
-        base_url = "http://versionec.us.wizard101.com/WizPatcher/{}/LatestBuild/".format(forced_revision)
+        file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/{}/Windows/LatestFileList.bin".format(forced_revision)
+        base_url = "http://testversionec.us.wizard101.com/WizPatcher/{}/LatestBuild/".format(forced_revision)
 
         await self.new_revision(self.revision_data, file_list_url, base_url)
 

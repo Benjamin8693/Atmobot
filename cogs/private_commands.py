@@ -7,6 +7,8 @@ from discord_components import Button, ButtonStyle, InteractionType
 import bot_globals
 
 # Built-in packages
+import os
+import shutil
 import subprocess
 import sys
 import traceback
@@ -168,6 +170,16 @@ class PrivateCommands(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
+    async def copydb(self, ctx):
+
+        source_directory="resources/database/wizdiff-V_r707528.Wizard_1_460.db"
+        destination_directory="wizdiff.db"
+        shutil.copy(source_directory, destination_directory)
+
+        await ctx.send("Copied test database.")
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def initdb(self, ctx):
         self.bot.spoilers.init_db()
 
@@ -188,8 +200,9 @@ class PrivateCommands(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def testspoil(self, ctx):
-        await self.bot.spoilers.test_file_update()
+    async def testspoil(self, ctx, version: str = ""):
+
+        await self.bot.spoilers.test_file_update(forced_revision=version)
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

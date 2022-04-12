@@ -88,7 +88,7 @@ fallback_version_dev = "WizardDev"
 
 version_empty = "Wizard_{}_{}"
 
-default_revision_range = 1000
+default_revision_range = 5000
 
 # Fallback .WAD file used for testing
 fallback_wad = "Root"
@@ -218,7 +218,8 @@ spoilers_template = {
               "file_inclusions": [],
               "channel_to_post": 1,
               "post_description": "Take a look at the new Spell Preview Icons!",
-              "post_to_twitter": True}]
+              "post_to_twitter": True,
+              "divide_threshold": 5}]
 }
 
 spoilers_path = "spoilers.json"
@@ -230,10 +231,11 @@ SPOILER_FILE_INCLUSIONS = 3
 SPOILER_CHANNEL_TO_POST = 4
 SPOILER_POST_DESCRIPTION = 5
 SPOILER_POST_TO_TWITTER = 6
+SPOILER_DIVIDE_THRESHOLD = 7
 
 time_between_posts = 5
-spoiler_divide_threshold = 2
 spoiler_divide_amount = 16
+spoilers_per_tweet = 4
 
 twitter_description_format = "[BOT] {description}"
 twitter_description_extension = " [{current}/{total}]"

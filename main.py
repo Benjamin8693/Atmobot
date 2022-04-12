@@ -108,13 +108,6 @@ class Atmobot(commands.Bot):
                                                      game_longhand=game_longhand,
                                                      footer="=" * 52))
 
-            # Simulate a file update
-            # TODO: Remove this
-            #await self.spoilers.test_file_update()
-            #await self.spoilers.text_compare_demo()
-            #await self.spoilers.update_loop()
-            #self.spoilers.init_db()
-
         else:
 
             print("{time} | RECONNECT: Bot reconnected to Discord API".format(time=await self.get_formatted_time()))
@@ -157,7 +150,7 @@ class Atmobot(commands.Bot):
             author = response.guild.get_member(response.author.id)
 
             role_ids = (role.id for role in author.roles)
-            role_id = 729523418164232264
+            role_id = 886396512018501733
             guild = response.guild
             role = guild.get_role(role_id)
 

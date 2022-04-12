@@ -131,15 +131,15 @@ class Spoilers(UpdateNotifier):
                     if revisions:
                         revision = revisions.pop()
 
-                    formatted_revision = "{}.{}".format(revision[bot_globals.REVISION_NUMBER], revision[bot_globals.REVISION_VERSION])
+                        formatted_revision = "{}.{}".format(revision[bot_globals.REVISION_NUMBER], revision[bot_globals.REVISION_VERSION])
 
-                    if self.db.check_if_new_revision(formatted_revision):
-                        print("{time} | SPOILERS: New revision {revision} found! Running file update protocol".format(time=await self.bot.get_formatted_time(), revision=formatted_revision))
-                        self.revision_data = formatted_revision
-                        await self.test_file_update()
-                        update = True
-                    else:
-                        print("{time} | SPOILERS: No new revision found".format(time=await self.bot.get_formatted_time()))
+                        if self.db.check_if_new_revision(formatted_revision):
+                            print("{time} | SPOILERS: New revision {revision} found! Running file update protocol".format(time=await self.bot.get_formatted_time(), revision=formatted_revision))
+                            self.revision_data = formatted_revision
+                            await self.test_file_update()
+                            update = True
+                        else:
+                            print("{time} | SPOILERS: No new revision found".format(time=await self.bot.get_formatted_time()))
                 except:
                     print("{time} | SPOILERS: Patch server timed out and caused an exception".format(time=await self.bot.get_formatted_time()))
 

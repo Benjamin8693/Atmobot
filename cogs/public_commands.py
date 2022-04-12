@@ -265,6 +265,11 @@ class PublicCommands(commands.Cog):
         # Logging
         print("{time} | THUMBNAIL: {user} requested custom thumbnail with header \"{thumbnail_header}\", footer \"{thumbnail_footer}\", and type \"{thumbnail_type}\"".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), thumbnail_header=header, thumbnail_footer=footer, thumbnail_type=type))
 
+        # If no thumbnail type was provided, use the game the bot is currently set up for
+        if not type:
+            thumb_id = settings.get("game_id", -1)
+            type = bot_globals.game_longhands.get(thumb_id)
+
         # Capitalize our header and footer if the thumbnail type calls for it
         thumb_info = bot_globals.command_thumbnail_extras.get(type)
         capitalize = thumb_info[bot_globals.COMMAND_THUMBNAIL_UPPERCASE]

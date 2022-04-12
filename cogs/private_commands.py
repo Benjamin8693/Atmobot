@@ -172,7 +172,7 @@ class PrivateCommands(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def copydb(self, ctx):
 
-        source_directory="resources/database/wizdiff-V_r707528.Wizard_1_460.db"
+        source_directory="resources/database/wizdiff-V_r713909.Wizard_1_470.db"
         destination_directory="wizdiff.db"
         shutil.copy(source_directory, destination_directory)
 

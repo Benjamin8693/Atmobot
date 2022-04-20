@@ -82,13 +82,13 @@ REVISION_UNKNOWN = -1
 REVISION_NUMBER = 0
 REVISION_VERSION = 1
 
-fallback_revision = 713909
+fallback_revision = 716142
 fallback_version = "Wizard_1_470"
 fallback_version_dev = "WizardDev"
 
 version_empty = "Wizard_{}_{}"
 
-default_revision_range = 5000
+default_revision_range = 500
 
 # Fallback .WAD file used for testing
 fallback_wad = "Root"

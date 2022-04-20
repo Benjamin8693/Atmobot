@@ -168,7 +168,7 @@ class Spoilers(UpdateNotifier):
         file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/{}/Windows/LatestFileList.bin".format(forced_revision)
         base_url = "http://testversionec.us.wizard101.com/WizPatcher/{}/LatestBuild/".format(forced_revision)
 
-        await self.new_revision(self.revision_data, file_list_url, base_url)
+        await self.new_revision(forced_revision, file_list_url, base_url)
 
         # Re-enable commands
         #for command in self.bot.commands:

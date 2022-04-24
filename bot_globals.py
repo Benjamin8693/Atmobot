@@ -130,7 +130,8 @@ command_quote_authors = {"chris": (310684137403056128, (2021, 5, 12)),
                          "benjamin": (104405233987235840, None),
                          "lemon": (386646628754522114, (2021, 4, 2)),
                          "slackaduts": (263123145333014530, None),
-                         "region": (287443435915575296, None)}
+                         "region": (287443435915575296, None),
+                         "calamity": (321468290373386251, None)}
 
 COMMAND_QUOTE_AUTHOR_ID = 0
 COMMAND_QUOTE_DATE_RANGE = 1

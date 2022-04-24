@@ -128,7 +128,8 @@ command_quote_arg_author_description = "Choose an author to retrieve a quote fro
 command_quote_authors = {"chris": (310684137403056128, (2021, 5, 12)),
                          "alphastaire": (169587016684666880, None),
                          "benjamin": (104405233987235840, None),
-                         "lemon": (386646628754522114, None)}
+                         "lemon": (386646628754522114, (2021, 5, 12)),
+                         "slack": (263123145333014530, None)}
 
 COMMAND_QUOTE_AUTHOR_ID = 0
 COMMAND_QUOTE_DATE_RANGE = 1

@@ -56,6 +56,16 @@ class PrivateCommands(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
+    async def reloadcommands(self, ctx):
+
+        command_module_name = "cogs.public_commands"
+
+        self.bot.reload_extension(command_module_name)
+
+        await ctx.send("Commands reloaded.")
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def testping(self, ctx):
 
         await ctx.send("<@&886396512018501733>")
@@ -68,7 +78,7 @@ class PrivateCommands(commands.Cog):
         version_list = [bot_globals.fallback_version_dev, most_recent_version]
         revision = await self.bot.checker.revision_bruteforcer.start(revision_start=most_recent_version, revision_range=bot_globals.default_revision_range, version_list=version_list)
         
-        await ctx.send("Revision is {}".format(revision))
+        await ctx.send("Revision is {}.".format(revision))
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

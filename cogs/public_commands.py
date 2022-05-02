@@ -12,6 +12,7 @@ import datetime
 import os
 import random
 import sys
+import time
 import traceback
 import typing
 import uuid
@@ -134,66 +135,78 @@ class PublicCommands(commands.Cog):
         # Log the result
         print("{time} | REMCO: Ascii art posted".format(time=await self.bot.get_formatted_time()))
 
-    author_choices = []
-    for author_name in list(bot_globals.command_quote_authors.keys()):
-        choice = create_choice(name=author_name.capitalize(), value=author_name)
-        author_choices.append(choice)
-    author_option = create_option(name=bot_globals.command_quote_arg_author_name, description=bot_globals.command_quote_arg_author_description, option_type=3, required=True, choices=author_choices)
-    @cog_ext.cog_slash(name=bot_globals.command_quote_name, description=bot_globals.command_quote_description, guild_ids=subscribed_guild_ids, options=[author_option])
+    user_choices = []
+    available_users = {}
+    quote_users = settings.get("quote_users", [])
+    for quote_user in quote_users:
+        user_name = quote_user[bot_globals.COMMAND_QUOTE_USER_NAME]
+        user_id = quote_user[bot_globals.COMMAND_QUOTE_USER_ID]
+        date_range = quote_user[bot_globals.COMMAND_QUOTE_DATE_RANGE]
+        available_users[user_name] = [user_id, date_range]
+        choice = create_choice(name=user_name.capitalize(), value=user_name)
+        user_choices.append(choice)
+    user_option = create_option(name=bot_globals.command_quote_arg_user_name, description=bot_globals.command_quote_arg_user_description, option_type=3, required=True, choices=user_choices)
+    @cog_ext.cog_slash(name=bot_globals.command_quote_name, description=bot_globals.command_quote_description, guild_ids=subscribed_guild_ids, options=[user_option])
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
-    async def quote(self, ctx, author: str):
+    async def quote(self, ctx, user: str):
 
-        # Grab author details
-        author_data = bot_globals.command_quote_authors.get(author)
-        author_id = author_data[bot_globals.COMMAND_QUOTE_AUTHOR_ID]
-        date_range = author_data[bot_globals.COMMAND_QUOTE_DATE_RANGE]
-        author_username = author.capitalize()
+        # Grab user details
+        user_data = self.available_users.get(user)
+        user_id = user_data[bot_globals.COMMAND_QUOTE_USER_ID - 1]
+        date_range = user_data[bot_globals.COMMAND_QUOTE_DATE_RANGE - 1]
+        formatted_user = user.capitalize()
 
         # Logging
-        print("{time} | QUOTE: {user} requested quote of user {author}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), author=author_username))
+        print("{time} | QUOTE: {requester} requested quote of user {user}".format(time=await self.bot.get_formatted_time(), requester=await self.get_full_username(ctx.author), user=formatted_user))
 
         # Generate chat history for the author if it doesn't exist
-        if author not in self.message_history:
+        if user not in self.message_history:
 
             history = []
-            self.message_history[author] = history
+            self.message_history[user] = history
 
             # Notify that we're generating the quote library
-            await ctx.send("Generating Quote library for {author_name}. This could take a few minutes.".format(author_name=author_username))
+            await ctx.send("Generating Quote library for {user}. Please wait a little bit, then try again.".format(user=formatted_user))
 
-            # Grab the past 10,000 messages from the quote channel
-            reference_channel = self.bot.get_channel(bot_globals.command_quote_channel_id)
+            # Grab the past x messages from the quote channel
+            channel_id = settings.get("quote_channel_id", 0)
+            if not channel_id:
+                await ctx.send("Quote channel ID not set!")
+                print("{time} | QUOTE: Quote channel ID not set".format(time=await self.bot.get_formatted_time()))
+                return
+
+            reference_channel = self.bot.get_channel(channel_id)
             if date_range:
                 reference_time = datetime.datetime(*date_range)
             else:
                 reference_time = datetime.datetime.now()
-            async for message in reference_channel.history(limit=bot_globals.command_quote_message_limit, before=reference_time.replace(tzinfo=None)):
-                if message.author.id == author_id:
-                    if len(message.content) > 10 and (not "<@" in message.content) and (not "<:" in message.content):
+            async for message in reference_channel.history(limit=bot_globals.command_quote_message_history, before=reference_time.replace(tzinfo=None)):
+                if message.author.id == user_id:
+                    if len(message.content) > bot_globals.command_quote_message_threshold and (not "<@" in message.content) and (not "<:" in message.content):
                         history.append(message.content)
 
             # Add them to history
-            self.message_history[author] = history
+            self.message_history[user] = history
 
             # Quote library finished generating
-            print("{time} | QUOTE: Quote library generated".format(time=await self.bot.get_formatted_time()))
+            print("{time} | QUOTE: Quote library for {user} generated".format(time=await self.bot.get_formatted_time(), user=formatted_user))
             return
 
-        # Grab chat history from this author
-        history = self.message_history.get(author)
+        # Grab chat history from this user
+        history = self.message_history.get(user)
 
-        # We don't have any chat history to grab a quote from quite yet
+        # We don't have any chat history to grab a quote from
         if not history:
-            await ctx.send("Quote library has not yet finished generating. Check back in a few minutes.")
-            print("{time} | QUOTE: Still generating quote library".format(time=await self.bot.get_formatted_time()))
+            await ctx.send("There are no available quotes  for {user}.".format(user=formatted_user))
+            print("{time} | QUOTE: No available quotes for {user}".format(time=await self.bot.get_formatted_time(), user=formatted_user))
             return
 
         # Pick a random messgae from the history and send it
         random_message = random.choice(history)
-        await ctx.send("**{author_name}:** \"{message}\"".format(author_name=author_username, message=random_message))
+        await ctx.send("**{user}:** \"{message}\"".format(user=formatted_user, message=random_message))
 
         # Log the result
-        print("{time} | QUOTE: Quote \"{quote}\" from {author_name} posted".format(time=await self.bot.get_formatted_time(), quote=random_message, author_name=author_username))
+        print("{time} | QUOTE: Quote \"{quote}\" from {user} posted".format(time=await self.bot.get_formatted_time(), quote=random_message, user=formatted_user))
 
     @cog_ext.cog_slash(name=bot_globals.command_testrealm_name, description=bot_globals.command_testrealm_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
@@ -227,7 +240,7 @@ class PublicCommands(commands.Cog):
         print("{time} | DAYS: {user} requested days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         today = datetime.date.today()
-        future = datetime.date(2022, 4, 12)
+        future = datetime.date(2022, 7, 5)
         diff = future - today
 
         # Days plural
@@ -308,14 +321,31 @@ class PublicCommands(commands.Cog):
         hours_formatted = elasped_time.seconds // 3600
         minutes_formatted = elasped_time.seconds // 60 % 60
         seconds_formatted = elasped_time.seconds % 60
+
+        # Gather version and release notes from settings
+        release_info = settings.get("release_info", [])
+        if release_info:
+            release_version = release_info[bot_globals.COMMAND_STATS_RELEASE_VERSION]
+            release_notes = release_info[bot_globals.COMMAND_STATS_RELEASE_NOTES]
+        else:
+            release_version = bot_globals.command_stats_release_version_unknown
+            release_notes = None
+
+        version = bot_globals.command_stats_version.format(version=release_version)
+        if release_notes:
+            formatted_notes = ""
+            for release_note in release_notes:
+                note = bot_globals.command_stats_release_note.format(note=release_note)
+                formatted_notes += note
+            notes = bot_globals.command_stats_notes.format(notes=formatted_notes)
+            release = version + bot_globals.command_stats_newline + notes
+        else:
+            release = version + bot_globals.command_stats_newline
         
-        newline = "\n"
-        version = "Version: {version}".format(version=bot_globals.version_number)
-        notes = "Release Notes:\n- Refactored the \"Thumbnail\" command.\n- Renamed the \"Uptime\" command to \"Stats\" and added additional information upon use."
-        uptime = "Uptime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.".format(version=bot_globals.version_number, days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted)
+        uptime = bot_globals.command_stats_uptime.format(days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted)
 
         # Send the stats
-        await ctx.send(version + newline + notes + newline + newline + uptime)
+        await ctx.send(release + bot_globals.command_stats_newline + uptime)
 
         # Log the result
         print("{time} | STATS: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(time=await self.bot.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
@@ -334,9 +364,16 @@ class PublicCommands(commands.Cog):
         all_files = [x for x in list(os.scandir(current_path)) if x.is_file()]
         random_file = random.choice(all_files).name
 
-        # Small chance of replacing this with our easter egg image
-        if random.random() < 1. / 5:
-            random_file = "hidden/surprise.png"
+        # Small chance of replacing this with a hidden meme
+        hidden_memes = settings.get("hidden_memes", [])
+        for hidden_meme in hidden_memes:
+            meme_name = hidden_meme[bot_globals.COMMAND_MEME_HIDDEN_NAME]
+            meme_rarity = hidden_meme[bot_globals.COMMAND_MEME_HIDDEN_RARITY]
+            random.seed(len(meme_name) + time.time())
+            if random.random() < 1.0 / meme_rarity:
+                print("{time} | MEME: Hidden meme '{file_path}' activated".format(time=await self.bot.get_formatted_time(), file_path=meme_name))
+                random_file = os.path.join(bot_globals.memes_hidden_path, meme_name)
+                break
 
         # Generate a file path and send the file
         file_path = os.path.join(current_path, random_file)

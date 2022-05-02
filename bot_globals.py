@@ -1,5 +1,3 @@
-# Bot version
-version_number = "1.0.3"
 
 # Default settings
 default_settings = {
@@ -18,7 +16,11 @@ default_settings = {
     "spoiler_channel_ids": [0, 0, 0],
     "spoiler_announcement_role_id": 0,
     "spoiler_greetings": "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].",
-    "spoiler_goodbye": "Thats all for now!\n\nSee you next time!"
+    "spoiler_goodbye": "Thats all for now!\n\nSee you next time!",
+    "release_info": ["1.0.0", ["Added a new feature", "Made a tweak", "Fixed a bug"]],
+    "hidden_memes": [],
+    "quote_channel_id": 0,
+    "quote_users": []
 }
 
 # Name of the settings file
@@ -102,6 +104,8 @@ patcher_tips = {200: "The Patcher is online",
 resources_path = "resources"
 deepfakes_path = "deepfakes"
 memes_path = "memes"
+memes_archived_path = "archive"
+memes_hidden_path = "hidden"
 hero101_path = "hero"
 video_path = "video"
 locale_path = "locale"
@@ -123,21 +127,15 @@ command_remco_art = "⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⠋⠉⠉⠙�
 
 command_quote_name = "quote"
 command_quote_description = "Posts a random quote."
-command_quote_arg_author_name = "author"
-command_quote_arg_author_description = "Choose an author to retrieve a quote from."
-command_quote_authors = {"chris": (310684137403056128, (2021, 5, 12)),
-                         "alphastaire": (169587016684666880, None),
-                         "benjamin": (104405233987235840, None),
-                         "lemon": (386646628754522114, (2021, 4, 2)),
-                         "slackaduts": (263123145333014530, None),
-                         "region": (287443435915575296, None),
-                         "calamity": (321468290373386251, None)}
+command_quote_arg_user_name = "user"
+command_quote_arg_user_description = "Choose a user to retrieve a quote from."
 
-COMMAND_QUOTE_AUTHOR_ID = 0
-COMMAND_QUOTE_DATE_RANGE = 1
+COMMAND_QUOTE_USER_NAME = 0
+COMMAND_QUOTE_USER_ID = 1
+COMMAND_QUOTE_DATE_RANGE = 2
 
-command_quote_channel_id = 389266925185662986
-command_quote_message_limit = 10000
+command_quote_message_history = 10000
+command_quote_message_threshold = 10
 
 command_days_name = "days"
 command_days_description = "Displays the amount of days left until Test Realm Watch begins."
@@ -148,13 +146,13 @@ command_testrealm_name = "testrealm"
 command_testrealm_description = "Details when Test Realm is likely to arrive, and why."
 command_testrealm_embed_title = "When is Test Realm coming?"
 command_testrealm_embed_intro_title = "We don't know"
-command_testrealm_embed_intro_description = "But we can certainly make an educated guess. By taking a look at prior Test Realm release dates, we can estimate when this one may release. Let's look at Spring Update releases from the last 5 years."
+command_testrealm_embed_intro_description = "But we can certainly make an educated guess. By taking a look at prior Test Realm release dates, we can estimate when this one may release. Let's look at Summer Update releases from the last 5 years."
 command_testrealm_embed_historicals_title = "Prior release dates"
-command_testrealm_embed_historicals_description = "2017: Wednesday, 3/22 @ 3:52 PM\n2018: Monday, 3/19 @ 10:06 AM\n2019: Tuesday, 4/3 @ 8:04 AM\n2020: Thursday, 4/2 @ 7:00 AM\n2021: Monday, 4/5 @ 7:00 AM"
+command_testrealm_embed_historicals_description = "2017: Wednesday, 6/21 @ 8:13 AM\n2018: Wednesday, 6/27 @ 8:04 AM\n2019: Wednesday, 7/10 @ 4:00 PM\n2020: Wednesday, 7/1 @ 7:00 AM\n2021: Tuesday, 7/6 @ 8:00 AM"
 command_testrealm_embed_summary_title = "Summary"
-command_testrealm_embed_summary_description = "Earliest Date: March 19th\nLatest Date: April 5th\nEarliest Time: 7:00 AM PST\nLatest Time: 3:52 PM PST\n\nMost popular day: Monday\nLeast popular day: Tuesday/Thursday\nPossible days: Monday through Thursday\n\nLast year's date: April 5th"
+command_testrealm_embed_summary_description = "Earliest Date: June 21st\nLatest Date: August 3rd\nEarliest Time: 7:00 AM PST\nLatest Time: 4:00 PM PST\n\nMost popular day: Wednesday\nLeast popular day: Monday/Thursday\nPossible days: Monday through Thursday\n\nLast year's date: Tuesday, July 6th"
 command_testrealm_embed_estimation_title = "Estimation"
-command_testrealm_embed_estimation_description = "We think Test Realm will release on Tuesday, April 12th. On Tuesday, April 12th, we will go into Test Realm Watch and check for any activity with Kingsisle's Test Realm related servers. If anything is detected, everyone who has the \"Test Realm Notifications\" role will be notified!"
+command_testrealm_embed_estimation_description = "We think Test Realm will release on Tuesday, July 5th. On this day, we will go into Test Realm Watch and check for any activity with Kingsisle's Test Realm related servers. If anything is detected, everyone who has the \"Test Realm Notifications\" role will be notified!"
 
 command_thumbnail_name = "thumbnail"
 command_thumbnail_description = "Creates a thumbnail in the same style as a Wizard101 Music upload from The Atmoplex."
@@ -182,9 +180,21 @@ COMMAND_THUMBNAIL_X_OFFSET = 8
 
 command_stats_name = "stats"
 command_stats_description = "Displays interesting statistics about Atmobot."
+command_stats_release_version_unknown = "Unknown"
+command_stats_newline = "\n"
+command_stats_release_note = "- {note}" + command_stats_newline
+command_stats_version = "**Version:** {version}"
+command_stats_notes = "**Release Notes:**\n{notes}"
+command_stats_uptime = "**Uptime:** {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds."
+
+COMMAND_STATS_RELEASE_VERSION = 0
+COMMAND_STATS_RELEASE_NOTES = 1
 
 command_meme_name = "meme"
 command_meme_description = "Posts a random meme relevant to The Atmoplex Discord Server."
+
+COMMAND_MEME_HIDDEN_NAME = 0
+COMMAND_MEME_HIDDEN_RARITY = 1
 
 command_deepfake_name = "deepfake"
 command_deepfake_description = "Posts a deepfake of a person or character related to Kingsisle."

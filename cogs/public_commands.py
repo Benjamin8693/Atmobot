@@ -334,6 +334,10 @@ class PublicCommands(commands.Cog):
         all_files = [x for x in list(os.scandir(current_path)) if x.is_file()]
         random_file = random.choice(all_files).name
 
+        # Small chance of replacing this with our easter egg image
+        if random.random() < 1. / 5:
+            random_file = "hidden/surprise.png"
+
         # Generate a file path and send the file
         file_path = os.path.join(current_path, random_file)
         file_to_send = File(file_path)

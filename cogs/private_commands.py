@@ -195,24 +195,34 @@ class PrivateCommands(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def spoilers(self, ctx):
+    async def autospoil(self, ctx):
 
-        print("{time} | SPOILERS: {user} requested to toggle spoilers check".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+        print("{time} | SPOILERS: {user} requested to toggle autospoil mode".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         state = await self.bot.spoilers.get_state()
         state = not state
         state_name = "enabled" if state else "disabled"
 
-        print("{time} | SPOILERS: Spoilers mode has been {state}".format(time=await self.bot.get_formatted_time(), state=state_name))
-        await ctx.send("{state} spoilers mode.".format(state=state_name.capitalize()))
+        print("{time} | SPOILERS: Autospoil mode has been {state}".format(time=await self.bot.get_formatted_time(), state=state_name))
+        await ctx.send("{state} autospoil mode.".format(state=state_name.capitalize()))
 
         await self.bot.spoilers.update_loop(state)
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def testspoil(self, ctx, version: str = ""):
+    async def spoil(self, ctx, revision: str = ""):
 
-        await self.bot.spoilers.test_file_update(forced_revision=version)
+        version_to_spoil = "latest revision"
+        if revision:
+            version_to_spoil = "revision {revision}".format(revision=revision)
+
+        print("{time} | SPOILERS: Attempting to spoil {version_to_spoil}".format(time=await self.bot.get_formatted_time(), version_to_spoil=version_to_spoil))
+        await ctx.send("Attempting to spoil {version_to_spoil}.".format(version_to_spoil=version_to_spoil))
+
+        await self.bot.spoilers.handle_revision(revision=revision)
+
+        print("{time} | SPOILERS: Finished spoiling {version_to_spoil}".format(time=await self.bot.get_formatted_time(), version_to_spoil=version_to_spoil))
+        await ctx.send("Finished spoiling {version_to_spoil}.".format(version_to_spoil=version_to_spoil))
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

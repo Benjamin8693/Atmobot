@@ -136,7 +136,7 @@ class Spoilers(UpdateNotifier):
                         if self.db.check_if_new_revision(formatted_revision):
                             print("{time} | SPOILERS: New revision {revision} found! Running file update protocol".format(time=await self.bot.get_formatted_time(), revision=formatted_revision))
                             self.revision_data = formatted_revision
-                            await self.test_file_update()
+                            await self.handle_revision()
                             update = True
                         else:
                             print("{time} | SPOILERS: No new revision found".format(time=await self.bot.get_formatted_time()))
@@ -147,7 +147,7 @@ class Spoilers(UpdateNotifier):
                     print("{time} | SPOILERS: Sleeping for 600 seconds".format(time=await self.bot.get_formatted_time()))
                     await asyncio.sleep(600)
 
-    async def test_file_update(self, forced_revision=None):
+    async def handle_revision(self, revision=None):
 
         print("{time} | SPOILERS: File updated detected! Handling revision {revision}".format(time=await self.bot.get_formatted_time(), revision=self.revision_data))
 
@@ -163,12 +163,12 @@ class Spoilers(UpdateNotifier):
         #file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/{}/Windows/LatestFileList.bin".format(self.revision_data)
         #base_url = "http://testversionec.us.wizard101.com/WizPatcher/{}/LatestBuild/".format(self.revision_data)
 
-        if not forced_revision:
-            forced_revision = self.revision_data
-        file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/{}/Windows/LatestFileList.bin".format(forced_revision)
-        base_url = "http://testversionec.us.wizard101.com/WizPatcher/{}/LatestBuild/".format(forced_revision)
+        if not revision:
+            revision = self.revision_data
+        file_list_url = "http://versionec.us.wizard101.com/WizPatcher/{}/Windows/LatestFileList.bin".format(revision)
+        base_url = "http://versionec.us.wizard101.com/WizPatcher/{}/LatestBuild/".format(revision)
 
-        await self.new_revision(forced_revision, file_list_url, base_url)
+        await self.new_revision(revision, file_list_url, base_url)
 
         # Re-enable commands
         #for command in self.bot.commands:
@@ -225,7 +225,10 @@ class Spoilers(UpdateNotifier):
         print("{time} | SPOILERS: New files of interest detected! Posting Atmobot introduction".format(time=await self.bot.get_formatted_time()))
 
         # Announce a new revision on Discord
+        # TODO: Make this a toggle, because for small patches we may not want a ping
+        # TODO: For now we will temporarily disable this
         if not self.discord_post_override:
+            return
 
             # Discord channel to send our announcement in
             spoiler_channel_ids = settings.get("spoiler_channel_ids")

@@ -17,7 +17,8 @@ def bruteforce_list(revision_list, version_list, q):
         for revision in revision_list:
 
             # Generate a patch link to test with
-            link = "http://testversionec.us.wizard101.com/WizPatcher/V_r{revision}.{version}/Windows/LatestFileList.bin".format(revision=revision, version=version)
+            # TODO: Be able to change automatically between test and live
+            link = "http://versionec.us.wizard101.com/WizPatcher/V_r{revision}.{version}/Windows/LatestFileList.bin".format(revision=revision, version=version)
             
             # Only report back if we get a valid error code
             if requests.get(link, headers={'User-Agent': 'Mozilla/5.0'}).status_code == 200:

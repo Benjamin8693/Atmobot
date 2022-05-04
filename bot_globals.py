@@ -13,7 +13,7 @@ default_settings = {
     "fetch_revision_on_startup": False,
     "twitter_api_keys": ["", "", "", "", ""],
     "authorized_poster_ids": [],
-    "spoiler_channel_ids": [0, 0, 0],
+    "spoiler_channel_ids": [0, 0, 0, 0, 0],
     "spoiler_announcement_role_id": 0,
     "spoiler_greetings": "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].",
     "spoiler_goodbye": "Thats all for now!\n\nSee you next time!",
@@ -219,10 +219,11 @@ TWITTER_KEY_ACCESS_TOKEN_SECRET = 3
 TWITTER_KEY_BEAR = 4
 
 CHANNEL_INVALID = -1
-CHANNEL_ANNOUNCEMENT = 0
-CHANNEL_IMAGES = 1
-CHANNEL_MUSIC = 2
-CHANNEL_LOCALE = 3
+CHANNEL_LOG = 0
+CHANNEL_ANNOUNCEMENT = 1
+CHANNEL_IMAGES = 2
+CHANNEL_MUSIC = 3
+CHANNEL_LOCALE = 4
 
 spoilers_template = {
     "Root": [{"name": "Spell Preview Icons",

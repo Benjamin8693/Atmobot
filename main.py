@@ -136,6 +136,10 @@ class Atmobot(commands.Bot):
         self.spoilers = spoilers.Spoilers(self)
         await self.spoilers.startup()
 
+        # Set up Discord logging
+        sys.stdout.bot = self
+        sys.stderr.bot = self
+
     async def wait_for_button_press(self):
 
         # Wait for the button press
@@ -174,6 +178,11 @@ class Atmobot(commands.Bot):
 
         await self.wait_for_button_press()
 
+    def handle_log(self, output):
+        spoiler_channel_ids = settings.get("spoiler_channel_ids")
+        log_channel = self.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_LOG])
+        self.loop.create_task(log_channel.send(output))
+
 # Setup logging
 if not os.path.exists("logs/"):
     os.mkdir("logs/")
@@ -181,8 +190,11 @@ if not os.path.exists("logs/"):
 class LogOutput:
 
     def __init__(self, orig, log):
+
         self.orig = orig
         self.log = log
+
+        self.bot = None
 
     def write(self, out):
         if isinstance(out, str):
@@ -195,6 +207,12 @@ class LogOutput:
         if self.console:
             self.orig.write(out)
             self.orig.flush()
+
+        if self.bot and out and out != "\n":
+            try:
+                self.bot.handle_log(out)
+            except:
+                pass
 
     def flush(self):
         self.log.flush()

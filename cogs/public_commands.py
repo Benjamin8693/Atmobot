@@ -105,7 +105,7 @@ class PublicCommands(commands.Cog):
     async def hero101(self, ctx):
 
         # Logging
-        print("{time} | HERO101: {user} requested a Hero101 asset.".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+        print("{time} | HERO101: {user} requested a Hero101 asset".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         # Path to get our Hero101 assets from
         current_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.hero101_path)
@@ -120,7 +120,7 @@ class PublicCommands(commands.Cog):
         await ctx.send(file=file_to_send)
 
         # Log the result
-        print("{time} | HERO101: Random Hero101 asset '{file_path}' uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
+        print("{time} | HERO101: Hero101 asset \"{file_path}\" uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
 
     @cog_ext.cog_slash(name=bot_globals.command_remco_name, description=bot_globals.command_remco_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
@@ -197,7 +197,7 @@ class PublicCommands(commands.Cog):
 
         # We don't have any chat history to grab a quote from
         if not history:
-            await ctx.send("There are no available quotes  for {user}.".format(user=formatted_user))
+            await ctx.send("There are no available quotes for {user}.".format(user=formatted_user))
             print("{time} | QUOTE: No available quotes for {user}".format(time=await self.bot.get_formatted_time(), user=formatted_user))
             return
 
@@ -355,7 +355,7 @@ class PublicCommands(commands.Cog):
     async def meme(self, ctx):
 
         # Logging
-        print("{time} | MEME: {user} requested a meme.".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+        print("{time} | MEME: {user} requested a meme".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         # Path to get our memes from
         current_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.memes_path)
@@ -373,7 +373,7 @@ class PublicCommands(commands.Cog):
             random.seed(len(meme_name) + time.time())
             roll = random.random()
             if roll < 1.0 / meme_rarity:
-                print("{time} | MEME: Hidden meme '{file_path}' activated".format(time=await self.bot.get_formatted_time(), file_path=meme_name))
+                print("{time} | MEME: Hidden meme \"{file_path}\" activated".format(time=await self.bot.get_formatted_time(), file_path=meme_name))
                 random_file = os.path.join(bot_globals.memes_hidden_path, meme_name)
                 break
 
@@ -383,7 +383,7 @@ class PublicCommands(commands.Cog):
         await ctx.send(file=file_to_send)
 
         # Log the result
-        print("{time} | MEME: Random meme '{file_path}' uploaded (hidden meme rolled {roll})".format(time=await self.bot.get_formatted_time(), file_path=random_file, roll=roll))
+        print("{time} | MEME: Meme \"{file_path}\" uploaded (hidden meme rolled {roll})".format(time=await self.bot.get_formatted_time(), file_path=random_file, roll=roll))
 
     def get_directories_from_path(self, current_path, return_as_strings=False):
         directories_to_return = []
@@ -425,7 +425,7 @@ class PublicCommands(commands.Cog):
             await ctx.send("Deepfake categories: {}.".format(categories_string))
 
             # Log the result
-            print("{time} | DEEPFAKE: Deepfake categories requested, returning category list '{category_list}'".format(time=await self.bot.get_formatted_time(), category_list=categories_string))
+            print("{time} | DEEPFAKE: Deepfake categories requested, returning category list \"{category_list}\"".format(time=await self.bot.get_formatted_time(), category_list=categories_string))
 
             return
 
@@ -433,10 +433,10 @@ class PublicCommands(commands.Cog):
         elif directory and not os.path.exists(os.path.join(bot_globals.resources_path, bot_globals.deepfakes_path, directory)):
 
             # Send the message
-            await ctx.send("Deepfake category '{}' does not exist!".format(directory))
+            await ctx.send("Deepfake category \"{}\" does not exist!".format(directory))
 
             # Log the result
-            print("{time} | DEEPFAKE: Deepfake category '{category}' requested, but does not exist".format(time=await self.bot.get_formatted_time(), category=directory))
+            print("{time} | DEEPFAKE: Deepfake category \"{category}\" requested, but does not exist".format(time=await self.bot.get_formatted_time(), category=directory))
 
             return
 
@@ -464,7 +464,7 @@ class PublicCommands(commands.Cog):
         await ctx.send(file=file_to_send)
 
         # Log the result
-        print("{time} | DEEPFAKE: Deepfake '{file_path}' uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
+        print("{time} | DEEPFAKE: Deepfake \"{file_path}\" uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
 
 # Used for connecting the Command Center to the rest of the bot
 def setup(bot):

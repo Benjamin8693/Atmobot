@@ -365,12 +365,14 @@ class PublicCommands(commands.Cog):
         random_file = random.choice(all_files).name
 
         # Small chance of replacing this with a hidden meme
+        roll = 1.0
         hidden_memes = settings.get("hidden_memes", [])
         for hidden_meme in hidden_memes:
             meme_name = hidden_meme[bot_globals.COMMAND_MEME_HIDDEN_NAME]
             meme_rarity = hidden_meme[bot_globals.COMMAND_MEME_HIDDEN_RARITY]
             random.seed(len(meme_name) + time.time())
-            if random.random() < 1.0 / meme_rarity:
+            roll = random.random()
+            if roll < 1.0 / meme_rarity:
                 print("{time} | MEME: Hidden meme '{file_path}' activated".format(time=await self.bot.get_formatted_time(), file_path=meme_name))
                 random_file = os.path.join(bot_globals.memes_hidden_path, meme_name)
                 break
@@ -381,7 +383,7 @@ class PublicCommands(commands.Cog):
         await ctx.send(file=file_to_send)
 
         # Log the result
-        print("{time} | MEME: Random meme '{file_path}' uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
+        print("{time} | MEME: Random meme '{file_path}' uploaded (hidden meme rolled {roll})".format(time=await self.bot.get_formatted_time(), file_path=random_file, roll=roll))
 
     def get_directories_from_path(self, current_path, return_as_strings=False):
         directories_to_return = []

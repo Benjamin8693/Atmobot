@@ -1,8 +1,7 @@
 # 3rd-Party Packages
-from discord import Color, File, Embed
+from discord import Color, File, Embed, Interaction, InputTextStyle, slash_command
 from discord.ext import commands
-from discord_slash import cog_ext
-from discord_slash.utils.manage_commands import create_choice, create_option
+from discord.ui import InputText, Modal
 
 # Local packages
 import bot_globals
@@ -55,6 +54,25 @@ class CommandsCooldown:
 
         return True
 
+class MyModal(Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.add_item(InputText(label="Short Input", placeholder="Placeholder Test"))
+
+        self.add_item(
+            InputText(
+                label="Longer Input",
+                value="Longer Value\nSuper Long Value",
+                style=InputTextStyle.long,
+            )
+        )
+
+    async def callback(self, interaction: Interaction):
+        embed = Embed(title="Your Modal Results", color=Color.random())
+        embed.add_field(name="First Input", value=self.children[0].value, inline=False)
+        embed.add_field(name="Second Input", value=self.children[1].value, inline=False)
+        await interaction.response.send_message(embeds=[embed])
+
 class PublicCommands(commands.Cog):
 
     subscribed_guild_ids = settings.get("subscribed_guild_ids", [])
@@ -100,7 +118,13 @@ class PublicCommands(commands.Cog):
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
 
-    @cog_ext.cog_slash(name=bot_globals.command_hero101_name, description=bot_globals.command_hero101_description, guild_ids=subscribed_guild_ids)
+    @slash_command(name = "modaltest", guild_ids = subscribed_guild_ids)
+    async def modal_slash(self, ctx):
+        """Shows an example of a modal dialog being invoked from a slash command."""
+        modal = MyModal(title="Slash Command Modal")
+        await ctx.send_modal(modal)
+
+    @slash_command(name = bot_globals.command_hero101_name, description = bot_globals.command_hero101_description, guild_ids = subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def hero101(self, ctx):
 
@@ -117,12 +141,12 @@ class PublicCommands(commands.Cog):
         # Generate a file path and send the file
         file_path = os.path.join(current_path, random_file)
         file_to_send = File(file_path)
-        await ctx.send(file=file_to_send)
+        await ctx.respond(file=file_to_send)
 
         # Log the result
         print("{time} | HERO101: Hero101 asset \"{file_path}\" uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
 
-    @cog_ext.cog_slash(name=bot_globals.command_remco_name, description=bot_globals.command_remco_description, guild_ids=subscribed_guild_ids)
+    @slash_command(name=bot_globals.command_remco_name, description=bot_globals.command_remco_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def remco(self, ctx):
 
@@ -130,11 +154,12 @@ class PublicCommands(commands.Cog):
         print("{time} | REMCO: {user} requested Remco ascii art".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
         
         # Send the amount of days
-        await ctx.send(bot_globals.command_remco_art)
+        await ctx.respond(bot_globals.command_remco_art)
 
         # Log the result
         print("{time} | REMCO: Ascii art posted".format(time=await self.bot.get_formatted_time()))
 
+    """
     user_choices = []
     available_users = {}
     quote_users = settings.get("quote_users", [])
@@ -146,7 +171,7 @@ class PublicCommands(commands.Cog):
         choice = create_choice(name=user_name.capitalize(), value=user_name)
         user_choices.append(choice)
     user_option = create_option(name=bot_globals.command_quote_arg_user_name, description=bot_globals.command_quote_arg_user_description, option_type=3, required=True, choices=user_choices)
-    @cog_ext.cog_slash(name=bot_globals.command_quote_name, description=bot_globals.command_quote_description, guild_ids=subscribed_guild_ids, options=[user_option])
+    @slash_command(name=bot_globals.command_quote_name, description=bot_globals.command_quote_description, guild_ids=subscribed_guild_ids, options=[user_option])
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def quote(self, ctx, user: str):
 
@@ -208,7 +233,7 @@ class PublicCommands(commands.Cog):
         # Log the result
         print("{time} | QUOTE: Quote \"{quote}\" from {user} posted".format(time=await self.bot.get_formatted_time(), quote=random_message, user=formatted_user))
 
-    @cog_ext.cog_slash(name=bot_globals.command_testrealm_name, description=bot_globals.command_testrealm_description, guild_ids=subscribed_guild_ids)
+    @slash_command(name=bot_globals.command_testrealm_name, description=bot_globals.command_testrealm_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     #@commands.command()
     #@commands.has_permissions(manage_messages=True)
@@ -232,7 +257,7 @@ class PublicCommands(commands.Cog):
         # Log the result
         print("{time} | TESTREALM: Test Realm information posted".format(time=await self.bot.get_formatted_time()))
     
-    @cog_ext.cog_slash(name=bot_globals.command_days_name, description=bot_globals.command_days_description, guild_ids=subscribed_guild_ids)
+    @slash_command(name=bot_globals.command_days_name, description=bot_globals.command_days_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def days(self, ctx):
 
@@ -271,7 +296,7 @@ class PublicCommands(commands.Cog):
     header_option = create_option(name=bot_globals.command_thumbnail_arg_header_name, description=bot_globals.command_thumbnail_arg_header_description, option_type=3, required=True)
     footer_option = create_option(name=bot_globals.command_thumbnail_arg_footer_name, description=bot_globals.command_thumbnail_arg_footer_description, option_type=3, required=True)
     game_option = create_option(name=bot_globals.command_thumbnail_arg_type_name, description=bot_globals.command_thumbnail_arg_type_description, option_type=3, required=False, choices=list(bot_globals.command_thumbnail_extras.keys()))
-    @cog_ext.cog_slash(name=bot_globals.command_thumbnail_name, description=bot_globals.command_thumbnail_description, guild_ids=subscribed_guild_ids, options=[header_option, footer_option, game_option])
+    @slash_command(name=bot_globals.command_thumbnail_name, description=bot_globals.command_thumbnail_description, guild_ids=subscribed_guild_ids, options=[header_option, footer_option, game_option])
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def thumbnail(self, ctx, header: str, footer: str, type: str = None):
 
@@ -305,7 +330,7 @@ class PublicCommands(commands.Cog):
         # Log the result
         print("{time} | THUMBNAIL: Custom thumbnail with header {thumbnail_header} and footer {thumbnail_footer} uploaded".format(time=await self.bot.get_formatted_time(), thumbnail_header=header, thumbnail_footer=footer))
 
-    @cog_ext.cog_slash(name=bot_globals.command_stats_name, description=bot_globals.command_stats_description, guild_ids=subscribed_guild_ids)
+    @slash_command(name=bot_globals.command_stats_name, description=bot_globals.command_stats_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def stats(self, ctx):
 
@@ -350,7 +375,7 @@ class PublicCommands(commands.Cog):
         # Log the result
         print("{time} | STATS: Bot has been up for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds".format(time=await self.bot.get_formatted_time(), days=days_formatted, hours=hours_formatted, minutes=minutes_formatted, seconds=seconds_formatted))
 
-    @cog_ext.cog_slash(name=bot_globals.command_meme_name, description=bot_globals.command_meme_description, guild_ids=subscribed_guild_ids)
+    @slash_command(name=bot_globals.command_meme_name, description=bot_globals.command_meme_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def meme(self, ctx):
 
@@ -404,7 +429,7 @@ class PublicCommands(commands.Cog):
         choice = create_choice(name=directory.capitalize(), value=directory)
         directory_choices.append(choice)
     directory_option = create_option(name=bot_globals.command_deepfake_arg_directory_name, description=bot_globals.command_deepfake_arg_directory_description, option_type=3, required=False, choices=directory_choices)
-    @cog_ext.cog_slash(name=bot_globals.command_deepfake_name, description=bot_globals.command_deepfake_description, guild_ids=subscribed_guild_ids, options=[directory_option])
+    @slash_command(name=bot_globals.command_deepfake_name, description=bot_globals.command_deepfake_description, guild_ids=subscribed_guild_ids, options=[directory_option])
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     async def deepfake(self, ctx, directory: typing.Optional[str] = None):
 
@@ -465,6 +490,8 @@ class PublicCommands(commands.Cog):
 
         # Log the result
         print("{time} | DEEPFAKE: Deepfake \"{file_path}\" uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
+
+    """
 
 # Used for connecting the Command Center to the rest of the bot
 def setup(bot):

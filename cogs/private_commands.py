@@ -1,7 +1,6 @@
 # 3rd-Party Packages
 from discord import Color, Embed
 from discord.ext import commands
-from discord_components import Button, ButtonStyle, InteractionType
 
 # Local packages
 import bot_globals

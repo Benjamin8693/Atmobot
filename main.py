@@ -1,8 +1,6 @@
 # 3rd-Party Packages
 from discord import Intents
 from discord.ext import commands
-from discord_components import DiscordComponents
-from discord_slash import SlashCommand
 
 # Local packages
 import bot_globals
@@ -30,7 +28,7 @@ class Atmobot(commands.Bot):
         self.load_settings()
 
         # We HAVE to load our Cogs here, or else it won't work properly
-        SlashCommand(self, sync_commands=True)
+        #SlashCommand(self, sync_commands=True)
 
         # Public commands
         print("{time} | STARTUP: Loading Public Commands".format(time=utils.get_formatted_time()))
@@ -39,6 +37,10 @@ class Atmobot(commands.Bot):
         # Private commands
         print("{time} | STARTUP: Loading Private Commands".format(time=utils.get_formatted_time()))
         self.load_extension("cogs.private_commands")
+
+        # Music commands
+        print("{time} | STARTUP: Loading Music Commands".format(time=utils.get_formatted_time()))
+        self.load_extension("cogs.music_commands")
 
         # Deprecated commands
         if settings.get("deprecated_commands", False):
@@ -118,7 +120,7 @@ class Atmobot(commands.Bot):
         self.started = True
 
         # Setup the Discord Components library
-        DiscordComponents(self)
+        #DiscordComponents(self)
 
         # Wait for button presses
         asyncio.ensure_future(self.wait_for_button_press())
@@ -181,7 +183,7 @@ class Atmobot(commands.Bot):
     def handle_log(self, output):
         spoiler_channel_ids = settings.get("spoiler_channel_ids")
         log_channel = self.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_LOG])
-        self.loop.create_task(log_channel.send(output))
+        #self.loop.create_task(log_channel.send(output))
 
 # Setup logging
 if not os.path.exists("logs/"):

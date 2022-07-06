@@ -15,20 +15,28 @@ import json
 import os
 import sys
 
-# Atmobot
 class Atmobot(commands.Bot):
 
-    def __init__(self, command_prefix, case_insensitive, description, intents, help_command):
+    def __init__(self, command_prefix, case_insensitive, description, intents, help_command, startup_time):
         commands.Bot.__init__(self, command_prefix=command_prefix, case_insensitive=case_insensitive, description=description, intents=intents, help_command=help_command)
         
-        self.startup_time = datetime.datetime.now()
-        self.started = False
-        self.checker = None
+        self.startup_time = startup_time
 
         self.load_settings()
 
+        self.started = False
+
+        self.guild_id = settings.get("guild_id", 0)
+        self.guild = None
+
+        self.reduced_cooldown_channels = []
+        self.reduced_cooldown_roles = []
+
         # We HAVE to load our Cogs here, or else it won't work properly
         #SlashCommand(self, sync_commands=True)
+
+        # Create a builtin to reference our bot object at any time
+        __builtins__.bot = self
 
         # Public commands
         print("{time} | STARTUP: Loading Public Commands".format(time=utils.get_formatted_time()))
@@ -53,23 +61,38 @@ class Atmobot(commands.Bot):
         # If we don't have a settings file, generate one
         if not os.path.isfile(bot_globals.settings_path):
             with open(bot_globals.settings_path, "w") as data:
-                json.dump(bot_globals.default_settings, data, indent=4)
+
+                # Create a dictonary with our defaults
+                default_settings = {}
+                for setting in bot_globals.bot_settings:
+                    setting_info = bot_globals.bot_settings.get(setting)
+                    setting_value = setting_info[bot_globals.BOT_SETTINGS_DEFAULT]
+                    default_settings[setting] = setting_value
+                
+                # Save it to json
+                json.dump(default_settings, data, indent=4)
 
         # Load our settings
         with open(bot_globals.settings_path) as data:
             __builtins__.settings = json.load(data)
 
         # Make sure our settings are up-to-date
-        changed = False
-        for setting in list(bot_globals.default_settings.keys()):
+        updated = False
+        for setting in bot_globals.bot_settings:
+
+            # Grab setting info
+            setting_info = bot_globals.bot_settings.get(setting)
 
             # Add a setting if we're missing it
             if setting not in settings:
-                changed = True
-                value = bot_globals.default_settings.get(setting)
-                settings[setting] = value
+                updated = True
+                setting_value = setting_info[bot_globals.BOT_SETTINGS_DEFAULT]
+                settings[setting] = setting_value
 
-        if changed:
+            # TODO: Add setting versioning
+
+        # Our settings have been updated, let's be sure to save them
+        if updated:
             self.save_settings()
 
     async def update_setting(self, setting_name, variable_to_replace):
@@ -102,12 +125,10 @@ class Atmobot(commands.Bot):
             await self.startup()
 
             # Log that our bot is actually running
-            game_longhand = bot_globals.game_longhands.get(settings.get("game_id", -1))
             print(bot_globals.startup_message.format(header="=" * 52,
                                                      username=self.user.name,
                                                      id=self.user.id,
                                                      timestamp=self.startup_time.strftime("%Y-%m-%d-%H-%M-%S"),
-                                                     game_longhand=game_longhand,
                                                      footer="=" * 52))
 
         else:
@@ -119,19 +140,29 @@ class Atmobot(commands.Bot):
 
         self.started = True
 
-        # Setup the Discord Components library
-        #DiscordComponents(self)
+        # Load the guild we'll be serving
+        self.guild = self.get_guild(self.guild_id)
+
+        # Load channel and role info for cooldowns
+        reduced_cooldown_channel_ids = settings.get("reduced_cooldown_channels", [])
+        for channel_id in reduced_cooldown_channel_ids:
+            channel = self.get_channel(channel_id)
+            self.reduced_cooldown_channels.append(channel)
+        reduced_cooldown_role_ids = settings.get("reduced_cooldown_roles", [])
+        for role_id in reduced_cooldown_role_ids:
+            role = self.guild.get_role(role_id)
+            self.reduced_cooldown_roles.append(role)
 
         # Wait for button presses
         asyncio.ensure_future(self.wait_for_button_press())
 
         # Update startup time
-        await self.update_setting("last_startup", self.startup_time.strftime("%Y-%m-%d %H:%M:%S"))
+        #await self.update_setting("last_startup", self.startup_time.strftime("%Y-%m-%d %H:%M:%S"))
 
         # Checker class used for checking url and patcher status
         print("{time} | STARTUP: Loading Patch Checker".format(time=await self.get_formatted_time()))
-        self.checker = checker.Checker(self)
-        await self.checker.startup()
+        #self.checker = checker.Checker(self)
+        #await self.checker.startup()
 
         # Automatic spoiler system
         print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))
@@ -181,7 +212,7 @@ class Atmobot(commands.Bot):
         await self.wait_for_button_press()
 
     def handle_log(self, output):
-        spoiler_channel_ids = settings.get("spoiler_channel_ids")
+        spoiler_channel_ids = settings.get("spoiler_channels")
         log_channel = self.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_LOG])
         #self.loop.create_task(log_channel.send(output))
 
@@ -248,6 +279,6 @@ def _prefix_callable(bot, msg):
     return prefixes
 
 # Run the bot
-atmobot = Atmobot(command_prefix=_prefix_callable, case_insensitive=True, description=bot_globals.bot_description, intents=Intents.all(), help_command=None)
+atmobot = Atmobot(command_prefix = _prefix_callable, case_insensitive = True, description = bot_globals.bot_description, intents = Intents.all(), help_command = None, startup_time = datetime.datetime.now())
 token = settings.get("bot_token", "")
 atmobot.run(token)

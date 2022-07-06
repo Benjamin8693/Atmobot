@@ -85,7 +85,7 @@ class PrivateCommands(commands.Cog):
 
         print("{time} | TWEET: {user} submitted tweet draft with content {content} and link {link}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), content=content, link=link))
 
-        authorized_poster_ids = settings.get("authorized_poster_ids", [])
+        authorized_poster_ids = settings.get("authorized_posters", [])
         if ctx.author.id not in authorized_poster_ids:
             print("{time} | TWEET: {user} attempted to draft tweet but is not authorized".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
             await ctx.send("Unauthorized poster.")

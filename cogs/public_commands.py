@@ -16,43 +16,6 @@ import traceback
 import typing
 import uuid
 
-class CommandsCooldown:
-
-    def __init__(self, rate, per, alter_rate, alter_per, bucket, cooldown_exempt_channel_ids, cooldown_exempt_role_ids):
-
-        self.default_mapping = commands.CooldownMapping.from_cooldown(rate, per, bucket)
-        self.alter_mapping = commands.CooldownMapping.from_cooldown(alter_rate, alter_per, bucket)
-
-        self._bucket_type = bucket
-
-        self.cooldown_exempt_channel_ids = cooldown_exempt_channel_ids
-        self.cooldown_exempt_role_ids = cooldown_exempt_role_ids
-
-    def __call__(self, ctx):
-
-        # Match the channel sent to the appropriate cooldown
-        current_channel = ctx.channel.id
-        role_ids = (x.id for x in ctx.author.roles)
-
-        try:
-
-            # Exempt channels and roles get lower cooldowns
-            if (current_channel in self.cooldown_exempt_channel_ids) or any(check in self.cooldown_exempt_role_ids for check in role_ids):
-                bucket = self.alter_mapping.get_bucket(ctx)
-
-            # Everything else gets a regular cooldown
-            else:
-                bucket = self.default_mapping.get_bucket(ctx)
-
-        except Exception as e:
-            print(e)
-
-        # Handle normal cooldown stuff
-        retry_after = bucket.update_rate_limit()
-        if retry_after:
-            raise commands.CommandOnCooldown(bucket, retry_after)
-
-        return True
 
 class MyModal(Modal):
     def __init__(self, *args, **kwargs) -> None:
@@ -73,26 +36,19 @@ class MyModal(Modal):
         embed.add_field(name="Second Input", value=self.children[1].value, inline=False)
         await interaction.response.send_message(embeds=[embed])
 
-class PublicCommands(commands.Cog):
-
-    subscribed_guild_ids = settings.get("subscribed_guild_ids", [])
-    cooldown_exempt_channel_ids = settings.get("cooldown_exempt_channel_ids", [])
-    cooldown_exempt_role_ids = settings.get("cooldown_exempt_role_ids", [])
+class Commands(commands.Cog):
 
     def __init__(self, bot):
 
+        # A reference to the parent bot object
         self.bot = bot
 
-        # Quote command history
-        self.message_history = {}
-
-    @commands.Cog.listener()
-    async def on_slash_command_error(self, ctx, error):
-        await self.handle_error(ctx, error)
-
+    # Ran when a regular command errors
+    #@commands.Cog.listener()
     async def cog_command_error(self, ctx, error):
         await self.handle_error(ctx, error)
 
+    # Handler for both types of errors
     async def handle_error(self, ctx, error):
 
         # Errors to ignore
@@ -111,6 +67,25 @@ class PublicCommands(commands.Cog):
             print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
+    # Cooldown behavior
+    def cooldown_behavior(message):
+
+        # Users with manage messages perms get to bypass all cooldowns
+        if message.author.guild_permissions.manage_messages:
+            return None
+
+        # This is a channel with a reduced cooldown
+        elif message.channel in bot.reduced_cooldown_channels:
+            return commands.Cooldown(1, 3)
+
+        # We have a role that reduces cooldowns
+        elif any(role in message.author.roles for role in bot.reduced_cooldown_roles):
+            return commands.Cooldown(1, 5)
+
+        # All other users have the regular cooldown
+        return commands.Cooldown(1, 15)
+
+    # Retrieves a formatted version of a user's name
     async def get_full_username(self, user):
         user_name = user.name
         user_discriminator = user.discriminator
@@ -118,14 +93,13 @@ class PublicCommands(commands.Cog):
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
 
-    @slash_command(name = "modaltest", guild_ids = subscribed_guild_ids)
+    @slash_command(name = "modaltest", guild_ids = [bot.guild_id])
     async def modal_slash(self, ctx):
         """Shows an example of a modal dialog being invoked from a slash command."""
         modal = MyModal(title="Slash Command Modal")
         await ctx.send_modal(modal)
 
-    @slash_command(name = bot_globals.command_hero101_name, description = bot_globals.command_hero101_description, guild_ids = subscribed_guild_ids)
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
+    @slash_command(name = bot_globals.command_hero101_name, description = bot_globals.command_hero101_description, guild_ids = [bot.guild_id])
     async def hero101(self, ctx):
 
         # Logging
@@ -146,8 +120,8 @@ class PublicCommands(commands.Cog):
         # Log the result
         print("{time} | HERO101: Hero101 asset \"{file_path}\" uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
 
-    @slash_command(name=bot_globals.command_remco_name, description=bot_globals.command_remco_description, guild_ids=subscribed_guild_ids)
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
+    @slash_command(name = bot_globals.command_remco_name, description = bot_globals.command_remco_description, guild_ids = [bot.guild_id])
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
     async def remco(self, ctx):
 
         # Logging
@@ -303,9 +277,9 @@ class PublicCommands(commands.Cog):
         # Logging
         print("{time} | THUMBNAIL: {user} requested custom thumbnail with header \"{thumbnail_header}\", footer \"{thumbnail_footer}\", and type \"{thumbnail_type}\"".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), thumbnail_header=header, thumbnail_footer=footer, thumbnail_type=type))
 
-        # If no thumbnail type was provided, use the game the bot is currently set up for
+        # If no thumbnail type was provided, use Wizard101
         if not type:
-            thumb_id = settings.get("game_id", -1)
+            thumb_id = 0
             type = bot_globals.game_longhands.get(thumb_id)
 
         # Capitalize our header and footer if the thumbnail type calls for it
@@ -495,4 +469,4 @@ class PublicCommands(commands.Cog):
 
 # Used for connecting the Command Center to the rest of the bot
 def setup(bot):
-    bot.add_cog(PublicCommands(bot=bot))
+    bot.add_cog(Commands(bot=bot))

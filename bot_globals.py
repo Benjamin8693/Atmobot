@@ -1,27 +1,25 @@
-
-# Default settings
-default_settings = {
-    "game_id": 0,
-    "bot_token": "",
-    "subscribed_guild_ids": [0],
-    "cooldown_exempt_channel_ids": [0],
-    "cooldown_exempt_role_ids": [0],
-    "deprecated_commands": False,
-    "last_startup": "",
-    "revision_info_live": [],
-    "revision_info_test": [],
-    "fetch_revision_on_startup": False,
-    "twitter_api_keys": ["", "", "", "", ""],
-    "authorized_poster_ids": [],
-    "spoiler_channel_ids": [0, 0, 0, 0, 0],
-    "spoiler_announcement_role_id": 0,
-    "spoiler_greetings": "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].",
-    "spoiler_goodbye": "Thats all for now!\n\nSee you next time!",
-    "release_info": ["1.0.0", ["Added a new feature", "Made a tweak", "Fixed a bug"]],
-    "hidden_memes": [],
-    "quote_channel_id": 0,
-    "quote_users": []
+# Bot settings
+bot_settings =  {
+    "bot_token": ["Bot API Token", "Token used to connect to the Discord API.", 1, str, "", True],
+    "twitter_api_keys": ["Twitter API Keys", "Keys used to connect to the Twitter API.", 1, str, ["", "", "", "", ""], True, ["Key A", "Key B", "Key C", "Key D", "Key E"]],
+    "guild_id": ["Server ID", "ID of the Discord server we're in.", 1, int, 0, False],
+    "reduced_cooldown_channels": ["Cooldown Exempt Channels", "IDs of channels with reduced command cooldowns.", 1, int, [], False],
+    "reduced_cooldown_roles": ["Cooldown Exempt Roles", "IDs of roles with reduced command cooldowns.", 1, int, [], False],
+    "deprecated_commands": ["Allow Deprecated Commands", "Whether or not to enable deprecated (unsupported) commands.", 1, bool, False, False],
+    "authorized_posters": ["Authorized Twitter Posters", "IDs of users with permission to make a post on the connected Twitter account.", 1, int, [], False],
+    "spoiler_channels": ["Spoiler Channels", "IDs of channels to post spoilers in.", 1, int, [0, 0, 0, 0, 0], False, ["Announcements Channel", "Channel A", "Channel B", "Channel C", "Channel D"]],
+    "spoiler_ping_role": ["Spoiler Announcement Role", "ID of the role to ping for important spoiler announcements.", 1, int, 0, False],
+    "spoiler_introduction": ["Spoiler Introduction Message", "Message to display when the bot has detected a new file update with files of interest.", 1, str, "Hello! I am Atmobot.\n\nAny automatically posted tweets will begin with [BOT].", False],
+    "spoiler_closure": ["Spoiler Closure Message", "Message to display after the bot has finished posting about new file updates.", 1, str, "Thats all for now!\n\nSee you next time!", False] 
 }
+
+BOT_SETTINGS_NAME = 0
+BOT_SETTINGS_DESCRIPTION = 1
+BOT_SETTINGS_VERSION = 2
+BOT_SETTINGS_TYPE = 3
+BOT_SETTINGS_DEFAULT = 4
+BOT_SETTINGS_CENSOR = 5
+BOT_SETTINGS_INDEX_DESCRIPTORS = 6
 
 # Name of the settings file
 settings_path = "settings.json"
@@ -30,7 +28,7 @@ settings_path = "settings.json"
 bot_description = '''Atmobot adds unique functionality to The Atmoplex Discord Server!'''
 
 # Debug message for when the bot starts up
-startup_message = "{header}\nLogged in as {username} with user ID {id}\nStarted up at {timestamp}\nRunning in {game_longhand} mode\n{footer}"
+startup_message = "{header}\nLogged in as {username} with user ID {id}\nStarted up at {timestamp}\n{footer}"
 
 # Important urls to check
 test_patch_client_url = "https://www.wizard101.com/testpatchClient"
@@ -115,9 +113,6 @@ font_atmoplex = "font_atmoplex.ttf"
 font_mgi = "font_mgi.ttf"
 
 # Commands
-default_command_cooldown = 5
-extended_command_cooldown = 1
-
 command_hero101_name = "hero101"
 command_hero101_description = "Posts something random related to Hero101."
 

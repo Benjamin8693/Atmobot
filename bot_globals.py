@@ -67,36 +67,74 @@ GAME_UNKNOWN = -1
 WIZARD101 = 0
 PIRATE101 = 1
 
+# Longhang names for the games
 game_longhands = {GAME_UNKNOWN: "",
                   WIZARD101: "Wizard101",
                   PIRATE101: "Pirate101"}
 longhand_to_game = {"Wizard101": WIZARD101,
                     "Pirate101": PIRATE101}
 
-game_shorthands = {GAME_UNKNOWN: "",
+# Shorthand names for the games used for patcher links
+game_shorthands_patcher = {GAME_UNKNOWN: "",
                    WIZARD101: "Wiz",
                    PIRATE101: "Pirate"}
+
+# Shorthand names for the games used for version labeling
+game_shorthands_version = {GAME_UNKNOWN: "",
+                           WIZARD101: "Wizard",
+                           PIRATE101: "Pirate"}
 
 # Revision handling
 REVISION_UNKNOWN = -1
 REVISION_NUMBER = 0
 REVISION_VERSION = 1
 
+fallback_game = WIZARD101
 fallback_revision = 716142
-fallback_version = "Wizard_1_470"
-fallback_version_dev = "WizardDev"
+fallback_version_live = "1_470"
+fallback_version_live_formatted = "{game}_{version}"
+fallback_version_dev = "{game}Dev"
 
-version_empty = "Wizard_{}_{}"
+version_empty = "{game}_{revision}_{version}"
 
 default_revision_range = 500
 
 # Fallback .WAD file used for testing
 fallback_wad = "Root"
 
-# Strings that relate the patcher's error code to likeliness of being online
-patcher_tips = {200: "The Patcher is online",
-                403: "The Patcher may be online",
-                404: "The Patcher may be online"}
+# Correlation between patcher error code and likeliness of being online
+patcher_online = "is online"
+patcher_offline = "is offline"
+patcher_undecided = "may be online"
+patcher_tips = {200: patcher_online,
+                403: patcher_undecided,
+                404: patcher_undecided,
+                504: patcher_offline}
+
+CHECKER_ROUTINE_GAME = 0
+
+CHECKER_ROUTINE_GAME_WIZARD = 0
+CHECKER_ROUTINE_GAME_PIRATE = 1
+CHECKER_ROUTINE_GAME_BOTH = 2
+
+CHECKER_ROUTINE_METHOD = 1
+
+CHECKER_ROUTINE_METHOD_PATCHER = 0
+CHECKER_ROUTINE_METHOD_WEBSITE = 1
+CHECKER_ROUTINE_METHOD_BOTH = 2
+
+CHECKER_ROUTINE_DURATION = 1
+CHECKER_ROUTINE_FREQUENCY = 2
+CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL = 3
+
+CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_NONE = 0
+CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_MODS = 1
+CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_ROLE = 2
+CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_EVERYONE = 3
+CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_TWEET = 4
+
+CHECKER_ROUTINE_ANNOUNCEMENT_MESSAGE = 4
+CHECKER_ROUTINE_REPEAT_AFTER_SUCCESS = 5
 
 # Paths to our resource folders
 resources_path = "resources"
@@ -112,7 +150,14 @@ locale_path = "locale"
 font_atmoplex = "font_atmoplex.ttf"
 font_mgi = "font_mgi.ttf"
 
-# Commands
+# Command error messages
+command_error_cooldown_header_title = "This command is on cooldown."
+command_error_cooldown_header_desc = "Try again in **{time_to_retry} seconds.**"
+command_error_cooldown_footer_title = "Want shorter cooldowns?"
+command_error_cooldown_footer_desc = "Become a Server Booster or use Atmobot in {cooldown_free_channel} for shorter cooldowns!"
+command_error_exception_title = "Uh oh! Atmobot has run into an error."
+command_error_exception_desc = "Please try again. If the problem persists, please contact an administrator."
+
 command_hero101_name = "hero101"
 command_hero101_description = "Posts something random related to Hero101."
 

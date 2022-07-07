@@ -191,13 +191,13 @@ class Spoilers(UpdateNotifier):
     async def post_goodbye(self):
 
         # Grab the goodbye message
-        goodbye_text = settings.get("spoiler_goodbye")
+        goodbye_text = settings.get("spoiler_closure")
 
         # Post goodbye message to Discord
         if not self.discord_post_override:
 
             # Discord channel to send our announcement in
-            spoiler_channel_ids = settings.get("spoiler_channel_ids")
+            spoiler_channel_ids = settings.get("spoiler_channels")
             announcement_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_ANNOUNCEMENT])
 
             # Send the message
@@ -231,11 +231,11 @@ class Spoilers(UpdateNotifier):
             return
 
             # Discord channel to send our announcement in
-            spoiler_channel_ids = settings.get("spoiler_channel_ids")
+            spoiler_channel_ids = settings.get("spoiler_channels")
             announcement_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_ANNOUNCEMENT])
 
             # Ping all Test Realm Notifications members
-            announcement_role_id = settings.get("spoiler_announcement_role_id")
+            announcement_role_id = settings.get("spoiler_ping_role")
             if announcement_channel and announcement_role_id:
                 await announcement_channel.send("<@&{role_id}>".format(role_id=announcement_role_id))
 
@@ -260,7 +260,7 @@ class Spoilers(UpdateNotifier):
         if not self.twitter_post_override:
 
             # Grab the announcement message for Twitter
-            announcement_text = settings.get("spoiler_greetings")
+            announcement_text = settings.get("spoiler_introduction")
 
             # Post it to Twitter
             if announcement_text:
@@ -589,7 +589,7 @@ class Spoilers(UpdateNotifier):
             template.save(output_path)
 
             # Post the spoiler to Discord if we have channel IDs
-            spoiler_channel_ids = settings.get("spoiler_channel_ids")
+            spoiler_channel_ids = settings.get("spoiler_channels")
             if spoiler_channel_ids:
 
                 # Only send the description a single time on Discord
@@ -704,7 +704,7 @@ class Spoilers(UpdateNotifier):
                 chained_image.save(chained_image_name)
 
                 # Post the spoiler to Discord if we have channel IDs
-                spoiler_channel_ids = settings.get("spoiler_channel_ids")
+                spoiler_channel_ids = settings.get("spoiler_channels")
                 if spoiler_channel_ids:
 
                     # Only send the description a single time on Discord
@@ -766,7 +766,7 @@ class Spoilers(UpdateNotifier):
                         file_name = await self.convert_to_png(file_name)
 
                     # Post the spoiler to Discord if we have channel IDs
-                    spoiler_channel_ids = settings.get("spoiler_channel_ids")
+                    spoiler_channel_ids = settings.get("spoiler_channels")
                     if spoiler_channel_ids:
 
                         # Only send the description once
@@ -824,7 +824,7 @@ class Spoilers(UpdateNotifier):
                 file_name = await self.convert_to_png(file_name)
 
             # Post the spoiler to Discord if we have channel IDs
-            spoiler_channel_ids = settings.get("spoiler_channel_ids")
+            spoiler_channel_ids = settings.get("spoiler_channels")
             if spoiler_channel_ids:
                 await self.post_spoiler_to_discord(file_name, spoiler_name, spoiler_post_description, spoiler_channel_to_post, spoiler_channel_ids)
 
@@ -855,7 +855,7 @@ class Spoilers(UpdateNotifier):
                 new_file_name = "cache/" + os.path.basename(file_name)
 
                 # Post the spoiler to Discord if we have channel IDs
-                spoiler_channel_ids = settings.get("spoiler_channel_ids")
+                spoiler_channel_ids = settings.get("spoiler_channels")
                 if spoiler_channel_ids:
 
                     # Only send the description once
@@ -918,7 +918,7 @@ class Spoilers(UpdateNotifier):
 
             try:
 
-                spoiler_channel_ids = settings.get("spoiler_channel_ids")
+                spoiler_channel_ids = settings.get("spoiler_channels")
                 if spoiler_channel_ids:
                     await self.post_spoiler_to_discord(file_name, spoiler_name, spoiler_post_description, spoiler_channel_to_post, spoiler_channel_ids)
 
@@ -1119,9 +1119,9 @@ class Spoilers(UpdateNotifier):
 
     async def create_video_thumbnail(self, file_name, thumbnail_header, thumbnail_footer, thumb_type=None):
 
-        # If no thumbnail type was provided, use the game the bot is currently set up for
+        # If no thumbnail type was provided, use Wizard101
         if not thumb_type:
-            thumb_id = settings.get("game_id", -1)
+            thumb_id = 0
             thumb_type = bot_globals.game_longhands.get(thumb_id)
 
         # Info to help craft the thumbnail for this particular type

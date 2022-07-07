@@ -48,22 +48,53 @@ class Commands(commands.Cog):
     async def cog_command_error(self, ctx, error):
         await self.handle_error(ctx, error)
 
-    # Handler for both types of errors
+    # Error handler
     async def handle_error(self, ctx, error):
 
-        # Errors to ignore
-        ignored = (commands.CommandNotFound, )
+        # Find out what error was triggered
         error = getattr(error, 'original', error)
+
+        # Ignore these errors
+        ignored = (commands.CommandNotFound, )
         if isinstance(error, ignored):
             return
 
-        # Cooldown error
+        # We're on cooldown for this command, reply back with an embed
         if isinstance(error, commands.CommandOnCooldown):
-            cooldown_embed = Embed(title=f"You are on cooldown.", description=f"Try again in {error.retry_after:.2f}s.", color=Color.red())
-            await ctx.send(embed=cooldown_embed)
 
-        # Print traceback
+            # Create an embed
+            cooldown_embed = Embed(color=Color.red())
+
+            # Header explaining we're on cooldown
+            time_to_retry = "{retry_after}.1f".format(retry_after=error.retry_after)
+            cooldown_embed.add_field(name=bot_globals.command_error_cooldown_header_title,
+                                     value=bot_globals.command_error_cooldown_header_desc.format(time_to_retry=time_to_retry),
+                                     inline=False)
+
+            # Footer explaining ways to get less cooldowns
+            cooldown_free_channel = bot.reduced_cooldown_channels[0].mention
+            cooldown_embed.add_field(name=bot_globals.command_error_cooldown_footer_title,
+                                     value=bot_globals.command_error_cooldown_footer_desc.format(cooldown_free_channel=cooldown_free_channel), 
+                                     inline=False)
+            
+            # Respond with the embed
+            await ctx.respond(embed=cooldown_embed, ephemeral=True)
+
+        # We probably ran into an exception, print it to console and let the user know we errored out
         else:
+
+            # Create an embed
+            cooldown_embed = Embed(color=Color.red())
+
+            # Explain that we ran into an error
+            cooldown_embed.add_field(name=bot_globals.command_error_exception_title,
+                                     value=bot_globals.command_error_exception_desc,
+                                     inline=False)
+
+            # Respond with the embed
+            await ctx.respond(embed=cooldown_embed)
+
+            # Print exception to console
             print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 

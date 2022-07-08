@@ -25,12 +25,127 @@ BOT_SETTINGS_INDEX_DESCRIPTORS = 6
 settings_path = "settings.json"
 
 # Described our bot
-bot_description = '''Atmobot adds unique functionality to The Atmoplex Discord Server!'''
+bot_description = '''Atmobot adds a range of fun and informative commands to the Atmoplex Discord Server. It can also automatically spoil updates for Wizard101 and Pirate101!'''
 
 # Debug message for when the bot starts up
 startup_message = "{header}\nLogged in as {username} with user ID {id}\nStarted up at {timestamp}\n{footer}"
 
-# Important urls to check
+# Paths to our resource folders
+resources_path = "resources"
+deepfakes_path = "deepfakes"
+memes_path = "memes"
+memes_archived_path = "archive"
+memes_hidden_path = "hidden"
+hero101_path = "hero"
+video_path = "video"
+locale_path = "locale"
+
+# Font paths
+font_atmoplex = "font_atmoplex.ttf"
+font_mgi = "font_mgi.ttf"
+
+# Command error messages
+command_error_cooldown_header_title = "This command is on cooldown."
+command_error_cooldown_header_desc = "Try again in **{time_to_retry} seconds.**"
+command_error_cooldown_footer_title = "Want shorter cooldowns?"
+command_error_cooldown_footer_desc = "Become a Server Booster or use Atmobot in {cooldown_free_channel} for shorter cooldowns!"
+command_error_exception_title = "Uh oh! Atmobot has run into an error."
+command_error_exception_desc = "Please try again. If the problem persists, please contact an administrator."
+
+# Hero101 command
+command_hero101_name = "hero101"
+command_hero101_description = "Posts something random related to Hero101."
+
+# Remco command
+command_remco_name = "remco"
+command_remco_description = "Posts ascii art depicting the CEO of MGI, Remco Westermann."
+command_remco_art = "⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⠋⠉⠉⠙⠻⠿⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⠟⢁⣠⣤⣶⣶⣷⣶⣶⣦⣄⠈⠙⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⡟⠃⠀⢠⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⡀⠈⢻⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⡏⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡄⠈⢻⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⠃⠀⠀⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣆⡌⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⠀⠀⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⡏⠀⠀⣸⣿⣿⣿⡿⠿⠿⣿⣿⣿⣿⣿⣿⠿⣿⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⡇⠀⢀⡙⠛⠑⡸⠛⠛⠂⠀⠘⢻⣟⠊⠀⠘⢛⡛⣧⠙⠃⣽⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⡇⠈⠿⣿⣿⣯⣺⣿⣿⣿⡟⣰⣿⣿⣏⢻⣿⣿⣿⣟⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣧⣾⣿⣿⣿⣿⣶⣭⣴⣿⣿⣿⣿⣿⣷⣶⣿⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣅⣀⣈⣿⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⡟⢿⣿⣿⣿⣿⣤⣀⣀⣀⣉⣉⣉⣉⣉⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣷⡀⢿⡝⢿⣿⣿⣿⣷⣭⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⡇⠘⢻⣿⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠛⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⡇⣦⡀⢀⠀⠴⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠏⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿"
+
+# Quote command
+command_quote_name = "quote"
+command_quote_description = "Posts a random quote from the specified user."
+command_quote_arg_user_name = "user"
+command_quote_arg_user_description = "The user to retrieve a quote from."
+
+COMMAND_QUOTE_USER_NAME = 0
+COMMAND_QUOTE_USER_ID = 1
+COMMAND_QUOTE_DATE_RANGE = 2
+
+command_quote_message_history = 10000
+command_quote_message_threshold = 10
+
+# Days command
+command_days_name = "days"
+command_days_description = "Displays the amount of days left until Test Realm Watch begins."
+command_days_formatted = "There {verb} **{days} day{s}** until Test Realm Watch ({date}).\nTest Realm Watch is the first day of the season in which Test Realm has a chance to release."
+command_days_watch = "**Test Realm Watch has begun!**\nTest Realm is likely to release any time **Monday through Thursday**, from **9:00 AM PST until 5:00 PM PST**."
+
+# Test Realm command
+command_testrealm_name = "testrealm"
+command_testrealm_description = "Details when Test Realm is likely to arrive, and why."
+command_testrealm_embed_title = "When is Test Realm coming?"
+command_testrealm_embed_intro_title = "We don't know"
+command_testrealm_embed_intro_description = "But we can certainly make an educated guess. By taking a look at prior Test Realm release dates, we can estimate when this one may release. Let's look at Summer Update releases from the last 5 years."
+command_testrealm_embed_historicals_title = "Prior release dates"
+command_testrealm_embed_historicals_description = "2017: Wednesday, 6/21 @ 8:13 AM\n2018: Wednesday, 6/27 @ 8:04 AM\n2019: Wednesday, 7/10 @ 4:00 PM\n2020: Wednesday, 7/1 @ 7:00 AM\n2021: Tuesday, 7/6 @ 8:00 AM"
+command_testrealm_embed_summary_title = "Summary"
+command_testrealm_embed_summary_description = "Earliest Date: June 21st\nLatest Date: August 3rd\nEarliest Time: 7:00 AM PST\nLatest Time: 4:00 PM PST\n\nMost popular day: Wednesday\nLeast popular day: Monday/Thursday\nPossible days: Monday through Thursday\n\nLast year's date: Tuesday, July 6th"
+command_testrealm_embed_estimation_title = "Estimation"
+command_testrealm_embed_estimation_description = "We think Test Realm will release on Tuesday, July 5th. On this day, we will go into Test Realm Watch and check for any activity with Kingsisle's Test Realm related servers. If anything is detected, everyone who has the \"Test Realm Notifications\" role will be notified!"
+
+# Thumbnail command
+command_thumbnail_name = "thumbnail"
+command_thumbnail_description = "Creates a thumbnail in the same style as a Wizard101 Music upload from The Atmoplex."
+command_thumbnail_arg_header_name = "header"
+command_thumbnail_arg_header_description = "The thumbnail header. Typically the name of a song."
+command_thumbnail_arg_footer_name = "footer"
+command_thumbnail_arg_footer_description = "The thumbnail footer. Typically the name of a world."
+command_thumbnail_arg_image_name = "image"
+command_thumbnail_arg_image_description = "Which image is used to create the thumbnail."
+command_thumbnail_file_name = "command_{}"
+command_thumbnail_extras = {"Wizard101": ("wiz", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
+                            "Wizard101 - New": ("wiz_new", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
+                            "Pirate101": ("pirate", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
+                            "Hero101": ("hero", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
+                            "Media Games Invest": ("mgi", 0, font_mgi, 70, -70, (255, 255, 255), 15, (255, 255, 255), 40)}
+
+COMMAND_THUMBNAIL_NAME = 0
+COMMAND_THUMBNAIL_UPPERCASE = 1
+COMMAND_THUMBNAIL_FONT = 2
+COMMAND_THUMBNAIL_FONT_SIZE = 3
+COMMAND_THUMBNAIL_HEADER_OFFSET = 4
+COMMAND_THUMBNAIL_HEADER_COLOR = 5
+COMMAND_THUMBNAIL_FOOTER_OFFSET = 6
+COMMAND_THUMBNAIL_FOOTER_COLOR = 7
+COMMAND_THUMBNAIL_X_OFFSET = 8
+
+# Stats command
+command_stats_name = "stats"
+command_stats_description = "Displays interesting statistics about Atmobot."
+command_stats_release_version_unknown = "Unknown"
+command_stats_newline = "\n"
+command_stats_release_note = "- {note}" + command_stats_newline
+command_stats_version = "**Version:** {version}"
+command_stats_notes = "**Release Notes:**\n{notes}"
+command_stats_uptime = "**Uptime:** {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds."
+
+COMMAND_STATS_RELEASE_VERSION = 0
+COMMAND_STATS_RELEASE_NOTES = 1
+
+# Meme command
+command_meme_name = "meme"
+command_meme_description = "Posts a random meme relevant to The Atmoplex Discord Server."
+
+COMMAND_MEME_HIDDEN_NAME = 0
+COMMAND_MEME_HIDDEN_RARITY = 1
+
+# Deepfake command
+command_deepfake_name = "deepfake"
+command_deepfake_description = "Posts a deepfake of a person or character related to Kingsisle."
+command_deepfake_arg_directory_name = "directory"
+command_deepfake_arg_directory_description = "Choose a specific category to retrieve a deepfake from."
+
+# URLs for the checker to test
 test_patch_client_url = "https://www.wizard101.com/testpatchClient"
 update_notes_url = "https://www.wizard101.com/game/community/update-notes/{month}{year}"
 
@@ -135,111 +250,6 @@ CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_TWEET = 4
 
 CHECKER_ROUTINE_ANNOUNCEMENT_MESSAGE = 4
 CHECKER_ROUTINE_REPEAT_AFTER_SUCCESS = 5
-
-# Paths to our resource folders
-resources_path = "resources"
-deepfakes_path = "deepfakes"
-memes_path = "memes"
-memes_archived_path = "archive"
-memes_hidden_path = "hidden"
-hero101_path = "hero"
-video_path = "video"
-locale_path = "locale"
-
-# Fonts
-font_atmoplex = "font_atmoplex.ttf"
-font_mgi = "font_mgi.ttf"
-
-# Command error messages
-command_error_cooldown_header_title = "This command is on cooldown."
-command_error_cooldown_header_desc = "Try again in **{time_to_retry} seconds.**"
-command_error_cooldown_footer_title = "Want shorter cooldowns?"
-command_error_cooldown_footer_desc = "Become a Server Booster or use Atmobot in {cooldown_free_channel} for shorter cooldowns!"
-command_error_exception_title = "Uh oh! Atmobot has run into an error."
-command_error_exception_desc = "Please try again. If the problem persists, please contact an administrator."
-
-command_hero101_name = "hero101"
-command_hero101_description = "Posts something random related to Hero101."
-
-command_remco_name = "remco"
-command_remco_description = "Posts Remco."
-command_remco_art = "⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⠋⠉⠉⠙⠻⠿⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⠟⢁⣠⣤⣶⣶⣷⣶⣶⣦⣄⠈⠙⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⡟⠃⠀⢠⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⡀⠈⢻⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⡏⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⡄⠈⢻⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⠃⠀⠀⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣆⡌⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⠀⠀⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⡏⠀⠀⣸⣿⣿⣿⡿⠿⠿⣿⣿⣿⣿⣿⣿⠿⣿⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⡇⠀⢀⡙⠛⠑⡸⠛⠛⠂⠀⠘⢻⣟⠊⠀⠘⢛⡛⣧⠙⠃⣽⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⡇⠈⠿⣿⣿⣯⣺⣿⣿⣿⡟⣰⣿⣿⣏⢻⣿⣿⣿⣟⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣧⣾⣿⣿⣿⣿⣶⣭⣴⣿⣿⣿⣿⣿⣷⣶⣿⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣅⣀⣈⣿⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⡟⢿⣿⣿⣿⣿⣤⣀⣀⣀⣉⣉⣉⣉⣉⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣷⡀⢿⡝⢿⣿⣿⣿⣷⣭⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⡇⠘⢻⣿⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠛⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⡇⣦⡀⢀⠀⠴⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠏⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿"
-
-command_quote_name = "quote"
-command_quote_description = "Posts a random quote."
-command_quote_arg_user_name = "user"
-command_quote_arg_user_description = "Choose a user to retrieve a quote from."
-
-COMMAND_QUOTE_USER_NAME = 0
-COMMAND_QUOTE_USER_ID = 1
-COMMAND_QUOTE_DATE_RANGE = 2
-
-command_quote_message_history = 10000
-command_quote_message_threshold = 10
-
-command_days_name = "days"
-command_days_description = "Displays the amount of days left until Test Realm Watch begins."
-command_days_formatted = "There {verb} **{days} day{s}** until Test Realm Watch ({date}).\nTest Realm Watch is the first day of the season in which Test Realm has a chance to release."
-command_days_watch = "**Test Realm Watch has begun!**\nTest Realm is likely to release any time **Monday through Thursday**, from **9:00 AM PST until 5:00 PM PST**."
-
-command_testrealm_name = "testrealm"
-command_testrealm_description = "Details when Test Realm is likely to arrive, and why."
-command_testrealm_embed_title = "When is Test Realm coming?"
-command_testrealm_embed_intro_title = "We don't know"
-command_testrealm_embed_intro_description = "But we can certainly make an educated guess. By taking a look at prior Test Realm release dates, we can estimate when this one may release. Let's look at Summer Update releases from the last 5 years."
-command_testrealm_embed_historicals_title = "Prior release dates"
-command_testrealm_embed_historicals_description = "2017: Wednesday, 6/21 @ 8:13 AM\n2018: Wednesday, 6/27 @ 8:04 AM\n2019: Wednesday, 7/10 @ 4:00 PM\n2020: Wednesday, 7/1 @ 7:00 AM\n2021: Tuesday, 7/6 @ 8:00 AM"
-command_testrealm_embed_summary_title = "Summary"
-command_testrealm_embed_summary_description = "Earliest Date: June 21st\nLatest Date: August 3rd\nEarliest Time: 7:00 AM PST\nLatest Time: 4:00 PM PST\n\nMost popular day: Wednesday\nLeast popular day: Monday/Thursday\nPossible days: Monday through Thursday\n\nLast year's date: Tuesday, July 6th"
-command_testrealm_embed_estimation_title = "Estimation"
-command_testrealm_embed_estimation_description = "We think Test Realm will release on Tuesday, July 5th. On this day, we will go into Test Realm Watch and check for any activity with Kingsisle's Test Realm related servers. If anything is detected, everyone who has the \"Test Realm Notifications\" role will be notified!"
-
-command_thumbnail_name = "thumbnail"
-command_thumbnail_description = "Creates a thumbnail in the same style as a Wizard101 Music upload from The Atmoplex."
-command_thumbnail_arg_header_name = "header"
-command_thumbnail_arg_header_description = "The thumbnail header. Typically the name of a song."
-command_thumbnail_arg_footer_name = "footer"
-command_thumbnail_arg_footer_description = "The thumbnail footer. Typically the name of a world."
-command_thumbnail_arg_type_name = "type"
-command_thumbnail_arg_type_description = "Which type of thumbnail is created."
-command_thumbnail_file_name = "command_{}"
-command_thumbnail_extras = {"Wizard101": ("wiz", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
-                            "Pirate101": ("pirate", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
-                            "Hero101": ("hero", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
-                            "Media Games Invest": ("mgi", 0, font_mgi, 70, -70, (255, 255, 255), 15, (255, 255, 255), 40)}
-
-COMMAND_THUMBNAIL_NAME = 0
-COMMAND_THUMBNAIL_UPPERCASE = 1
-COMMAND_THUMBNAIL_FONT = 2
-COMMAND_THUMBNAIL_FONT_SIZE = 3
-COMMAND_THUMBNAIL_HEADER_OFFSET = 4
-COMMAND_THUMBNAIL_HEADER_COLOR = 5
-COMMAND_THUMBNAIL_FOOTER_OFFSET = 6
-COMMAND_THUMBNAIL_FOOTER_COLOR = 7
-COMMAND_THUMBNAIL_X_OFFSET = 8
-
-command_stats_name = "stats"
-command_stats_description = "Displays interesting statistics about Atmobot."
-command_stats_release_version_unknown = "Unknown"
-command_stats_newline = "\n"
-command_stats_release_note = "- {note}" + command_stats_newline
-command_stats_version = "**Version:** {version}"
-command_stats_notes = "**Release Notes:**\n{notes}"
-command_stats_uptime = "**Uptime:** {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds."
-
-COMMAND_STATS_RELEASE_VERSION = 0
-COMMAND_STATS_RELEASE_NOTES = 1
-
-command_meme_name = "meme"
-command_meme_description = "Posts a random meme relevant to The Atmoplex Discord Server."
-
-COMMAND_MEME_HIDDEN_NAME = 0
-COMMAND_MEME_HIDDEN_RARITY = 1
-
-command_deepfake_name = "deepfake"
-command_deepfake_description = "Posts a deepfake of a person or character related to Kingsisle."
-command_deepfake_arg_directory_name = "directory"
-command_deepfake_arg_directory_description = "Choose a specific category to retrieve a deepfake from."
 
 # Posted when a new test revision has been detected, and the bot is about to commence with auto-spoilers
 spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."

@@ -1,5 +1,6 @@
 # 3rd-Party Packages
-from discord import Color, File, Embed, Interaction, InputTextStyle, slash_command
+from optparse import Option
+from discord import Color, File, Embed, Interaction, InputTextStyle, slash_command, option
 from discord.ext import commands
 from discord.ui import InputText, Modal
 
@@ -130,6 +131,8 @@ class Commands(commands.Cog):
         modal = MyModal(title="Slash Command Modal")
         await ctx.send_modal(modal)
 
+    # Hero101 Command
+    # Posts a random Hero101-related image
     @slash_command(name = bot_globals.command_hero101_name, description = bot_globals.command_hero101_description, guild_ids = [bot.guild_id])
     async def hero101(self, ctx):
 
@@ -151,6 +154,8 @@ class Commands(commands.Cog):
         # Log the result
         print("{time} | HERO101: Hero101 asset \"{file_path}\" uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
 
+    # Remco Command
+    # Posts ascii art of the CEO of MGI, Remco Westermann
     @slash_command(name = bot_globals.command_remco_name, description = bot_globals.command_remco_description, guild_ids = [bot.guild_id])
     @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
     async def remco(self, ctx):
@@ -163,6 +168,46 @@ class Commands(commands.Cog):
 
         # Log the result
         print("{time} | REMCO: Ascii art posted".format(time=await self.bot.get_formatted_time()))
+
+    # Thumbnail Command
+    # Creates a custom image based on the text provided
+    @slash_command(name = bot_globals.command_thumbnail_name, description = bot_globals.command_thumbnail_description, guild_ids = [bot.guild_id])
+    @option(name = bot_globals.command_thumbnail_arg_header_name, description = bot_globals.command_thumbnail_arg_header_description, required = True)
+    @option(name = bot_globals.command_thumbnail_arg_footer_name, description = bot_globals.command_thumbnail_arg_footer_description, required = True)
+    @option(name = bot_globals.command_thumbnail_arg_image_name, description = bot_globals.command_thumbnail_arg_image_description, choices = list(bot_globals.command_thumbnail_extras.keys()), default = None, required = False)
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
+    async def thumbnail(self, ctx, header: str, footer: str, image: str = None):
+
+        # Logging
+        print("{time} | THUMBNAIL: {user} requested custom thumbnail with header \"{thumbnail_header}\", footer \"{thumbnail_footer}\", and image \"{thumbnail_image}\"".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), thumbnail_header=header, thumbnail_footer=footer, thumbnail_image=image))
+
+        # If no thumbnail image was provided, use Wizard101
+        if not image:
+            thumb_id = 0
+            image = bot_globals.game_longhands.get(thumb_id)
+
+        # Capitalize our header and footer if the thumbnail image calls for it
+        thumb_info = bot_globals.command_thumbnail_extras.get(image)
+        capitalize = thumb_info[bot_globals.COMMAND_THUMBNAIL_UPPERCASE]
+        if capitalize:
+            header = header.upper()
+            footer = footer.upper()
+
+        # Generate a thumbnail from the creator we have in our spoilers submodule
+        file_name = bot_globals.command_thumbnail_file_name.format(str(uuid.uuid4())[:8])
+        await self.bot.spoilers.create_video_thumbnail(file_name, header, footer, thumb_type=image)
+
+        # Upload our completed thumbnail so long as it successfully generated
+        file_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.video_path, bot_globals.thumbnail_output_path.format(file_name=file_name))
+        file_to_send = File(file_path)
+        await ctx.respond(file=file_to_send)
+
+        # Delete the file
+        os.remove(file_path)
+
+        # Log the result
+        print("{time} | THUMBNAIL: Custom thumbnail with header {thumbnail_header} and footer {thumbnail_footer} uploaded".format(time=await self.bot.get_formatted_time(), thumbnail_header=header, thumbnail_footer=footer))
+
 
     """
     user_choices = []

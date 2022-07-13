@@ -32,9 +32,6 @@ class Atmobot(commands.Bot):
         self.reduced_cooldown_channels = []
         self.reduced_cooldown_roles = []
 
-        # We HAVE to load our Cogs here, or else it won't work properly
-        #SlashCommand(self, sync_commands=True)
-
         # Create a builtin to reference our bot object at any time
         __builtins__.bot = self
 
@@ -133,7 +130,7 @@ class Atmobot(commands.Bot):
 
         else:
 
-            print("{time} | RECONNECT: Bot reconnected to Discord API".format(time=await self.get_formatted_time()))
+            print("{time} | RECONNECT: Bot reconnected to Discord API".format(time=await utils.get_formatted_time()))
 
     # Preliminary stuff done when starting up the bot
     async def startup(self):
@@ -171,7 +168,9 @@ class Atmobot(commands.Bot):
 
         # Set up Discord logging
         sys.stdout.bot = self
+        sys.stdout.load_log_channel()
         sys.stderr.bot = self
+        sys.stderr.load_log_channel()
 
     async def wait_for_button_press(self):
 
@@ -211,15 +210,14 @@ class Atmobot(commands.Bot):
 
         await self.wait_for_button_press()
 
-    def handle_log(self, output):
-        spoiler_channel_ids = settings.get("spoiler_channels")
-        log_channel = self.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_LOG])
-        #self.loop.create_task(log_channel.send(output))
+    # Used to output log information to a channel on Discord
+    def handle_log(self, output, log_channel):
 
-# Setup logging
-if not os.path.exists("logs/"):
-    os.mkdir("logs/")
+        # Send log output to our channel if it exists
+        if log_channel:
+            self.loop.create_task(log_channel.send(output))
 
+# Log class 
 class LogOutput:
 
     def __init__(self, orig, log):
@@ -228,22 +226,51 @@ class LogOutput:
         self.log = log
 
         self.bot = None
+        self.log_channel = None
+
+    def load_log_channel(self):
+
+        # Grab the ID for our logging channel
+        log_channel_id = settings.get("log_channel")
+
+        # We can only write our logs to Discord if we have a channel ID to hook up to
+        if log_channel_id:
+
+            # Grab the channel from it's ID0
+            self.log_channel = self.bot.get_channel(log_channel_id)
 
     def write(self, out):
+
+        # Preserve the original output for Discord
+        discord_out = out
+
+        # Strip the output for log and console
+        chars_to_replace = ("*",)
+        for char_to_replace in chars_to_replace:
+            out = out.replace(char_to_replace, "")
+
+        # Encode our string to utf8
         if isinstance(out, str):
             out_bytes = out.encode('utf-8', 'ignore')
+
+        # Get a decoded version of our string
         else:
             out_bytes = out
             out = out.decode('utf-8', 'ignore')
+
+        # Write to log
         self.log.write(out_bytes)
         self.log.flush()
+
+        # Write to console
         if self.console:
             self.orig.write(out)
             self.orig.flush()
 
+        # We want to try and print out our log via Discord as well
         if self.bot and out and out != "\n":
             try:
-                self.bot.handle_log(out)
+                self.bot.handle_log(discord_out, self.log_channel)
             except:
                 pass
 
@@ -251,6 +278,11 @@ class LogOutput:
         self.log.flush()
         self.orig.flush()
 
+# Create logging directory
+if not os.path.exists("logs/"):
+    os.mkdir("logs/")
+
+# Create a new log and hook up our log class
 log_name = "logs/atmobot-log-{timestamp}.log".format(timestamp=datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 log = open(log_name, "ab")
 logOut = LogOutput(sys.__stdout__, log)
@@ -260,7 +292,7 @@ sys.stderr = logErr
 sys.stdout.console = True
 sys.stderr.console = True
 
-# What prefix are we going to use?
+# Set up prefixes that can be used to call the bot
 def _prefix_callable(bot, msg):
     
     # Prefixes we can use for the bot
@@ -278,7 +310,7 @@ def _prefix_callable(bot, msg):
     # Return available prefixes
     return prefixes
 
-# Run the bot
+# Create the Atmobot class and run the bot
 atmobot = Atmobot(command_prefix = _prefix_callable, case_insensitive = True, description = bot_globals.bot_description, intents = Intents.all(), help_command = None, startup_time = datetime.datetime.now())
 token = settings.get("bot_token", "")
 atmobot.run(token)

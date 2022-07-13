@@ -6,9 +6,11 @@ from discord.ui import InputText, Modal
 
 # Local packages
 import bot_globals
+import utils
 
 # Built-in packages
 import datetime
+import inspect
 import os
 import random
 import sys
@@ -125,6 +127,37 @@ class Commands(commands.Cog):
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
 
+    # Formats and logs command usage information
+    async def log_info(self, ctx, message = None):
+
+        # Grab time, formatted author info, and formatted channel info
+        current_time = await self.bot.get_formatted_time()
+        full_username = await self.get_full_username(ctx.author)
+        user_id = ctx.author.id
+        channel_name = ctx.channel.name
+        channel_id = ctx.channel.id
+
+        user_mention = ctx.author.mention
+        channel_mention = ctx.channel.mention
+
+        # Formatted name of the function that called us
+        caller_name = inspect.stack()[1][3]
+        caller_name_formatted = caller_name.upper()
+
+        # Sanity check if we don't provide a message
+        if not message:
+            message = bot_globals.fallback_log_message
+
+        # Assemble our log message
+        log_message = bot_globals.formatted_log_message_discord.format(current_time = current_time,
+                                                                       caller_name_formatted = caller_name_formatted,
+                                                                       user_mention = user_mention,
+                                                                       channel_mention = channel_mention,
+                                                                       message = message)
+
+        # Print to console
+        print(log_message)
+
     @slash_command(name = "modaltest", guild_ids = [bot.guild_id])
     async def modal_slash(self, ctx):
         """Shows an example of a modal dialog being invoked from a slash command."""
@@ -137,7 +170,7 @@ class Commands(commands.Cog):
     async def hero101(self, ctx):
 
         # Logging
-        print("{time} | HERO101: {user} requested a Hero101 asset".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+        await self.log_info(ctx, "Choosing random image from **\"{image_directory}\"** directory.".format(image_directory = os.path.join(bot_globals.resources_path, bot_globals.hero101_path)))
 
         # Path to get our Hero101 assets from
         current_path = os.path.join(os.getcwd(), bot_globals.resources_path, bot_globals.hero101_path)
@@ -146,13 +179,16 @@ class Commands(commands.Cog):
         all_files = [x for x in list(os.scandir(current_path)) if x.is_file()]
         random_file = random.choice(all_files).name
 
+        # Logging
+        await self.log_info(ctx, "Attempting to upload image **\"{file_path}\"**.".format(file_path = random_file))
+
         # Generate a file path and send the file
         file_path = os.path.join(current_path, random_file)
         file_to_send = File(file_path)
         await ctx.respond(file=file_to_send)
 
-        # Log the result
-        print("{time} | HERO101: Hero101 asset \"{file_path}\" uploaded".format(time=await self.bot.get_formatted_time(), file_path=random_file))
+        # Logging
+        await self.log_info(ctx, "Image uploaded successfully.")
 
     # Remco Command
     # Posts ascii art of the CEO of MGI, Remco Westermann

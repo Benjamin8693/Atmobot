@@ -6,6 +6,7 @@ bot_settings =  {
     "reduced_cooldown_channels": ["Cooldown Exempt Channels", "IDs of channels with reduced command cooldowns.", 1, int, [], False],
     "reduced_cooldown_roles": ["Cooldown Exempt Roles", "IDs of roles with reduced command cooldowns.", 1, int, [], False],
     "deprecated_commands": ["Allow Deprecated Commands", "Whether or not to enable deprecated (unsupported) commands.", 1, bool, False, False],
+    "log_channel": ["Logging Channel", "ID of the channel to post bot logs in.", 1, int, 0, False],
     "authorized_posters": ["Authorized Twitter Posters", "IDs of users with permission to make a post on the connected Twitter account.", 1, int, [], False],
     "spoiler_channels": ["Spoiler Channels", "IDs of channels to post spoilers in.", 1, int, [0, 0, 0, 0, 0], False, ["Announcements Channel", "Channel A", "Channel B", "Channel C", "Channel D"]],
     "spoiler_ping_role": ["Spoiler Announcement Role", "ID of the role to ping for important spoiler announcements.", 1, int, 0, False],
@@ -43,6 +44,11 @@ locale_path = "locale"
 # Font paths
 font_atmoplex = "font_atmoplex.ttf"
 font_mgi = "font_mgi.ttf"
+
+# Command logging
+fallback_log_message = "WARNING: Log information not provided!"
+formatted_log_message_local = "{current_time} | {caller_name_formatted} | {full_username} ({user_id}) | {channel_name} ({channel_id})\n{message}"
+formatted_log_message_discord = "**{current_time} | {caller_name_formatted} | {user_mention} | {channel_mention}**\n*{message}*"
 
 # Command error messages
 command_error_cooldown_header_title = "This command is on cooldown."
@@ -104,7 +110,7 @@ command_thumbnail_arg_image_name = "image"
 command_thumbnail_arg_image_description = "Which image is used to create the thumbnail."
 command_thumbnail_file_name = "command_{}"
 command_thumbnail_extras = {"Wizard101": ("wiz", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
-                            "Wizard101 - New": ("wiz_new", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
+                            "Wizard101 (New)": ("wiz_new", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
                             "Pirate101": ("pirate", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
                             "Hero101": ("hero", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
                             "Media Games Invest": ("mgi", 0, font_mgi, 70, -70, (255, 255, 255), 15, (255, 255, 255), 40)}

@@ -158,8 +158,8 @@ class Atmobot(commands.Bot):
 
         # Checker class used for checking url and patcher status
         print("{time} | STARTUP: Loading Patch Checker".format(time=await self.get_formatted_time()))
-        #self.checker = checker.Checker(self)
-        #await self.checker.startup()
+        self.checker = checker.Checker(self)
+        await self.checker.startup()
 
         # Automatic spoiler system
         print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))

@@ -6,7 +6,7 @@ from discord.ui import InputText, Modal
 
 # Local packages
 import bot_globals
-from checker import ImageBruteforcerView
+from checker import ImageBruteforcer
 import utils
 
 # Built-in packages
@@ -150,8 +150,14 @@ class Commands(commands.Cog):
         mode = bot_globals.command_bruteforce_modes.get(mode)
 
         if mode == bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE:
-            image_bruteforcer_view = ImageBruteforcerView(ctx = ctx)
-            await ctx.respond("**Update Note Image Bruteforcer**", view = image_bruteforcer_view)
+
+            bruteforcer_instructions = "__**Add**__ a name to bruteforce\n__**Remove**__ a name from the bruteforce list\n__**Run**__ the bruteforcer\n__**View**__ all names on the bruteforce list\n__**Settings**__ for the bruteforcer"
+            
+            view_embed = Embed(color=Color.blurple())
+            view_embed.add_field(name = "Bruteforcer Control Panel", value = bruteforcer_instructions, inline=False)
+
+            image_bruteforcer = ImageBruteforcer(timeout=None)
+            await ctx.respond(embed = view_embed, view = image_bruteforcer)
 
         elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_WEBSITE:
             await ctx.respond("Website bruteforcer not yet implemented.")

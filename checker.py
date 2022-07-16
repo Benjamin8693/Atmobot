@@ -1,6 +1,6 @@
 # 3rd Party Packages
-from discord import ButtonStyle, Color, Embed, Interaction, Optional, ui
-from discord.ui import InputText, Modal, Item
+from discord import ButtonStyle, Color, Embed, Interaction, Optional, File
+from discord.ui import InputText, Modal, Item, View, Button, button
 
 # Local packages
 import os
@@ -88,13 +88,31 @@ class Checker:
         # If we don't have a checker config file, generate one
         if not os.path.isfile(bot_globals.checker_path):
             with open(bot_globals.checker_path, "w") as data:
-                json.dump(bot_globals.spoilers_template, data, indent=4)
+                json.dump(bot_globals.checker_template, data, indent=4)
 
-        # Load our spoiler config
+        # Load our checker config
         with open(bot_globals.checker_path) as data:
             self.checker_config = json.load(data)
 
-    async def find_images(self, term):
+    async def update_checker_config(self, config_name, variable_to_replace):
+
+        # We typically shouldn't be updating a config variable that doesn't already exist
+        if config_name not in self.checker_config:
+            print("Updated config variable '{}' that does not exist!".format(config_name))
+
+        # Update the config variable
+        self.checker_config[config_name] = variable_to_replace
+
+        # Save our config
+        self.save_checker_config()
+
+    def save_checker_config(self):
+
+        # Write to the checker config file
+        with open(bot_globals.checker_path, "w") as data:
+            json.dump(self.checker_config, data, indent=4)
+
+    async def find_images(self, interaction, term):
 
         # Http client
         conn = AsyncHTTPClient()
@@ -103,8 +121,21 @@ class Checker:
         suffixes = self.checker_config.get("image_suffixes")
         extensions = self.checker_config.get("image_extensions")
 
+        def get_percentage(percentage):
+
+            formatted_percentage = round(percentage * 100, 2)
+
+            return "Bruteforcing term **{term}**: {percentage}%".format(term = term, percentage = formatted_percentage)
+
+        percentage_message = await interaction.channel.send(get_percentage(0))
+
         # Iterate over all of our suffixes to attempt every possible variation
         for suffix in suffixes:
+
+            # Update the percantage
+            suffix_count = suffixes.index(suffix) + 1
+            percentage = suffix_count / len(suffixes)
+            await percentage_message.edit(content=get_percentage(percentage))
 
             # Also iterate over every possible file extension we're looking for
             for extension in extensions:
@@ -121,19 +152,22 @@ class Checker:
 
                 # The image exists
                 if response == 200:
+
                     print(f'{short_url} exists.')
                     image = resp.body
-                    f = open(short_url, "wb")
+                    file_path = "cache/{image_name}".format(image_name = short_url)
+                    f = open(file_path, "wb")
                     f.write(image)
                     f.close()
 
-                # The image doesn't exist
-                elif response == 302:
-                    print(f'{short_url} does not exist.')
+                    file_to_send = File(file_path)
+                    await interaction.channel.send("**{image_name}**\n<{image_url}>".format(image_name = short_url, image_url = url), file = file_to_send)
 
-                # Something odd is going on
-                else:
-                    print('Fuck')
+                # Cooldown to prevent rate limiting
+                await asyncio.sleep(0.25)
+
+        await interaction.channel.send("Finished bruteforcing term **{term}**".format(term = term))
+
 
     """
     async def grab_revision(self, service):
@@ -353,67 +387,209 @@ class Checker:
     """
 
 
+class ImageRunView(View):
+
+    @button(label = "Start", style = ButtonStyle.green)
+    async def start_bruteforce(self, button: Button, interaction: Interaction):
+
+        current_image_names = bot.checker.checker_config.get("image_names", [])
+    
+        if not current_image_names:
+            await interaction.response.send_message("No image names to bruteforce.")
+            return
+
+        await interaction.response.send_message("Bruteforce started.")
+
+        for image_name in current_image_names:
+            await bot.checker.find_images(interaction, image_name)
+
+        await interaction.channel.send("Bruteforce completed.")
+
+        #await interaction.response.send_message("Start not yet implemented.")
+
+    @button(label = "Schedule", style = ButtonStyle.blurple)
+    async def schedule_bruteforce(self, button: Button, interaction: Interaction):
+
+        await interaction.response.send_message("Schedule not yet implemented.", delete_after=5)
+
+    
+class ImagePopIndexModal(Modal):
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(InputText(label="Index", placeholder = "1"))
+
+    async def callback(self, interaction: Interaction):
+
+        # Current image names
+        current_image_names = bot.checker.checker_config.get("image_names", [])
+
+        # Image index to pop
+        image_index = self.children[0].value
+
+        # Only pop the index if an integer was specified
+        if image_index.isdigit():
+
+            # The index can only be between 1 and the length of the image name list
+            if 1 <= int(image_index) <= len(current_image_names):
+
+                popped_image_name = current_image_names.pop(int(image_index) - 1)
+                await bot.checker.update_checker_config("image_names", current_image_names)
+
+                await interaction.response.send_message("Popped **{popped_image_name}** from the list.".format(popped_image_name = popped_image_name), delete_after=5)
+                
+                return
+
+        await interaction.response.send_message("Invalid index specified.", delete_after=5)
+
+
+class ImageRemovalView(View):
+
+    # Button for clearing all names from the image bruteforce list
+    @button(label = "Clear", style = ButtonStyle.red)
+    async def clear_all(self, button: Button, interaction: Interaction):
+
+        current_image_names = bot.checker.checker_config.get("image_names", [])
+
+        # Empty the list of image names
+        await bot.checker.update_checker_config("image_names", [])
+
+        # Relay message that the list has been cleared
+        if current_image_names:
+            await interaction.response.send_message("Cleared all image names.", delete_after=5)
+
+        else:
+            await interaction.response.send_message("No image names available to clear.", delete_after=5)
+
+    # Button for removing the name at the front of the image bruteforce list
+    @button(label = "Pop First", style = ButtonStyle.red)
+    async def pop_front(self, button: Button, interaction: Interaction):
+
+        current_image_names = bot.checker.checker_config.get("image_names", [])
+
+        if current_image_names:
+            popped_image_name = current_image_names.pop(0)
+            await bot.checker.update_checker_config("image_names", current_image_names)
+
+            await interaction.response.send_message("Popped **{popped_image_name}** from front of list.".format(popped_image_name = popped_image_name), delete_after=5)
+
+        else:
+
+            await interaction.response.send_message("No image names available to pop.", delete_after=5)
+
+    # Button for removing the name at the back of the image bruteforce list
+    @button(label = "Pop Last", style = ButtonStyle.red)
+    async def pop_back(self, button: Button, interaction: Interaction):
+
+        current_image_names = bot.checker.checker_config.get("image_names", [])
+
+        if current_image_names:
+            popped_image_name = current_image_names.pop()
+            await bot.checker.update_checker_config("image_names", current_image_names)
+
+            await interaction.response.send_message("Popped **{popped_image_name}** from back of list.".format(popped_image_name = popped_image_name), delete_after=5)
+
+        else:
+
+            await interaction.response.send_message("No image names available to pop.", delete_after=5)
+
+    # Button for removing the name at the specified index
+    @button(label = "Pop Specific", style = ButtonStyle.red)
+    async def pop_index(self, button: Button, interaction: Interaction):
+
+        current_image_names = bot.checker.checker_config.get("image_names", [])
+
+        if current_image_names:
+            
+            modal = ImagePopIndexModal(title = "Type an image index to pop.")
+            await interaction.response.send_modal(modal)
+
+        else:
+
+            await interaction.response.send_message("No image names available to pop.", delete_after=5)
+
+
 class ImageInputModal(Modal):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.add_item(InputText(label="Add an image name.", placeholder="NewArcanumQuest"))
 
-        #self.add_item(
-        #    InputText(
-        #        label="Longer Input",
-        #        value="Longer Value\nSuper Long Value",
-        #        style=InputTextStyle.long,
-        #    )
-        #)
+        self.add_item(InputText(label="Image Name", placeholder = "NewPVPArena"))
 
     async def callback(self, interaction: Interaction):
-        embed = Embed(title="Your Modal Results", color=Color.random())
-        embed.add_field(name="First Input", value=self.children[0].value, inline=False)
-        #embed.add_field(name="Second Input", value=self.children[1].value, inline=False)
-        await interaction.response.send_message(embeds=[embed])
+
+        # Current image names
+        current_image_names = bot.checker.checker_config.get("image_names", [])
+
+        # Image name to add
+        image_name = self.children[0].value
+
+        # We don't want to add an image name already in the list
+        if image_name in current_image_names:
+
+            await interaction.response.send_message("**{image_name}** already exists in bruteforce list.".format(image_name = image_name), delete_after=5)
+            return
+
+        if len(image_name) > 50:
+
+            await interaction.response.send_message("Image name is too long to add!", delete_after=5)
+            return
+
+        current_image_names.append(image_name)
+        await bot.checker.update_checker_config("image_names", current_image_names)
+
+        await interaction.response.send_message("Added image name **{image_name}** to bruteforce list.".format(image_name = image_name), delete_after=5)
 
 
-class ImageBruteforcerView(ui.View):
+class ImageBruteforcer(View):
 
-    def __init__(self, *items: Item, timeout: Optional[float] = 180, ctx = None):
-        super().__init__(*items, timeout=timeout)
+    # Button for adding possible image names to the bruteforce list
+    @button(label = bot_globals.command_bruteforce_image_button_add, style = ButtonStyle.green)
+    async def bruteforce_(self, button: Button, interaction: Interaction):
 
-        self.ctx = ctx
-
-    @ui.button(label="Add", style=ButtonStyle.green)
-    async def add_callback(self, button: ui.Button, interaction: Interaction):
-        modal = ImageInputModal(title="Add an image name to check.")
+        # Send a modal requesting the name of an image to bruteforce
+        modal = ImageInputModal(title = "Type an image name to bruteforce.")
         await interaction.response.send_modal(modal)
 
-    @ui.button(label="Remove", style=ButtonStyle.red)
-    async def remove_callback(self, button: ui.Button, interaction: Interaction):
-        await self.ctx.respond("Names cleared.")
-        #modal = MyModal(title="Modal Triggered from Button")
-        #await interaction.response.send_modal(modal)
+    # Button for removing image names to bruteforce
+    @button(label = "Remove", style = ButtonStyle.red)
+    async def remove_image(self, button: Button, interaction: Interaction):
 
-    @ui.button(label="Schedule", style=ButtonStyle.blurple)
-    async def schedule_callback(self, button: ui.Button, interaction: Interaction):
-        await self.ctx.respond("Schedule a check.")
-        #modal = MyModal(title="Modal Triggered from Button")
-        #await interaction.response.send_modal(modal)
+        instructions = "__**Clear**__ all names from the bruteforce list\n__**Pop the First**__ name from the bruteforce list\n__**Pop the Last**__ name from the bruteforce list\n__**Pop a Specific**__ name from the bruteforce list"
 
-    @ui.button(label="Settings", style=ButtonStyle.grey)
-    async def settings_callback(self, button: ui.Button, interaction: Interaction):
-        await self.ctx.respond("Schedule a check.")
-        #modal = MyModal(title="Modal Triggered from Button")
-        #await interaction.response.send_modal(modal)
+        view_embed = Embed(color=Color.blurple())
+        view_embed.add_field(name = "Remove", value = instructions, inline=False)
 
-    #@ui.select(
-    #    placeholder="Pick Your Modal",
-    #    min_values=1,
-    #    max_values=1,
-    #    options=[
-    #        SelectOption(label="First Modal", description="Shows the first modal"),
-    #        SelectOption(label="Second Modal", description="Shows the second modal"),
-    #    ],
-    #)
-    #async def select_callback(self, select: ui.Select, interaction: Interaction):
-    #    modal = MyModal(title="Temporary Title")
-    #    modal.title = select.values[0]
-    #    await interaction.response.send_modal(modal)
+        image_removal_view = ImageRemovalView()
+        await interaction.response.send_message(embed=view_embed, view = image_removal_view)
+
+    # Button for scheduling image bruteforce routines
+    @button(label = "Run", style = ButtonStyle.blurple)
+    async def run_check(self, button: Button, interaction: Interaction):
+
+        image_run_view = ImageRunView()
+        await interaction.response.send_message("**Run Bruteforce**", view = image_run_view)
+
+    # Button for viewing the current list of image names
+    @button(label = "View", style = ButtonStyle.grey)
+    async def view_images(self, button: Button, interaction: Interaction):
+
+        image_list = ""
+        current_image_names = bot.checker.checker_config.get("image_names", [])
+        for image_name in current_image_names:
+            index = current_image_names.index(image_name)
+            image_list += "__**#{image_index}**__ {image_name}\n".format(image_index = index + 1, image_name = image_name)
+
+        # Create an embed
+        view_embed = Embed(color=Color.blurple())
+        view_embed.add_field(name = "Bruteforce List", value = image_list, inline=False)
+
+        # Respond with the embed
+        await interaction.response.send_message(embed=view_embed)
+
+    # Button for changing the image bruteforce settings
+    @button(label = "Settings", style = ButtonStyle.grey)
+    async def settings_callback(self, button: Button, interaction: Interaction):
+
+        await interaction.response.send_message("Settings not yet implemented.", delete_after=5)

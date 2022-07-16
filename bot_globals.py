@@ -67,8 +67,14 @@ command_bruteforce_arg_mode_description = "Choose the bruteforcing mode to acces
 COMMAND_BRUTEFORCE_MODE_IMAGE = 0
 COMMAND_BRUTEFORCE_MODE_WEBSITE = 1
 
-command_bruteforce_modes = {"Update Note Image Bruteforcer": COMMAND_BRUTEFORCE_MODE_IMAGE,
-                            "Website Bruteforcer": COMMAND_BRUTEFORCE_MODE_WEBSITE}
+command_bruteforce_modes = {"image": COMMAND_BRUTEFORCE_MODE_IMAGE,
+                            "website": COMMAND_BRUTEFORCE_MODE_WEBSITE}
+
+command_bruteforce_image_button_add = "Add"
+command_bruteforce_image_button_remove = "Remove"
+command_bruteforce_image_button_run = "Run"
+command_bruteforce_image_button_view = "View"
+command_bruteforce_image_button_settings = "Settings"
 
 # Hero101 command
 command_hero101_name = "hero101"
@@ -167,7 +173,8 @@ checker_template = {
     "image_names": [],
     "image_extensions": [".jpg", ".png", ".gif"],
     "image_prefixes": [],
-    "image_suffixes": ["", "01", "02", "03", "04", "05", "01_600", "02_600", "03_600", "04_600", "05_600", "_Lead", "_compressed", "_Lead_compressed_600", "_600", "_600b", "_Mercedes", "_watermark_contrast_600", "_watermark_contrast"]
+    "image_suffixes": ["", "01", "02", "03", "04", "05", "01_600", "02_600", "03_600", "04_600", "05_600", "_Lead", "_compressed", "_Lead_compressed_600", "_600", "_600b", "_Mercedes", "_watermark_contrast_600", "_watermark_contrast"],
+    "image_request_cooldown": 0.25
 }
 
 checker_path = "checker.json"

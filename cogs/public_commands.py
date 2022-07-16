@@ -1,11 +1,12 @@
 # 3rd-Party Packages
 from optparse import Option
-from discord import Color, File, Embed, Interaction, InputTextStyle, slash_command, option
+from discord import Color, File, Embed, Interaction, InputTextStyle, ButtonStyle, SelectOption, slash_command, option, ui
 from discord.ext import commands
 from discord.ui import InputText, Modal
 
 # Local packages
 import bot_globals
+from checker import ImageBruteforcerView
 import utils
 
 # Built-in packages
@@ -19,25 +20,6 @@ import traceback
 import typing
 import uuid
 
-
-class MyModal(Modal):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.add_item(InputText(label="Short Input", placeholder="Placeholder Test"))
-
-        self.add_item(
-            InputText(
-                label="Longer Input",
-                value="Longer Value\nSuper Long Value",
-                style=InputTextStyle.long,
-            )
-        )
-
-    async def callback(self, interaction: Interaction):
-        embed = Embed(title="Your Modal Results", color=Color.random())
-        embed.add_field(name="First Input", value=self.children[0].value, inline=False)
-        embed.add_field(name="Second Input", value=self.children[1].value, inline=False)
-        await interaction.response.send_message(embeds=[embed])
 
 class Commands(commands.Cog):
 
@@ -158,15 +140,26 @@ class Commands(commands.Cog):
         # Print to console
         print(log_message)
 
-    @slash_command(name = "modaltest", guild_ids = [bot.guild_id])
-    async def modal_slash(self, ctx):
-        """Shows an example of a modal dialog being invoked from a slash command."""
-        modal = MyModal(title="Slash Command Modal")
-        await ctx.send_modal(modal)
+    # Bruteforcer Command
+    # Opens the control panel for bruteforcing functionality
+    @slash_command(name = bot_globals.command_bruteforce_name, description = bot_globals.command_bruteforce_description, guild_ids = [bot.guild_id])
+    @option(name = bot_globals.command_bruteforce_arg_mode_name, description = bot_globals.command_bruteforce_arg_mode_description, choices = list(bot_globals.command_bruteforce_modes.keys()), required = True)
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
+    async def bruteforcer(self, ctx, mode: str):
+
+        mode = bot_globals.command_bruteforce_modes.get(mode)
+
+        if mode == bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE:
+            image_bruteforcer_view = ImageBruteforcerView(ctx = ctx)
+            await ctx.respond("**Update Note Image Bruteforcer**", view = image_bruteforcer_view)
+
+        elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_WEBSITE:
+            await ctx.respond("Website bruteforcer not yet implemented.")
 
     # Hero101 Command
     # Posts a random Hero101-related image
     @slash_command(name = bot_globals.command_hero101_name, description = bot_globals.command_hero101_description, guild_ids = [bot.guild_id])
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
     async def hero101(self, ctx):
 
         # Logging

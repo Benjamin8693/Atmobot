@@ -1,4 +1,9 @@
+# 3rd Party Packages
+from discord import ButtonStyle, Color, Embed, Interaction, Optional, ui
+from discord.ui import InputText, Modal, Item
+
 # Local packages
+import os
 import bot_globals
 import bruteforcer
 
@@ -13,16 +18,27 @@ from socket import create_connection
 import struct
 from urllib.request import urlopen, Request
 
+import os
+import json
+
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+import asyncio
+
+
 class Checker:
 
     def __init__(self, bot):
         
         self.bot = bot
-        self.revision_bruteforcer = bruteforcer.Bruteforcer(self.bot)
+        #self.revision_bruteforcer = bruteforcer.Bruteforcer(self.bot)
 
-        self.url_cache = {}
-        
+        #self.url_cache = {}
+       
     async def startup(self):
+
+        self.load_checker()
+
+        return
 
         # Hash current website info
         print("{time} | CHECKER: Hashing website info".format(time=await self.bot.get_formatted_time()))
@@ -67,6 +83,59 @@ class Checker:
         print("{time} | CHECKER: Live revision is {live_revision}".format(time=await self.bot.get_formatted_time(), live_revision=live_revision))
         print("{time} | CHECKER: Test revision is {test_revision}".format(time=await self.bot.get_formatted_time(), test_revision=test_revision))
 
+    def load_checker(self):
+
+        # If we don't have a checker config file, generate one
+        if not os.path.isfile(bot_globals.checker_path):
+            with open(bot_globals.checker_path, "w") as data:
+                json.dump(bot_globals.spoilers_template, data, indent=4)
+
+        # Load our spoiler config
+        with open(bot_globals.checker_path) as data:
+            self.checker_config = json.load(data)
+
+    async def find_images(self, term):
+
+        # Http client
+        conn = AsyncHTTPClient()
+
+        # Load suffixes and extensions to check
+        suffixes = self.checker_config.get("image_suffixes")
+        extensions = self.checker_config.get("image_extensions")
+
+        # Iterate over all of our suffixes to attempt every possible variation
+        for suffix in suffixes:
+
+            # Also iterate over every possible file extension we're looking for
+            for extension in extensions:
+
+                # Name of the possible file
+                short_url = term + suffix + extension
+
+                # Generate a url and check to see whether the image exists
+                url = "https://edgecast.wizard101.com/image/free/Wizard/C/Wizard-Society/Patch-Notes/{short_url}?v=1".format(short_url = short_url)
+                resp = await conn.fetch(HTTPRequest(url, follow_redirects=False), raise_error=False)
+
+                # Grab response code from the request
+                response = resp.code
+
+                # The image exists
+                if response == 200:
+                    print(f'{short_url} exists.')
+                    image = resp.body
+                    f = open(short_url, "wb")
+                    f.write(image)
+                    f.close()
+
+                # The image doesn't exist
+                elif response == 302:
+                    print(f'{short_url} does not exist.')
+
+                # Something odd is going on
+                else:
+                    print('Fuck')
+
+    """
     async def grab_revision(self, service):
 
         # It won't always work depending on whether the server is up and accepting connections
@@ -280,3 +349,71 @@ class Checker:
         # Format everything together into our patcher url
         patcher_url = bot_globals.patcher_url.format(server=full_server_name, game_longhand=game_longhand, game_shorthand=game_shorthand, revision_number=revision_number, revision_version=revision_version, wad_name=wad)
         return patcher_url
+
+    """
+
+
+class ImageInputModal(Modal):
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.add_item(InputText(label="Add an image name.", placeholder="NewArcanumQuest"))
+
+        #self.add_item(
+        #    InputText(
+        #        label="Longer Input",
+        #        value="Longer Value\nSuper Long Value",
+        #        style=InputTextStyle.long,
+        #    )
+        #)
+
+    async def callback(self, interaction: Interaction):
+        embed = Embed(title="Your Modal Results", color=Color.random())
+        embed.add_field(name="First Input", value=self.children[0].value, inline=False)
+        #embed.add_field(name="Second Input", value=self.children[1].value, inline=False)
+        await interaction.response.send_message(embeds=[embed])
+
+
+class ImageBruteforcerView(ui.View):
+
+    def __init__(self, *items: Item, timeout: Optional[float] = 180, ctx = None):
+        super().__init__(*items, timeout=timeout)
+
+        self.ctx = ctx
+
+    @ui.button(label="Add", style=ButtonStyle.green)
+    async def add_callback(self, button: ui.Button, interaction: Interaction):
+        modal = ImageInputModal(title="Add an image name to check.")
+        await interaction.response.send_modal(modal)
+
+    @ui.button(label="Remove", style=ButtonStyle.red)
+    async def remove_callback(self, button: ui.Button, interaction: Interaction):
+        await self.ctx.respond("Names cleared.")
+        #modal = MyModal(title="Modal Triggered from Button")
+        #await interaction.response.send_modal(modal)
+
+    @ui.button(label="Schedule", style=ButtonStyle.blurple)
+    async def schedule_callback(self, button: ui.Button, interaction: Interaction):
+        await self.ctx.respond("Schedule a check.")
+        #modal = MyModal(title="Modal Triggered from Button")
+        #await interaction.response.send_modal(modal)
+
+    @ui.button(label="Settings", style=ButtonStyle.grey)
+    async def settings_callback(self, button: ui.Button, interaction: Interaction):
+        await self.ctx.respond("Schedule a check.")
+        #modal = MyModal(title="Modal Triggered from Button")
+        #await interaction.response.send_modal(modal)
+
+    #@ui.select(
+    #    placeholder="Pick Your Modal",
+    #    min_values=1,
+    #    max_values=1,
+    #    options=[
+    #        SelectOption(label="First Modal", description="Shows the first modal"),
+    #        SelectOption(label="Second Modal", description="Shows the second modal"),
+    #    ],
+    #)
+    #async def select_callback(self, select: ui.Select, interaction: Interaction):
+    #    modal = MyModal(title="Temporary Title")
+    #    modal.title = select.values[0]
+    #    await interaction.response.send_modal(modal)

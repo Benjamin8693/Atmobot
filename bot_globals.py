@@ -58,6 +58,18 @@ command_error_cooldown_footer_desc = "Become a Server Booster or use Atmobot in 
 command_error_exception_title = "Uh oh! Atmobot has run into an error."
 command_error_exception_desc = "Please try again. If the problem persists, please contact an administrator."
 
+# Bruteforce command
+command_bruteforce_name = "bruteforce"
+command_bruteforce_description = "Opens the control panel for one of our bruteforcers."
+command_bruteforce_arg_mode_name = "mode"
+command_bruteforce_arg_mode_description = "Choose the bruteforcing mode to access."
+
+COMMAND_BRUTEFORCE_MODE_IMAGE = 0
+COMMAND_BRUTEFORCE_MODE_WEBSITE = 1
+
+command_bruteforce_modes = {"Update Note Image Bruteforcer": COMMAND_BRUTEFORCE_MODE_IMAGE,
+                            "Website Bruteforcer": COMMAND_BRUTEFORCE_MODE_WEBSITE}
+
 # Hero101 command
 command_hero101_name = "hero101"
 command_hero101_description = "Posts something random related to Hero101."
@@ -151,6 +163,15 @@ command_deepfake_description = "Posts a deepfake of a person or character relate
 command_deepfake_arg_directory_name = "directory"
 command_deepfake_arg_directory_description = "Choose a specific category to retrieve a deepfake from."
 
+checker_template = {
+    "image_names": [],
+    "image_extensions": [".jpg", ".png", ".gif"],
+    "image_prefixes": [],
+    "image_suffixes": ["", "01", "02", "03", "04", "05", "01_600", "02_600", "03_600", "04_600", "05_600", "_Lead", "_compressed", "_Lead_compressed_600", "_600", "_600b", "_Mercedes", "_watermark_contrast_600", "_watermark_contrast"]
+}
+
+checker_path = "checker.json"
+
 # URLs for the checker to test
 test_patch_client_url = "https://www.wizard101.com/testpatchClient"
 update_notes_url = "https://www.wizard101.com/game/community/update-notes/{month}{year}"
@@ -197,8 +218,8 @@ longhand_to_game = {"Wizard101": WIZARD101,
 
 # Shorthand names for the games used for patcher links
 game_shorthands_patcher = {GAME_UNKNOWN: "",
-                   WIZARD101: "Wiz",
-                   PIRATE101: "Pirate"}
+                           WIZARD101: "Wiz",
+                           PIRATE101: "Pirate"}
 
 # Shorthand names for the games used for version labeling
 game_shorthands_version = {GAME_UNKNOWN: "",

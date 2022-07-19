@@ -70,11 +70,21 @@ COMMAND_BRUTEFORCE_MODE_WEBSITE = 1
 command_bruteforce_modes = {"image": COMMAND_BRUTEFORCE_MODE_IMAGE,
                             "website": COMMAND_BRUTEFORCE_MODE_WEBSITE}
 
-command_bruteforce_image_button_add = "Add"
-command_bruteforce_image_button_remove = "Remove"
-command_bruteforce_image_button_run = "Run"
-command_bruteforce_image_button_view = "View"
-command_bruteforce_image_button_settings = "Settings"
+command_bruteforce_image_control_panel_name = "Bruteforcer Control Panel"
+command_bruteforce_image_control_panel_instructions = "__**Add**__ a name to bruteforce\n__**Remove**__ a name from the bruteforce list\n__**Run**__ the bruteforcer\n__**View**__ all names on the bruteforce list\n__**Settings**__ for the bruteforcer"
+
+command_bruteforce_image_add_button = "Add"
+
+command_bruteforce_image_remove_button = "Remove"
+command_bruteforce_image_remove_name = "Remove"
+command_bruteforce_image_remove_instructions = "__**Clear**__ all names from the bruteforce list\n__**Pop the First**__ name from the bruteforce list\n__**Pop the Last**__ name from the bruteforce list\n__**Pop a Specific**__ name from the bruteforce list"
+
+command_bruteforce_image_run_button = "Run"
+command_bruteforce_image_run_name = "Run Bruteforce"
+command_bruteforce_image_run_instructions = "__**Start**__ a bruteforce using the current settings\n__**Schedule**__ a bruteforce with a specific routine and settings"
+
+command_bruteforce_image_view_button = "View"
+command_bruteforce_image_settings_button = "Settings"
 
 # Hero101 command
 command_hero101_name = "hero101"

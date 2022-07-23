@@ -15,3 +15,5 @@ Benjamin - Lead Developer
 Starrfox - Creating various useful libraries that makes this bot possible
 
 Gustavo - Assistance with text comparison code
+
+Ashy - Created base for image bruteforcer & scheduler

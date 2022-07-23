@@ -128,21 +128,17 @@ class Checker:
 
             formatted_percentage = round(percentage * 100, 2)
 
-            return "Bruteforcing {image_index} of {total_images} __**{image_name}**__: {percentage}%".format(image_index = image_index + 1, total_images = total_images, image_name = image_name, percentage = formatted_percentage)
+            return "Bruteforcing {image_index} of {total_images} ({percentage}%)\n__**{image_name}**__".format(image_index = image_index + 1, total_images = total_images, percentage = formatted_percentage, image_name = image_name)
 
-        await interaction.message.edit(content = get_percentage(0), embed = embed, view = view)
+        # Update the percantage
+        percentage = (image_index + 1) / total_images
+        await interaction.message.edit(content = get_percentage(percentage), embed = embed, view = view)
 
         # Iterate over all of our suffixes to attempt every possible variation
         for suffix in suffixes:
 
             if self.cancel_operation:
                 break
-
-            # Update the percantage
-            suffix_count = suffixes.index(suffix) + 1
-            percentage = suffix_count / len(suffixes)
-
-            await interaction.message.edit(content = get_percentage(percentage), embed = embed, view = view)
 
             # Also iterate over every possible file extension we're looking for
             for extension in extensions:
@@ -176,7 +172,7 @@ class Checker:
                     await interaction.channel.send("**{image_name}**\n<{image_url}>".format(image_name = short_url, image_url = url), file = file_to_send)
 
                 # Cooldown to prevent rate limiting
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.05)
 
         #await interaction.channel.send("Finished bruteforcing term **{term}**".format(term = term))
 

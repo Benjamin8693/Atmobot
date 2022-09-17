@@ -113,6 +113,7 @@ locale_path = "locale"
 # Fonts
 font_atmoplex = "font_atmoplex.ttf"
 font_mgi = "font_mgi.ttf"
+font_sans = "font_sans.ttf"
 
 # Commands
 default_command_cooldown = 5
@@ -166,7 +167,8 @@ command_thumbnail_file_name = "command_{}"
 command_thumbnail_extras = {"Wizard101": ("wiz", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
                             "Pirate101": ("pirate", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
                             "Hero101": ("hero", 1, font_atmoplex, 130, 272, (239, 238, 41), 416, (255, 255, 255), 0),
-                            "Media Games Invest": ("mgi", 0, font_mgi, 70, -70, (255, 255, 255), 15, (255, 255, 255), 40)}
+                            "Media Games Invest": ("mgi", 0, font_mgi, 70, -70, (255, 255, 255), 15, (255, 255, 255), 40),
+                            "Server Dude": ("server", 0, font_sans, 100, 272, (239, 238, 41), 416, (255, 255, 255), 0)}
 
 COMMAND_THUMBNAIL_NAME = 0
 COMMAND_THUMBNAIL_UPPERCASE = 1

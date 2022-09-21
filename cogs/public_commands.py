@@ -208,6 +208,7 @@ class PublicCommands(commands.Cog):
         # Log the result
         print("{time} | QUOTE: Quote \"{quote}\" from {user} posted".format(time=await self.bot.get_formatted_time(), quote=random_message, user=formatted_user))
 
+    '''
     @cog_ext.cog_slash(name=bot_globals.command_testrealm_name, description=bot_globals.command_testrealm_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
     #@commands.command()
@@ -231,6 +232,7 @@ class PublicCommands(commands.Cog):
 
         # Log the result
         print("{time} | TESTREALM: Test Realm information posted".format(time=await self.bot.get_formatted_time()))
+    '''
     
     @cog_ext.cog_slash(name=bot_globals.command_days_name, description=bot_globals.command_days_description, guild_ids=subscribed_guild_ids)
     @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
@@ -240,7 +242,7 @@ class PublicCommands(commands.Cog):
         print("{time} | DAYS: {user} requested days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
 
         today = datetime.date.today()
-        future = datetime.date(2022, 7, 5)
+        future = datetime.date(2022, 10, 24)
         diff = future - today
 
         # Days plural

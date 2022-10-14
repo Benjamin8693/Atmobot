@@ -4,7 +4,7 @@ from discord.ext import commands
 
 # Local packages
 import bot_globals
-import checker
+import bruteforcer
 import spoilers
 import utils
 
@@ -156,10 +156,10 @@ class Atmobot(commands.Bot):
         # Update startup time
         #await self.update_setting("last_startup", self.startup_time.strftime("%Y-%m-%d %H:%M:%S"))
 
-        # Checker class used for checking url and patcher status
-        print("{time} | STARTUP: Loading Patch Checker".format(time=await self.get_formatted_time()))
-        self.checker = checker.Checker(self)
-        await self.checker.startup()
+        # Bruteforcer class used for checking url and patcher status
+        print("{time} | STARTUP: Loading Bruteforcer".format(time=await self.get_formatted_time()))
+        self.bruteforcer = bruteforcer.Bruteforcer(self)
+        await self.bruteforcer.startup()
 
         # Automatic spoiler system
         print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))

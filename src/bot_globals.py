@@ -58,34 +58,6 @@ command_error_cooldown_footer_desc = "Become a Server Booster or use Atmobot in 
 command_error_exception_title = "Uh oh! Atmobot has run into an error."
 command_error_exception_desc = "Please try again. If the problem persists, please contact an administrator."
 
-# Bruteforce command
-command_bruteforce_name = "bruteforce"
-command_bruteforce_description = "Opens the control panel for one of our bruteforcers."
-command_bruteforce_arg_mode_name = "mode"
-command_bruteforce_arg_mode_description = "Choose the bruteforcing mode to access."
-
-COMMAND_BRUTEFORCE_MODE_IMAGE = 0
-COMMAND_BRUTEFORCE_MODE_WEBSITE = 1
-
-command_bruteforce_modes = {"image": COMMAND_BRUTEFORCE_MODE_IMAGE,
-                            "website": COMMAND_BRUTEFORCE_MODE_WEBSITE}
-
-command_bruteforce_image_control_panel_name = "Bruteforcer Control Panel"
-command_bruteforce_image_control_panel_instructions = "__**Add**__ a name to bruteforce\n__**Remove**__ a name from the bruteforce list\n__**Run**__ the bruteforcer\n__**View**__ all names on the bruteforce list\n__**Settings**__ for the bruteforcer"
-
-command_bruteforce_image_add_button = "Add"
-
-command_bruteforce_image_remove_button = "Remove"
-command_bruteforce_image_remove_name = "Remove"
-command_bruteforce_image_remove_instructions = "__**Clear**__ all names from the bruteforce list\n__**Pop the First**__ name from the bruteforce list\n__**Pop the Last**__ name from the bruteforce list\n__**Pop a Specific**__ name from the bruteforce list"
-
-command_bruteforce_image_run_button = "Run"
-command_bruteforce_image_run_name = "Run Bruteforce"
-command_bruteforce_image_run_instructions = "__**Start**__ a bruteforce using the current settings\n__**Schedule**__ a bruteforce with a specific routine and settings"
-
-command_bruteforce_image_view_button = "View"
-command_bruteforce_image_settings_button = "Settings"
-
 # Hero101 command
 command_hero101_name = "hero101"
 command_hero101_description = "Posts something random related to Hero101."
@@ -179,17 +151,75 @@ command_deepfake_description = "Posts a deepfake of a person or character relate
 command_deepfake_arg_directory_name = "directory"
 command_deepfake_arg_directory_description = "Choose a specific category to retrieve a deepfake from."
 
-checker_template = {
-    "image_names": [],
-    "image_extensions": [".jpg", ".png", ".gif"],
-    "image_prefixes": [],
-    "image_suffixes": ["", "01", "02", "03", "04", "05", "01_600", "02_600", "03_600", "04_600", "05_600", "_Lead", "_compressed", "_Lead_compressed_600", "_600", "_600b", "_Mercedes", "_watermark_contrast_600", "_watermark_contrast"],
-    "image_request_cooldown": 0.25
+# Bruteforce command
+command_bruteforce_name = "bruteforce"
+command_bruteforce_description = "Opens the control panel for one of our bruteforcers."
+command_bruteforce_arg_mode_name = "mode"
+command_bruteforce_arg_mode_description = "Choose the bruteforcing mode to access."
+
+COMMAND_BRUTEFORCE_MODE_IMAGE = 0
+COMMAND_BRUTEFORCE_MODE_WEBSITE = 1
+COMMAND_BRUTEFORCE_MODE_REVISION = 2
+
+bruteforce_mode_to_index = {"image": COMMAND_BRUTEFORCE_MODE_IMAGE,
+                            "website": COMMAND_BRUTEFORCE_MODE_WEBSITE,
+                            "revision": COMMAND_BRUTEFORCE_MODE_REVISION}
+
+bruteforce_index_to_mode = {COMMAND_BRUTEFORCE_MODE_IMAGE: "image",
+                            COMMAND_BRUTEFORCE_MODE_WEBSITE: "website",
+                            COMMAND_BRUTEFORCE_MODE_REVISION: "revision"}
+
+# Bruteforcer template config
+bruteforcer_template = {
+    "image": [{"profile_name": "Default Profile",
+               "profile_active": True,
+               "image_names": [],
+               "image_extensions": [".jpg", ".png", ".gif"],
+               "image_prefixes": [""],
+               "image_suffixes": ["", "01", "02", "03", "04", "05", "01_600", "02_600", "03_600", "04_600", "05_600", "_Lead", "_compressed", "_Lead_compressed_600", "_600", "_600b", "_Mercedes", "_watermark_contrast_600", "_watermark_contrast"],
+               "image_request_cooldown": 0.25}],
+    "website": [],
+    "revision": []
 }
 
-checker_path = "checker.json"
+# File name for the bruteforcer config
+bruteforcer_path = "bruteforcer.json"
 
-# URLs for the checker to test
+BRUTEFORCE_PROFILE_INFO = 0
+BRUTEFORCE_PROFILE_INDEX = 1
+
+# Config options for bruteforcing in general
+BRUTEFORCE_PROFILE_NAME = 0
+BRUTEFORCE_PROFILE_ACTIVE = 1
+
+# Config options for image bruteforcing mode
+BRUTEFORCE_IMAGE_IMAGE_NAMES = 2
+BRUTEFORCE_IMAGE_IMAGE_EXTENSIONS = 3
+BRUTEFORCE_IMAGE_IMAGE_PREFIXES = 4
+BRUTEFORCE_IMAGE_IMAGE_SUFFIXES = 5
+BRUTEFORCE_IMAGE_IMAGE_REQUEST_COOLDOWN = 6
+
+bruteforce_image_control_panel_name = "Bruteforcer Control Panel"
+bruteforce_image_control_panel_instructions = "__**Run**__ - Run the bruteforcer using the current profile\n__**Profiles**__ - Add, remove, or edit bruteforcing profiles\n__**Settings**__ - Modify the settings of the bruteforcer"
+
+bruteforce_image_run_button = "Run"
+bruteforce_image_run_name = "Run Bruteforce"
+bruteforce_image_run_instructions = "__**Start**__ a bruteforce using the current settings\n__**Schedule**__ a bruteforce with a specific routine and settings"
+
+bruteforce_image_profiles_button = "Profiles"
+
+bruteforce_image_settings_button = "Settings"
+
+bruteforce_image_profile_add_term_button = "Add"
+
+bruteforce_image_profile_remove_term_button = "Remove"
+bruteforce_image_profile_remove_term_name = "Remove"
+bruteforce_image_profile_remove_term_instructions = "__**Clear**__ all names from the bruteforce list\n__**Remove First**__ name from the bruteforce list\n__**Remove Last**__ name from the bruteforce list\n__**Remove Specific**__ name from the bruteforce list"
+
+bruteforce_image_browse_terms_button = "Browse"
+bruteforce_image_browse_terms_name = "Bruteforce List"
+
+# URLs for the bruteforcer to test
 test_patch_client_url = "https://www.wizard101.com/testpatchClient"
 update_notes_url = "https://www.wizard101.com/game/community/update-notes/{month}{year}"
 
@@ -270,30 +300,30 @@ patcher_tips = {200: patcher_online,
                 404: patcher_undecided,
                 504: patcher_offline}
 
-CHECKER_ROUTINE_GAME = 0
+BRUTEFORCER_ROUTINE_GAME = 0
 
-CHECKER_ROUTINE_GAME_WIZARD = 0
-CHECKER_ROUTINE_GAME_PIRATE = 1
-CHECKER_ROUTINE_GAME_BOTH = 2
+BRUTEFORCER_ROUTINE_GAME_WIZARD = 0
+BRUTEFORCER_ROUTINE_GAME_PIRATE = 1
+BRUTEFORCER_ROUTINE_GAME_BOTH = 2
 
-CHECKER_ROUTINE_METHOD = 1
+BRUTEFORCER_ROUTINE_METHOD = 1
 
-CHECKER_ROUTINE_METHOD_PATCHER = 0
-CHECKER_ROUTINE_METHOD_WEBSITE = 1
-CHECKER_ROUTINE_METHOD_BOTH = 2
+BRUTEFORCER_ROUTINE_METHOD_PATCHER = 0
+BRUTEFORCER_ROUTINE_METHOD_WEBSITE = 1
+BRUTEFORCER_ROUTINE_METHOD_BOTH = 2
 
-CHECKER_ROUTINE_DURATION = 1
-CHECKER_ROUTINE_FREQUENCY = 2
-CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL = 3
+BRUTEFORCER_ROUTINE_DURATION = 1
+BRUTEFORCER_ROUTINE_FREQUENCY = 2
+BRUTEFORCER_ROUTINE_ANNOUNCEMENT_LEVEL = 3
 
-CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_NONE = 0
-CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_MODS = 1
-CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_ROLE = 2
-CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_EVERYONE = 3
-CHECKER_ROUTINE_ANNOUNCEMENT_LEVEL_TWEET = 4
+BRUTEFORCER_ROUTINE_ANNOUNCEMENT_LEVEL_NONE = 0
+BRUTEFORCER_ROUTINE_ANNOUNCEMENT_LEVEL_MODS = 1
+BRUTEFORCER_ROUTINE_ANNOUNCEMENT_LEVEL_ROLE = 2
+BRUTEFORCER_ROUTINE_ANNOUNCEMENT_LEVEL_EVERYONE = 3
+BRUTEFORCER_ROUTINE_ANNOUNCEMENT_LEVEL_TWEET = 4
 
-CHECKER_ROUTINE_ANNOUNCEMENT_MESSAGE = 4
-CHECKER_ROUTINE_REPEAT_AFTER_SUCCESS = 5
+BRUTEFORCER_ROUTINE_ANNOUNCEMENT_MESSAGE = 4
+BRUTEFORCER_ROUTINE_REPEAT_AFTER_SUCCESS = 5
 
 # Posted when a new test revision has been detected, and the bot is about to commence with auto-spoilers
 spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."
@@ -376,7 +406,7 @@ prefix_to_world = {
     "EM": "Empyrea",
     "KM": "Karamelle",
     "LM": "Lemuria",
-    "YG": "Yago"
+    "NV": "Novus"
 }
 
 twitter_video_limit = 140

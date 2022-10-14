@@ -108,14 +108,17 @@ async def boop(input):
 async def tests():
     # A event which runs after specific date (run_date, task, *task_args)
     a = await DateEvent.create(datetime.now() + timedelta(seconds=3), boop, "a")
+
     # A event which runs every * (minimum time is 1 second), (tick_rate, task, *task_args, first_run_date = None).
     # You can set first_run_date to a datetime to state when the first run should happen (datetime.now() causes it's first run to run on creation) if first_run_date isn't set then the first run is after the first duration has passed
     b = await TickEvent.create(timedelta(seconds=1), boop, "b")
+
     # You can use a.run_now() to run a asap and a.cancel() to cancel a otherwise a runs normally
     # A manual event which only runs if run() is ran
     c = ManualEvent(boop, "c")
     await asyncio.sleep(2)
     c.run()
+
     await asyncio.sleep(2)
 
 asyncio.run(tests())

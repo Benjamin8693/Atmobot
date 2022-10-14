@@ -6,7 +6,6 @@ from discord.ui import InputText, Modal
 
 # Local packages
 import bot_globals
-from checker import ImageBruteforcerView
 import utils
 
 # Built-in packages
@@ -143,20 +142,12 @@ class Commands(commands.Cog):
     # Bruteforcer Command
     # Opens the control panel for bruteforcing functionality
     @slash_command(name = bot_globals.command_bruteforce_name, description = bot_globals.command_bruteforce_description, guild_ids = [bot.guild_id])
-    @option(name = bot_globals.command_bruteforce_arg_mode_name, description = bot_globals.command_bruteforce_arg_mode_description, choices = list(bot_globals.command_bruteforce_modes.keys()), required = True)
+    @option(name = bot_globals.command_bruteforce_arg_mode_name, description = bot_globals.command_bruteforce_arg_mode_description, choices = list(bot_globals.bruteforce_mode_to_index.keys()), required = True)
     @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
-    async def bruteforcer(self, ctx, mode: str):
+    async def bruteforce(self, ctx, mode: str):
 
-        mode = bot_globals.command_bruteforce_modes.get(mode)
-
-        if mode == bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE:
-
-            embed, view = await bot.checker.get_bruteforce_image_control_panel()
-            await ctx.respond(embed = embed, view = view)
-
-        elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_WEBSITE:
-
-            await ctx.respond("Website bruteforcer not yet implemented.")
+        mode = bot_globals.bruteforce_mode_to_index.get(mode)
+        await self.bot.bruteforcer.handle_control_panel(interaction = ctx, mode = mode, respond = True)
 
     # Hero101 Command
     # Posts a random Hero101-related image

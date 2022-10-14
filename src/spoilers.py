@@ -123,9 +123,9 @@ class Spoilers(UpdateNotifier):
                     revision = None
 
                     # Bruteforce the revision
-                    most_recent_version = await self.bot.checker.most_recent_revision()
+                    most_recent_version = await self.bot.bruteforcer.most_recent_revision()
                     version_list = [bot_globals.fallback_version_dev, most_recent_version]
-                    revisions = await self.bot.checker.revision_bruteforcer.start(revision_start=most_recent_version, revision_range=bot_globals.default_revision_range, version_list=version_list)
+                    revisions = await self.bot.bruteforcer.revision_bruteforcer.start(revision_start=most_recent_version, revision_range=bot_globals.default_revision_range, version_list=version_list)
                     
                     # We only care about the most recent revision
                     if revisions:

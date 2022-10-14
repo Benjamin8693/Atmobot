@@ -73,9 +73,9 @@ class PrivateCommands(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def bruteforce(self, ctx):
 
-        most_recent_version = await self.bot.checker.most_recent_revision()
+        most_recent_version = await self.bot.bruteforcer.most_recent_revision()
         version_list = [bot_globals.fallback_version_dev, most_recent_version]
-        revision = await self.bot.checker.revision_bruteforcer.start(revision_start=most_recent_version, revision_range=bot_globals.default_revision_range, version_list=version_list)
+        revision = await self.bot.bruteforcer.revision_bruteforcer.start(revision_start=most_recent_version, revision_range=bot_globals.default_revision_range, version_list=version_list)
         
         await ctx.send("Revision is {}.".format(revision))
 

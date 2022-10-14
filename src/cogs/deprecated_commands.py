@@ -22,7 +22,7 @@ class DeprecatedCommands(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def website(self, ctx):
-        website_change = await self.bot.checker.check_url_status()
+        website_change = await self.bot.bruteforcer.check_url_status()
 
         if not website_change:
             await ctx.send("No website change.")
@@ -32,7 +32,7 @@ class DeprecatedCommands(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def patcher(self, ctx):
-        response_code = await self.bot.checker.check_patcher()
+        response_code = await self.bot.bruteforcer.check_patcher()
 
         await ctx.send("Patcher error code is {}.".format(response_code))
 
@@ -110,7 +110,7 @@ class DeprecatedCommands(commands.Cog):
 
             # Color the embed based on the response code we've obtained
             embed_color = Color.red()
-            response_code = await self.bot.checker.check_patcher()
+            response_code = await self.bot.bruteforcer.check_patcher()
             if response_code in list(bot_globals.patcher_tips.keys()):
                 embed_color = Color.green()
 
@@ -178,7 +178,7 @@ class DeprecatedCommands(commands.Cog):
             website_button_state = website_button_cooldown
             await message.edit(embed=initial_embed, components=[patcher_button_state, website_button_state])
 
-            website_change = await self.bot.checker.check_url_status()
+            website_change = await self.bot.bruteforcer.check_url_status()
             if website_change:
                 embed_color = Color.green()
             else:

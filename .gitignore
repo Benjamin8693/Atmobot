@@ -133,7 +133,7 @@ dmypy.json
 cache
 settings.json
 spoilers.json
-checker.json
+bruteforcer.json
 wizdiff.db
 resources/video/
 resources/music/

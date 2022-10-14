@@ -10,10 +10,8 @@ Please do NOT submit any issues or ask for support, as it will not be provided.
 I understand some of the code here may not be the best, but I went through quite a learning curve with this project- so please go easy on me!
 
 # Credits
+The Atmoplex - Group of individuals this bot was created for
 Benjamin - Lead Developer
-
-Starrfox - Creating various useful libraries that makes this bot possible
-
+Starrfox - Creating various useful libraries that make this bot possible
 Gustavo - Assistance with text comparison code
-
 Ashy - Created base for image bruteforcer & scheduler

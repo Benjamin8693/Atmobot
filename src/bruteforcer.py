@@ -36,6 +36,8 @@ class Bruteforcer:
         self.pause_operation = False
 
         self.http_client = AsyncHTTPClient()
+        
+        self.error_count = 5
        
     async def startup(self):
 
@@ -220,8 +222,8 @@ class Bruteforcer:
         # Prepare our profile back into a dictonary to save it to our config
         profile_dict = {}
         settings_names = await self.get_bruteforce_profile_settings(mode)
-        for info in profile_info:
-            index = profile_info.index(info)
+        for index in range(len(profile_info)):
+            info = profile_info[index]
             setting_name = settings_names[index]
             profile_dict[setting_name] = info
 
@@ -374,6 +376,23 @@ class Bruteforcer:
 
     async def start_image_bruteforce(self, interaction, image_names, image_extensions, image_prefixes, image_suffixes):
 
+        # Grab the URL we're going to bruteforce
+        request_url = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_REQUEST_URL)
+        if not request_url:
+            return False
+
+        # Grab the request cooldown, i.e. how long we wait in between each individual bruteforce
+        request_cooldown = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_REQUEST_COOLDOWN)
+        if not request_cooldown:
+            return False
+
+        # Grab information about how to handle successful bruteforces on Discord and Twitter
+        discord_notify = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_DISCORD_NOTIFY)
+        discord_channel = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_DISCORD_CHANNEL)
+        discord_message = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_DISCORD_MESSAGE)
+        twitter_notify = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_TWITTER_NOTIFY)
+        twitter_message = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_TWITTER_MESSAGE)
+
         # Get amount of images we're going to bruteforce
         image_count = len(image_names)
         
@@ -382,11 +401,6 @@ class Bruteforcer:
 
             # We've been requested to cancel the ongoing operation, so break out from the loop and stop bruteforcing
             if self.cancel_operation:
-
-                # Reset the cancel operation bool
-                self.cancel_operation = False
-
-                # Break from the loop
                 break
 
             # Get index of the current image, later used to determine progress
@@ -395,67 +409,82 @@ class Bruteforcer:
             # Update our interaction with a progress report
             await self.update_bruteforce_progress(interaction, image_name, image_index, image_count)
 
-            # Bruteforce this image
-            await self.bruteforce_image(interaction, image_name, image_extensions, image_prefixes, image_suffixes)
-
-    async def bruteforce_image(self, interaction, image_name, image_extensions, image_prefixes, image_suffixes):
-
-        # Iterate over all of our prefixes to attempt every possible variation
-        for prefix in image_prefixes:
-
-            # Break out of the loop if we need to cancel the operation
-            if self.cancel_operation:
-                break
-
-            # Also iterate over all of our suffixes
-            for suffix in image_suffixes:
+            # Iterate over all of our prefixes to attempt every possible variation
+            for prefix in image_prefixes:
 
                 # Break out of the loop if we need to cancel the operation
                 if self.cancel_operation:
                     break
 
-                # Finally iterate over all the possible file extensions
-                for extension in image_extensions:
+                # Also iterate over all of our suffixes
+                for suffix in image_suffixes:
 
                     # Break out of the loop if we need to cancel the operation
                     if self.cancel_operation:
                         break
 
-                    # The operation is paused, hold here until further notice
-                    while self.pause_operation:
-                        asyncio.sleep(1.0)
+                    # Finally iterate over all the possible file extensions
+                    for extension in image_extensions:
 
-                    # Construct a url to see whether our possible image exists
-                    possible_image = prefix + image_name + suffix + extension
-                    url = "https://edgecast.wizard101.com/image/free/Wizard/C/Wizard-Society/Patch-Notes/{possible_image}?v=1".format(possible_image = possible_image)
+                        # Break out of the loop if we need to cancel the operation
+                        if self.cancel_operation:
+                            break
 
-                    # Check to see if the image exists
-                    try:
-                        response = await self.http_client.fetch(HTTPRequest(url, follow_redirects = False), raise_error = False)
-                    except Exception as e:
-                        print("Timed out with url:\n{}".format(url))
-                        print(e)
-                    response_code = response.code
+                        # The operation is paused, hold here until further notice
+                        while self.pause_operation:
+                            asyncio.sleep(1.0)
 
-                    # The image exists
-                    if response_code == 200:
+                        # Bruteforce this image
+                        possible_image = prefix + image_name + suffix + extension
+                        formatted_url = request_url.format(possible_image)
+                        response = await self.bruteforce_image(formatted_url, request_cooldown)
 
-                        print(f'{possible_image} exists.')
-                        image = resp.body
-                        file_path = "cache/{image_name}".format(image_name = possible_image)
-                        f = open(file_path, "wb")
-                        f.write(image)
-                        f.close()
+                        # We got a response, which means the image exists! Handle it according to our config
+                        if response and ((discord_notify and discord_channel) or twitter_notify):
 
-                        file_to_send = File(file_path)
+                            # Save the image to file
+                            image = response.body
+                            file_path = "cache/{image_name}".format(image_name = possible_image)
+                            saved_file = open(file_path, "wb")
+                            saved_file.write(image)
+                            saved_file.close()
 
-                        await interaction.channel.send("@everyone")
-                        await interaction.channel.send("**{image_name}**\n<{image_url}>".format(image_name = possible_image, image_url = url), file = file_to_send)
+                            # Attempt to post to Discord
+                            if discord_notify and discord_channel:
+                                formatted_discord_message = "**{discord_message}\n{image_name}**\n<{image_url}>".format(discord_message = discord_message, image_name = possible_image, image_url = formatted_url)
+                                file_to_send = File(file_path)
+                                await self.bot.send_to_discord(discord_channel, formatted_discord_message, file_to_send)
 
-                    # Cooldown to prevent rate limiting
-                    await asyncio.sleep(0.05)
+                            # Attempt to post to Twitter
+                            if twitter_notify:
+                                formatted_twitter_message = "{twitter_message}\n{image_name}\n\n<{image_url}>".format(twitter_message = twitter_message, image_name = possible_image, image_url = formatted_url)
+                                await self.bot.send_to_twitter(formatted_twitter_message, file_path)
 
-        #await interaction.channel.send("Finished bruteforcing term **{term}**".format(term = term))
+                        # We're done the bruteforce, cool down a bit to avoid being rate limited
+                        await asyncio.sleep(request_cooldown)
+
+        # Reset the cancel operation flag, as the operation is now over
+        self.cancel_operation = False
+
+        await interaction.channel.send("Bruteforce Over.")
+
+    async def bruteforce_image(self, formatted_url, request_cooldown):
+
+        # Attempt to see if the image exists
+        try:
+            response = await self.http_client.fetch(HTTPRequest(formatted_url, follow_redirects = False), raise_error = False)
+            response_code = response.code
+        
+        # If it times out, that's fine, just make note of the error
+        except Exception as error:
+            await self.bruteforce_error(error, formatted_url)
+            return None
+
+        # The image exists! Let's return the response to be handled elsewhere
+        if response_code == 200:
+            return response
+
+        return None
 
     async def update_bruteforce_progress(self, interaction, image_name = None, image_index = None, image_count = None, view = None):
 
@@ -467,7 +496,7 @@ class Bruteforcer:
             # Determine percentage completion based on current image index and image count
             percentage = round(((image_index + 1) / image_count) * 100, 2)
             estimated_time = "TBD"
-            bruteforce_info = "__**{image_name}**__ ({image_index} of {image_count})\n__**{percentage}%**__ completed\n__**{estimated_time}**__ until completion".format(image_name = image_name, image_index = image_index, image_count = image_count, percentage = percentage, estimated_time = estimated_time)
+            bruteforce_info = "__**{image_name}**__ ({image_index} of {image_count})\n__**{percentage}%**__ completed\n__**{estimated_time}**__ until completion".format(image_name = image_name, image_index = image_index + 1, image_count = image_count, percentage = percentage, estimated_time = estimated_time)
 
             # Embed indicating our progress on the bruteforce
             embed = Embed(color=Color.green())
@@ -491,6 +520,9 @@ class Bruteforcer:
         else:
             await interaction.message.edit(embed = embed)
 
+    async def bruteforce_error(self, error, formatted_url):
+
+        self.error_count += 1
 
     """
     async def grab_revision(self, service):
@@ -783,6 +815,9 @@ class BruteforceImageRun(View):
     @button(label = "Loop", style = ButtonStyle.green)
     async def loop_bruteforce(self, button: Button, interaction: Interaction):
 
+        await interaction.response.send_message("Temporarily disabled.")
+        return
+
         bot.bruteforcer.loop_operation = True
 
         await interaction.response.defer()
@@ -814,7 +849,7 @@ class BruteforceImageRun(View):
                     break
 
                 image_index = current_image_names.index(image_name)
-                await bot.bruteforcer.find_images(interaction, embed, view, image_name, image_index, len(current_image_names))
+                await bot.bruteforcer.start_image_bruteforce(interaction, embed, view, image_name, image_index, len(current_image_names))
 
             await asyncio.sleep(10)
 

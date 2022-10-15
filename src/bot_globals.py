@@ -177,7 +177,16 @@ bruteforcer_template = {
                "image_extensions": [".jpg", ".png", ".gif"],
                "image_prefixes": [""],
                "image_suffixes": ["", "01", "02", "03", "04", "05", "01_600", "02_600", "03_600", "04_600", "05_600", "_Lead", "_compressed", "_Lead_compressed_600", "_600", "_600b", "_Mercedes", "_watermark_contrast_600", "_watermark_contrast"],
-               "image_request_cooldown": 0.25}],
+               "request_url": "https://edgecast.wizard101.com/image/free/Wizard/C/Wizard-Society/Patch-Notes/{}?v=1",
+               "request_cooldown": 0.05,
+               "request_error_threshold": 5,
+               "request_error_retry_after": 300,
+               "remove_image_when_found": True,
+               "discord_notify": True,
+               "discord_channel": 0,
+               "discord_message": "A new image has been detected!",
+               "twitter_notify": False,
+               "twitter_message": "A new image has been detected!"}],
     "website": [],
     "revision": []
 }
@@ -197,7 +206,16 @@ BRUTEFORCE_IMAGE_IMAGE_NAMES = 2
 BRUTEFORCE_IMAGE_IMAGE_EXTENSIONS = 3
 BRUTEFORCE_IMAGE_IMAGE_PREFIXES = 4
 BRUTEFORCE_IMAGE_IMAGE_SUFFIXES = 5
-BRUTEFORCE_IMAGE_IMAGE_REQUEST_COOLDOWN = 6
+BRUTEFORCE_IMAGE_REQUEST_URL = 6
+BRUTEFORCE_IMAGE_REQUEST_COOLDOWN = 7
+BRUTEFORCE_IMAGE_REQUEST_ERROR_THRESHOLD = 8
+BRUTEFORCE_IMAGE_REQUEST_ERROR_RETRY_AFTER = 9
+BRUTEFORCE_IMAGE_REMOVE_IMAGE_WHEN_FOUND = 10
+BRUTEFORCE_IMAGE_DISCORD_NOTIFY = 11
+BRUTEFORCE_IMAGE_DISCORD_CHANNEL = 12
+BRUTEFORCE_IMAGE_DISCORD_MESSAGE = 13
+BRUTEFORCE_IMAGE_TWITTER_NOTIFY = 14
+BRUTEFORCE_IMAGE_TWITTER_MESSAGE = 15
 
 bruteforce_image_control_panel_name = "Bruteforcer Control Panel"
 bruteforce_image_control_panel_instructions = "__**Run**__ - Run the bruteforcer using the current profile\n__**Profiles**__ - Add, remove, or edit bruteforcing profiles\n__**Settings**__ - Modify the settings of the bruteforcer"
@@ -391,6 +409,7 @@ prefix_to_world = {
     "MS": "Mooshu",
     "DS": "Dragonspyre",
     "GH": "Grizzleheim",
+    "CL": "Celestia",
     "WT": "Wintertusk",
     "WY": "Wysteria",
     "ZF": "Zafaria",
@@ -406,7 +425,24 @@ prefix_to_world = {
     "EM": "Empyrea",
     "KM": "Karamelle",
     "LM": "Lemuria",
-    "NV": "Novus"
+    "NV": "Novus",
+    "YG": "Yago",
+    "WL": "Wallaru",
+    "SI": "Skull Island",
+    "MO": "Monquista",
+    "MQ": "Monquista",
+    "VA": "Valencia",
+    "VL": "Valencia",
+    "CR": "Cool Ranch",
+    "RJ": "Rajah",
+    "ED": "El Dorado",
+    "TM": "Lighthouse World",
+    "NEX": "Nexus City",
+    "NC": "Nexus City",
+    "TKO": "Tokyo",
+    "TK": "Tokyo",
+    "RUS": "Russia",
+    "RS": "Russia"
 }
 
 twitter_video_limit = 140

@@ -172,6 +172,50 @@ class Atmobot(commands.Bot):
         sys.stderr.bot = self
         sys.stderr.load_log_channel()
 
+    async def send_to_discord(self, channel_id, message, files = None):
+
+        # Get the channel from it's ID
+        discord_channel = self.get_channel(channel_id)
+        if not discord_channel:
+            return False
+
+        # Send the message and any files
+        try:
+            await discord_channel.send(message, file = files)
+
+        # TODO: Should only error out if the file you're sending is too large.
+        except Exception as error:
+            print(error)
+            print("Failed to send discord image!")
+
+    async def send_to_twitter(self, message, files = None):
+        
+        # By default, the media we're going to upload is just the list of file names
+        media = files
+
+        # For uploading mp4 files, we need to upload ahead of time and then provide a media ID
+        if type(files) == str and files.endswith(".mp4"):
+
+            # TODO: Move Twitter API loading to main.py instead of spoilers.py
+            media: int = self.spoilers.twitter_api.UploadMediaChunked(media = files, media_category = 'tweet_video')
+
+            # Sleep so that our uploaded video has some time to process
+            # We're using time.sleep() here because asyncio.sleep() doesn't work in a thread
+            #time.sleep(bot_globals.twitter_video_process_time)
+
+        if not media:
+            return
+
+        # Publish the tweet
+        # TODO: Re-add "in_reply_to_status_id"
+        try:
+            status = self.spoilers.twitter_api.PostUpdate(status = message, media = media)
+
+        # TODO: Should only error out if the file you're sending is too large.
+        except Exception as error:
+            print(error)
+            print("Failed to send twitter image!")
+
     async def wait_for_button_press(self):
 
         # Wait for the button press

@@ -5,15 +5,18 @@ from discord.ext import commands
 # Local packages
 import bot_globals
 import bruteforcer
+import scheduler
 import spoilers
 import utils
 
 # Built-in packages
 import asyncio
 import datetime
+import inspect
 import json
 import os
 import sys
+
 
 class Atmobot(commands.Bot):
 
@@ -166,11 +169,104 @@ class Atmobot(commands.Bot):
         self.spoilers = spoilers.Spoilers(self)
         await self.spoilers.startup()
 
+        await self.load_scheduler()
+
         # Set up Discord logging
         sys.stdout.bot = self
         sys.stdout.load_log_channel()
         sys.stderr.bot = self
         sys.stderr.load_log_channel()
+
+    async def load_scheduler(self):
+
+        # If we don't have a scheduler config file, generate one with default options
+        if not os.path.isfile(bot_globals.scheduler_path):
+            with open(bot_globals.scheduler_path, "w") as data:
+                json.dump(bot_globals.scheduler_template, data, indent=4)
+
+        # Load our scheduler config
+        with open(bot_globals.scheduler_path) as data:
+            self.scheduler_config = json.load(data)
+
+        # Load all scheduled tasks
+        await self.load_scheduled_functions()
+        await self.populate_tasks()
+
+    async def load_scheduled_functions(self):
+
+        self.all_scheduled_functions = {}
+
+        classes_to_inspect = (self, self.bruteforcer, self.spoilers)
+        for inspection in classes_to_inspect:
+            
+            all_methods = inspect.getmembers(inspection, predicate = inspect.ismethod)
+            for method_pair in all_methods:
+
+                method_name = method_pair[0]
+                method = method_pair[1]
+
+                # If this method name has already been registered, rename it using it's class name
+                if method_name in self.all_scheduled_functions:
+                    class_name = inspection.__class__.__name__
+                    method_name = "{class_name}_{method_name}".format(class_name = class_name, method_name = method_name)
+                
+                self.all_scheduled_functions[method_name] = method
+
+    async def populate_tasks(self):
+
+        if not self.scheduler_config:
+            return
+
+        # Load all our scheduled tasks
+        date_tasks = self.scheduler_config.get("date")
+        tick_tasks = self.scheduler_config.get("tick")
+        manual_tasks = self.scheduler_config.get("manual")
+
+        # Handle date tasks
+        for task in date_tasks:
+            date_task_time = task.get("time")
+            date_task_method = task.get("method")
+            date_task_args = task.get("args")
+            if date_task_time and date_task_method:
+                await scheduler.DateEvent.create(date_task_time, date_task_method, *date_task_args)
+
+        # Handle tick tasks
+        for task in tick_tasks:
+            tick_task_initial_time = task.get("initial_time")
+            tick_task_delay = task.get("delay")
+            tick_task_method = task.get("method")
+            tick_task_args = task.get("args")
+            if tick_task_delay and tick_task_method:
+                await scheduler.TickEvent.create(tick_task_initial_time, tick_task_delay, tick_task_method, *tick_task_args)
+
+    async def update_scheduler_config(self, config_name, variable_to_replace):
+
+        # We typically shouldn't be updating a config variable that doesn't already exist
+        if config_name not in self.scheduler_config:
+            print("Updated config variable '{}' that does not exist!".format(config_name))
+
+        # Update the config variable
+        self.scheduler_config[config_name] = variable_to_replace
+
+        # Save our config
+        await self.save_scheduler_config()
+
+    async def save_scheduler_config(self):
+
+        # Write to the scheduler config file
+        with open(bot_globals.scheduler_path, "w") as data:
+            json.dump(self.scheduler_config, data, indent=4)
+
+    def get_scheduled_function(self, function_name):
+
+        scheduled_function = self.all_scheduled_functions.get(function_name)
+        if not scheduled_function:
+            return self.scheduled_message_error
+
+        return scheduled_function
+
+    async def scheduled_message_error(self, *args):
+        print("Attempted to run a scheduled task but a function could not be found!")
 
     async def send_to_discord(self, channel_id, message, files = None):
 

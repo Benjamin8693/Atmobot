@@ -25,6 +25,25 @@ BOT_SETTINGS_INDEX_DESCRIPTORS = 6
 # Name of the settings file
 settings_path = "settings.json"
 
+# Scheduler template config
+scheduler_template = {
+    "date": [{"name": "Good Morning Atmoplexia",
+              "time": 0,
+              "method": "send_to_discord",
+              "args": [963182643816579107, "Good morning Atmoplexia!"]}],
+    "tick": [{"name": "Good Morning Atmoplexia",
+              "initial_time": 0,
+              "delay": 10,
+              "method": "send_to_discord",
+              "args": [963182643816579107, "Good morning Atmoplexia!"]}],
+    "manual": [{"name": "Good Morning Atmoplexia",
+                "method": "send_to_discord",
+                "args": [963182643816579107, "Good morning Atmoplexia!"]}]
+}
+
+# File name for the scheduler config
+scheduler_path = "scheduler.json"
+
 # Described our bot
 bot_description = '''Atmobot adds a range of fun and informative commands to the Atmoplex Discord Server. It can also automatically spoil updates for Wizard101 and Pirate101!'''
 

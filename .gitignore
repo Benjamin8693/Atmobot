@@ -132,6 +132,7 @@ dmypy.json
 .vscode
 cache
 settings.json
+scheduler.json
 spoilers.json
 bruteforcer.json
 wizdiff.db

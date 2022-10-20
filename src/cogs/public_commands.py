@@ -1,6 +1,6 @@
 # 3rd-Party Packages
 from optparse import Option
-from discord import Color, File, Embed, Interaction, InputTextStyle, ButtonStyle, SelectOption, slash_command, option, ui
+from discord import Color, File, Embed, Interaction, InputTextStyle, ButtonStyle, SelectOption, slash_command, option, ui, Permissions
 from discord.ext import commands
 from discord.ui import InputText, Modal
 
@@ -141,7 +141,7 @@ class Commands(commands.Cog):
 
     # Bruteforcer Command
     # Opens the control panel for bruteforcing functionality
-    @slash_command(name = bot_globals.command_bruteforce_name, description = bot_globals.command_bruteforce_description, guild_ids = [bot.guild_id])
+    @slash_command(name = bot_globals.command_bruteforce_name, description = bot_globals.command_bruteforce_description, guild_ids = [bot.guild_id], default_member_permissions = Permissions(manage_messages = True))
     @option(name = bot_globals.command_bruteforce_arg_mode_name, description = bot_globals.command_bruteforce_arg_mode_description, choices = list(bot_globals.bruteforce_mode_to_index.keys()), required = True)
     @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
     async def bruteforce(self, ctx, mode: str):

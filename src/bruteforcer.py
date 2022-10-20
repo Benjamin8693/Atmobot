@@ -1,6 +1,10 @@
 # 3rd Party Packages
+from code import interact
+import dis
+from sys import intern
 from discord import ButtonStyle, Color, Embed, Interaction, Optional, File
 from discord.ui import InputText, Modal, Item, View, Button, button
+from discord.ext import tasks
 
 # Local packages
 import bot_globals
@@ -10,15 +14,16 @@ import utils
 import asyncio
 import datetime
 import hashlib
-from multiprocessing import Process
 import re
 import requests
-from socket import create_connection
 import struct
-from urllib.request import urlopen, Request
 import os
 import json
 import math
+import time
+from multiprocessing import Process
+from socket import create_connection
+from urllib.request import urlopen, Request
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
 
@@ -31,13 +36,23 @@ class Bruteforcer:
         self.bruteforcer_config = None
         self.current_profiles = []
 
+        self.embed_comments = bot_globals.bruteforce_embed_comments_idle
+
+        self.time_estimation_threshold = 3
+
+        # Variables for the current bruteforce operation
+        self.ongoing_operation = False
         self.loop_operation = False
         self.cancel_operation = False
         self.pause_operation = False
+        self.total_queries = 0
+        self.current_query = 0
+        self.total_terms = 0
+        self.current_term = 0
+        self.recent_timestamps = []
+        self.error_count = 0
 
         self.http_client = AsyncHTTPClient()
-        
-        self.error_count = 5
        
     async def startup(self):
 
@@ -256,6 +271,22 @@ class Bruteforcer:
         # Enable the new profile
         await bot.bruteforcer.update_bruteforce_profile_info(mode, bot_globals.BRUTEFORCE_PROFILE_ACTIVE, True)
 
+    async def add_embed_comments(self, embed: Embed):
+
+        # We don't have any comments to add
+        if not self.embed_comments:
+            return
+
+        # Keep track of the most recent embed- we may need to update it later
+        self.recent_embed = embed
+
+        # Add the embed
+        embed.add_field(name = bot_globals.bruteforce_embed_comments, value = self.embed_comments, inline = False)
+
+    async def set_embed_comments(self, comments):
+
+        self.embed_comments = comments
+
     async def handle_control_panel(self, interaction, mode, respond = False):
 
         if mode == bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE:
@@ -263,56 +294,79 @@ class Bruteforcer:
             embed, view = await self.get_bruteforce_image_control_panel()
             if respond:
                 await interaction.respond(embed = embed, view = view)
-            else:
-                await interaction.response.edit_message(embed = embed, view = view)
+                return
+            
+            await interaction.response.edit_message(embed = embed, view = view)
             return
-
-        elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_WEBSITE:
-
-            await interaction.respond("Website bruteforcer not yet implemented.")
-            return
-
-        elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_REVISION:
-
-            await interaction.respond("Revision bruteforcer not yet implemented.")
-            return
-
-        await interaction.respond("Error!")
 
     async def get_bruteforce_image_control_panel(self):
         
         embed = Embed(color = Color.blurple())
         embed.add_field(name = bot_globals.bruteforce_image_control_panel_name, value = bot_globals.bruteforce_image_control_panel_instructions)
+        await self.add_embed_comments(embed)
         view = BruteforceImageControlPanel(timeout = None)
 
         return embed, view
 
-    async def handle_run_panel(self, interaction, mode, respond = False):
+    async def handle_run_panel(self, interaction: Interaction, mode: int, respond: bool = False):
 
         if mode == bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE:
 
             embed, view = await self.get_bruteforce_image_run_panel()
             if respond:
                 await interaction.respond(embed = embed, view = view)
-            else:
-                await interaction.response.edit_message(embed = embed, view = view)
-            return
+                return
 
-        elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_WEBSITE:
-
-            await interaction.respond("Website bruteforcer not yet implemented.")
-            return
-
-        elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_REVISION:
-
-            await interaction.respond("Revision bruteforcer not yet implemented.")
+            await interaction.response.edit_message(embed = embed, view = view)
             return
 
     async def get_bruteforce_image_run_panel(self):
 
-        embed = Embed(color=Color.green())
+        embed = Embed(color = Color.green())
         embed.add_field(name = bot_globals.bruteforce_image_run_name, value = bot_globals.bruteforce_image_run_instructions)
+        await self.add_embed_comments(embed)
         view = BruteforceImageRun(timeout = None)
+
+        return embed, view
+
+    async def handle_schedule_panel(self, interaction: Interaction, mode: int, respond: bool = False):
+
+        if mode == bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE:
+
+            embed, view = await self.get_bruteforce_image_schedule_panel()
+            if respond:
+                await interaction.respond(embed = embed, view = view)
+                return
+
+            await interaction.response.edit_message(embed = embed, view = view)
+            return
+
+    async def get_bruteforce_image_schedule_panel(self):
+
+        embed = Embed(color = Color.blurple())
+        embed.add_field(name = "Schedule", value = "TBD")
+        await self.add_embed_comments(embed)
+        view = BruteforceImageSchedule(timeout = None)
+
+        return embed, view
+
+    async def handle_in_progress_panel(self, interaction: Interaction, mode: int, respond: bool = False):
+
+        if mode == bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE:
+
+            embed, view = await self.get_bruteforce_image_in_progress_panel(interaction)
+            if respond:
+                await interaction.respond(embed = embed, view = view)
+                return
+
+            await interaction.response.edit_message(embed = embed, view = view)
+            return
+
+    async def get_bruteforce_image_in_progress_panel(self, interaction: Interaction):
+
+        embed = await self.get_bruteforce_progress_embed()
+        await self.add_embed_comments(embed)
+        view = BruteforceImageInProgress(timeout = None, interaction = interaction)
 
         return embed, view
 
@@ -323,24 +377,16 @@ class Bruteforcer:
             embed, view = await self.get_bruteforce_image_profiles_panel()
             if respond:
                 await interaction.respond(embed = embed, view = view)
-            else:
-                await interaction.response.edit_message(embed = embed, view = view)
-            return
-
-        elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_WEBSITE:
-
-            await interaction.respond("Website bruteforcer not yet implemented.")
-            return
-
-        elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_REVISION:
-
-            await interaction.respond("Revision bruteforcer not yet implemented.")
+                return
+            
+            await interaction.response.edit_message(embed = embed, view = view)
             return
 
     async def get_bruteforce_image_profiles_panel(self):
 
         embed = Embed(color=Color.blurple())
         embed.add_field(name = "Profiles", value = "TBD")
+        await self.add_embed_comments(embed)
         view = BruteforceImageProfiles(timeout = None)
 
         return embed, view
@@ -352,39 +398,71 @@ class Bruteforcer:
             embed, view = await self.get_bruteforce_image_edit_profile_panel()
             if respond:
                 await interaction.respond(embed = embed, view = view)
-            else:
-                await interaction.response.edit_message(embed = embed, view = view)
-            return
+                return
 
-        elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_WEBSITE:
-
-            await interaction.respond("Website bruteforcer not yet implemented.")
-            return
-
-        elif mode == bot_globals.COMMAND_BRUTEFORCE_MODE_REVISION:
-
-            await interaction.respond("Revision bruteforcer not yet implemented.")
+            await interaction.response.edit_message(embed = embed, view = view)
             return
 
     async def get_bruteforce_image_edit_profile_panel(self):
 
         embed = Embed(color=Color.blurple())
         embed.add_field(name = "Edit Profile", value = "TBD")
+        await self.add_embed_comments(embed)
         view = BruteforceImageEditProfile(timeout = None)
 
         return embed, view
 
-    async def start_image_bruteforce(self, interaction, image_names, image_extensions, image_prefixes, image_suffixes):
+    async def start_image_bruteforce(self, interaction: Interaction = None):
 
-        # Grab the URL we're going to bruteforce
+        print("Starting up image bruteforce!")
+
+        if self.ongoing_operation:
+            print("Attempted to start an image bruteforce but one is already ongoing!")
+            return
+
+        # The bruteforce operation is now in progress
+        self.ongoing_operation = True
+        self.embed_comments = "Bruteforce in progress."
+
+        # Grab info about the images we're about to bruteforce
+        image_names = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_NAMES)
+        image_extensions = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_EXTENSIONS)
+        image_prefixes = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_PREFIXES)
+        image_suffixes = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_SUFFIXES)
+
+        # We have no image names queued up to bruteforce
+        if not image_names:
+            await self.cancel_image_bruteforce(interaction = interaction, reason = "Attempted to start an image bruteforce without any image names!")
+            return
+
+        # For some reason, we don't have any image extensions to bruteforce
+        if not image_extensions:
+            await self.cancel_image_bruteforce(interaction = interaction, reason = "Attempted to start an image bruteforce without any file extensions!")
+            return
+
+        # Even though we don't technically need any prefixes or suffixes, our system requires at the very least an empty string for each
+        # So if we don't even have that, we cann't move forward with the bruteforce
+        if not image_prefixes or not image_suffixes:
+            await self.cancel_image_bruteforce(interaction = interaction, reason = "Attempted to start an image bruteforce without any prefixes or suffixes!")
+            return
+
+        # Grab the URL we're going to bruteforce, don't proceed if it doesn't exist
         request_url = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_REQUEST_URL)
         if not request_url:
-            return False
+            await self.cancel_image_bruteforce(interaction = interaction, reason = "Attempted to start an image bruteforce without a URL to bruteforce!")
+            return
 
         # Grab the request cooldown, i.e. how long we wait in between each individual bruteforce
         request_cooldown = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_REQUEST_COOLDOWN)
         if not request_cooldown:
-            return False
+            await self.cancel_image_bruteforce(interaction = interaction, reason = "Attempted to start an image bruteforce with a request cooldown less than or equal to 0!")
+            return
+
+        self.total_queries = len(image_names) * len(image_prefixes) * len(image_suffixes) * len(image_extensions)
+        self.total_terms = len(image_names)
+
+        if interaction:
+            await self.handle_in_progress_panel(interaction = interaction, mode = bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE)
 
         # Grab information about how to handle successful bruteforces on Discord and Twitter
         discord_notify = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_DISCORD_NOTIFY)
@@ -393,27 +471,26 @@ class Bruteforcer:
         twitter_notify = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_TWITTER_NOTIFY)
         twitter_message = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_TWITTER_MESSAGE)
 
-        # Get amount of images we're going to bruteforce
-        image_count = len(image_names)
-        
         # Iterate over each image name and bruteforce it
         for image_name in image_names:
 
+            # Term tracking for reporting info back to our user
+            self.current_term += 1
+
+            # Track how long it will take to bruteforce this term
+            time_started = datetime.datetime.now()
+
             # We've been requested to cancel the ongoing operation, so break out from the loop and stop bruteforcing
             if self.cancel_operation:
+                await self.cancel_image_bruteforce(interaction = interaction, reason = "User requested to cancel the image bruteforce.")
                 break
-
-            # Get index of the current image, later used to determine progress
-            image_index = image_names.index(image_name)
-
-            # Update our interaction with a progress report
-            await self.update_bruteforce_progress(interaction, image_name, image_index, image_count)
 
             # Iterate over all of our prefixes to attempt every possible variation
             for prefix in image_prefixes:
 
                 # Break out of the loop if we need to cancel the operation
                 if self.cancel_operation:
+                    await self.cancel_image_bruteforce(interaction = interaction, reason = "User requested to cancel the image bruteforce.")
                     break
 
                 # Also iterate over all of our suffixes
@@ -421,6 +498,7 @@ class Bruteforcer:
 
                     # Break out of the loop if we need to cancel the operation
                     if self.cancel_operation:
+                        await self.cancel_image_bruteforce(interaction = interaction, reason = "User requested to cancel the image bruteforce.")
                         break
 
                     # Finally iterate over all the possible file extensions
@@ -428,11 +506,15 @@ class Bruteforcer:
 
                         # Break out of the loop if we need to cancel the operation
                         if self.cancel_operation:
+                            await self.cancel_image_bruteforce(interaction = interaction, reason = "User requested to cancel the image bruteforce.")
                             break
 
                         # The operation is paused, hold here until further notice
                         while self.pause_operation:
-                            asyncio.sleep(1.0)
+                            time.sleep(1.0)
+
+                        # Query tracking for reporting back info to the user
+                        self.current_query += 1
 
                         # Bruteforce this image
                         possible_image = prefix + image_name + suffix + extension
@@ -441,6 +523,8 @@ class Bruteforcer:
 
                         # We got a response, which means the image exists! Handle it according to our config
                         if response and ((discord_notify and discord_channel) or twitter_notify):
+
+                            print("Bruteforce found image! {image_name}".format(image_name = possible_image))
 
                             # Save the image to file
                             image = response.body
@@ -463,10 +547,23 @@ class Bruteforcer:
                         # We're done the bruteforce, cool down a bit to avoid being rate limited
                         await asyncio.sleep(request_cooldown)
 
-        # Reset the cancel operation flag, as the operation is now over
-        self.cancel_operation = False
+            # Record how long it took to bruteforce this one term
+            time_taken =  datetime.datetime.now() - time_started
+            await self.record_time_taken(time_taken)
 
-        await interaction.channel.send("Bruteforce Over.")
+        # Give our info collector some time to catch up
+        asyncio.sleep(3)
+
+        # The bruteforce operation is now over
+        self.embed_comments = "Bruteforce over."
+        self.ongoing_operation = False
+        self.pause_operation = False
+        self.cancel_operation = False
+        self.total_queries = 0
+        self.current_query = 0
+        self.recent_timestamps = []
+
+        print("Image bruteforce ended!")
 
     async def bruteforce_image(self, formatted_url, request_cooldown):
 
@@ -486,43 +583,66 @@ class Bruteforcer:
 
         return None
 
-    async def update_bruteforce_progress(self, interaction, image_name = None, image_index = None, image_count = None, view = None):
-
-        # We have a bruteforce in-progress
-        if not self.cancel_operation and not self.pause_operation and interaction:
-
-            bruteforce_title = "Bruteforce In-Progress"
-
-            # Determine percentage completion based on current image index and image count
-            percentage = round(((image_index + 1) / image_count) * 100, 2)
-            estimated_time = "TBD"
-            bruteforce_info = "__**{image_name}**__ ({image_index} of {image_count})\n__**{percentage}%**__ completed\n__**{estimated_time}**__ until completion".format(image_name = image_name, image_index = image_index + 1, image_count = image_count, percentage = percentage, estimated_time = estimated_time)
-
-            # Embed indicating our progress on the bruteforce
-            embed = Embed(color=Color.green())
-            embed.add_field(name = bruteforce_title, value = bruteforce_info)
-
-        # Our bruteforce is currently paused
-        elif self.pause_operation and interaction:
-
-            bruteforce_title = "Bruteforce Paused"
-
-            # TODO: Temp
-            bruteforce_info = "TODO"
-            
-            # Embed indicating our bruteforce is paused
-            embed = Embed(color=Color.red())
-            embed.add_field(name = bruteforce_title, value = bruteforce_info)
-
-        # Edit the interaction with our embed
-        if view:
-            await interaction.message.edit(embed = embed, view = view)
-        else:
-            await interaction.message.edit(embed = embed)
+    async def record_time_taken(self, time_taken: datetime.timedelta):
+        
+        self.recent_timestamps.insert(0, time_taken)
+        if len(self.recent_timestamps) > self.time_estimation_threshold:
+            self.recent_timestamps.pop()
 
     async def bruteforce_error(self, error, formatted_url):
 
         self.error_count += 1
+
+    async def cancel_image_bruteforce(self, interaction, reason: str):
+
+        print("Bruteforce cancelled with reason: {reason}".format(reason))
+
+        self.embed_comments = reason
+        self.ongoing_operation = False
+        self.total_queries = 0
+        self.current_query = 0
+        self.total_terms = 0
+        self.current_term = 0
+        self.recent_timestamps = []
+
+    async def get_bruteforce_progress_embed(self):
+
+        # We have a bruteforce in-progress
+        if self.total_queries:
+
+            # Determine percentage completion
+            percentage_completed = round(((self.current_query) / self.total_queries) * 100, 2)
+
+            # Estimate how long is left until the bruteforce is completed
+            if len(self.recent_timestamps) >= self.time_estimation_threshold:
+                average_timedelta = sum([delta.seconds for delta in self.recent_timestamps]) / len(self.recent_timestamps)
+                terms_remaining = self.total_terms - self.current_term
+                timedelta_to_completion = (average_timedelta * terms_remaining)
+                total_seconds = timedelta_to_completion
+                hours_to_completion = total_seconds // 3600
+                total_seconds = total_seconds - (hours_to_completion * 3600)
+                minutes_to_completion = total_seconds // 60
+                seconds_to_completion = total_seconds - (minutes_to_completion * 60)
+                time_to_completion = "{:02}:{:02}:{:02}".format(int(hours_to_completion), int(minutes_to_completion), int(seconds_to_completion))
+            else:
+                time_to_completion = bot_globals.bruteforce_image_run_time_to_completion_default
+
+            bruteforce_info = bot_globals.bruteforce_image_run_progress_embed.format(current_query = self.current_query, total_queries = self.total_queries, percentage = percentage_completed, estimated_time = time_to_completion)
+
+            # Embed indicating our progress on the bruteforce
+            if not self.ongoing_operation:
+                embed = Embed(color = Color.green())
+                embed.add_field(name = bot_globals.bruteforce_image_run_completed_name, value = bruteforce_info)
+            elif self.pause_operation:
+                embed = Embed(color = Color.red())
+                embed.add_field(name = bot_globals.bruteforce_image_run_paused_name, value = bruteforce_info)
+            else:
+                embed = Embed(color = Color.green())
+                embed.add_field(name = bot_globals.bruteforce_image_run_in_progress_name, value = bruteforce_info)
+
+            return embed
+        
+        return None
 
     """
     async def grab_revision(self, service):
@@ -750,153 +870,277 @@ class BruteforceImageControlPanel(View):
     """
     Interface for interacting with the image bruteforcer.
 
-    Run: Displays a view giving you options on how to run the current bruteforce profile. Includes buttons for starting, looping, scheduling, and more.
-    Profiles: Displays a view giving you options to manage the current bruteforce profiles. Includes buttons for creating, deleting, editing, and more.
-    Settings: Displays a view giving you options to edit the bruteforce settings.
+    Run: Displays a view giving you options on how to run the current bruteforce profile.
+    Profiles: Displays a view giving you options to manage the current bruteforce profiles.
+    Close: Deletes the message with our view, essentially closing the bruteforcer.
 
     """
 
-    @button(label = bot_globals.bruteforce_image_run_button, style = ButtonStyle.green)
-    async def run(self, button: Button, interaction: Interaction):
+    def __init__(self, *items: Item, timeout: Optional[float] = 180, disable_on_timeout: bool = False):
+        super().__init__(*items, timeout=timeout, disable_on_timeout=disable_on_timeout)
+
+        if bot.bruteforcer.ongoing_operation:
+            self.in_progress_button = Button(label = bot_globals.bruteforce_image_run_in_progress_button,
+                                             style = ButtonStyle.green)
+            self.in_progress_button.callback = self.view_bruteforce
+            self.add_item(self.in_progress_button)
+
+        self.run_button = Button(label = bot_globals.bruteforce_image_run_button,
+                                 style = ButtonStyle.green,
+                                 disabled = False if not bot.bruteforcer.ongoing_operation else True)
+        self.run_button.callback = self.run_bruteforce
+        self.add_item(self.run_button)
+
+        self.profiles_button = Button(label = bot_globals.bruteforce_image_profiles_button,
+                                      style = ButtonStyle.blurple)
+        self.profiles_button.callback = self.show_profiles
+        self.add_item(self.profiles_button)
+
+        self.close_button = Button(label = bot_globals.bruteforce_close_button,
+                                   style = ButtonStyle.grey)
+        self.close_button.callback = self.close_bruteforcer
+        self.add_item(self.close_button)
+
+    async def view_bruteforce(self, interaction: Interaction):
+
+        await bot.bruteforcer.handle_in_progress_panel(interaction = interaction, mode = bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE)
+
+    async def run_bruteforce(self, interaction: Interaction):
 
         await bot.bruteforcer.handle_run_panel(interaction = interaction, mode = bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE)
 
-    @button(label = "Profiles", style = ButtonStyle.blurple)
-    async def profiles(self, button: Button, interaction: Interaction):
+    async def show_profiles(self, interaction: Interaction):
 
         await bot.bruteforcer.handle_profiles_panel(interaction = interaction, mode = bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE)
 
-    @button(label = bot_globals.bruteforce_image_settings_button, style = ButtonStyle.grey)
-    async def settings(self, button: Button, interaction: Interaction):
+    async def close_bruteforcer(self, interaction: Interaction):
 
-        await interaction.response.send_message("Settings not yet implemented.", delete_after=5)
+        await interaction.message.delete()
 
 
 class BruteforceImageRun(View):
+    """
+    Interface for running the image bruteforcer using the current profile.
 
-    @button(label = "Start", style = ButtonStyle.green)
-    async def start_bruteforce(self, button: Button, interaction: Interaction):
+    Start: Starts a bruteforce using the current profile, and displays a view of the bruteforce's progress.
+    Loop: Starts a bruteforce on loop using the current profile, and displays a view of the bruteforce's progress.
+    Schedule: Displays a view giving you options to schedule when the next bruteforce should occur.
+    Back: Returns to the Image Bruteforcer Control Panel.
 
-        # Grab info about the images we're about to bruteforce
-        image_names = await bot.bruteforcer.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_NAMES)
-        image_extensions = await bot.bruteforcer.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_EXTENSIONS)
-        image_prefixes = await bot.bruteforcer.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_PREFIXES)
-        image_suffixes = await bot.bruteforcer.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_SUFFIXES)
+    """
 
-        # We have no image names queued up to bruteforce
-        if not image_names:
-            await interaction.response.send_message("No image names to bruteforce!")
-            return
+    def __init__(self, *items: Item, timeout: Optional[float] = 180, disable_on_timeout: bool = False):
+        super().__init__(*items, timeout=timeout, disable_on_timeout=disable_on_timeout)
 
-        # For some reason, we don't have any image extensions to bruteforce
-        if not image_extensions:
-            await interaction.response.send_message("No file extensions specified to bruteforce!")
-            return
+        if bot.bruteforcer.ongoing_operation:
+            self.in_progress_button = Button(label = bot_globals.bruteforce_image_run_in_progress_button,
+                                             style = ButtonStyle.green)
+            self.in_progress_button.callback = self.view_bruteforce
+            self.add_item(self.in_progress_button)
 
-        # Even though we don't technically need any prefixes or suffixes, our system requires at the very least an empty string for each
-        # So if we don't even have that, we cann't move forward with the bruteforce
-        if not image_prefixes or not image_suffixes:
-            await interaction.response.send_message("No image prefixes or suffixes found! Did you remove the empty strings?")
-            return
+        self.start_button = Button(label = bot_globals.bruteforce_image_run_start_button,
+                                   style = ButtonStyle.green,
+                                   disabled = False if not bot.bruteforcer.ongoing_operation else True)
+        self.start_button.callback = self.start_bruteforce
+        self.add_item(self.start_button)
 
-        # Embed indicates a bruteforce is about to begin
-        embed = Embed(color=Color.blurple())
-        embed.add_field(name = "Starting Bruteforce", value = "Please wait.")
+        self.loop_button = Button(label = bot_globals.bruteforce_image_run_loop_button,
+                                  style = ButtonStyle.green,
+                                  disabled = False if not bot.bruteforcer.ongoing_operation else True)
+        self.loop_button.callback = self.loop_bruteforce
+        self.add_item(self.loop_button)
 
-        # Cancel button used to stop the bruteforce at any time
-        view = BruteforceImageCancel(timeout = None)
+        self.schedule_button = Button(label = bot_globals.bruteforce_image_run_schedule_button,
+                                      style = ButtonStyle.blurple,
+                                      disabled = False if not bot.bruteforcer.ongoing_operation else True)
+        self.schedule_button.callback = self.schedule_bruteforce
+        self.add_item(self.schedule_button)
 
-        # Respond that we're about to begin the bruteforce
-        await interaction.response.edit_message(embed = embed, view = view)
+        self.back_button = Button(label = bot_globals.bruteforce_back_button,
+                                  style = ButtonStyle.grey)
+        self.back_button.callback = self.enter_control_panel
+        self.add_item(self.back_button)
 
-        # Send our list of images off to be bruteforced
-        await bot.bruteforcer.start_image_bruteforce(interaction, image_names, image_extensions, image_prefixes, image_suffixes)
+    async def view_bruteforce(self, interaction: Interaction):
 
-    @button(label = "Loop", style = ButtonStyle.green)
-    async def loop_bruteforce(self, button: Button, interaction: Interaction):
+        await bot.bruteforcer.handle_in_progress_panel(interaction = interaction, mode = bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE)
+
+    async def start_bruteforce(self, interaction: Interaction):
+
+        await bot.bruteforcer.start_image_bruteforce(interaction = interaction)
+
+    async def loop_bruteforce(self, interaction: Interaction):
 
         await interaction.response.send_message("Temporarily disabled.")
-        return
 
-        bot.bruteforcer.loop_operation = True
+    async def schedule_bruteforce(self, interaction: Interaction):
 
-        await interaction.response.defer()
+        await bot.bruteforcer.handle_schedule_panel(interaction = interaction, mode = bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE)
 
-        while bot.bruteforcer.loop_operation:
-
-            current_image_names = await bot.bruteforcer.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_PROFILE_NAME)
-            current_image_extensions = await bot.bruteforcer.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_EXTENSIONS)
-            current_image_suffixes = await bot.bruteforcer.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_SUFFIXES)
-        
-            if not current_image_names:
-                await interaction.response.send_message("No image names to bruteforce.")
-                return
-
-            time_estimate = len(current_image_names) * len(current_image_extensions) * len(current_image_suffixes) * 0.1
-            instructions = "__**{names_amount}**__ names to bruteforce\n__**{time_estimate}**__ estimated time to completion".format(names_amount = len(current_image_names), time_estimate = time_estimate)
-
-            embed = Embed(color=Color.blurple())
-            embed.add_field(name = "Bruteforce started", value = instructions)
-
-            view = BruteforceImageCancel(timeout = None)
-
-            await interaction.message.edit(embed = embed, view = view)
-
-            for image_name in current_image_names:
-
-                if bot.bruteforcer.cancel_operation:
-                    bot.bruteforcer.cancel_operation = True
-                    break
-
-                image_index = current_image_names.index(image_name)
-                await bot.bruteforcer.start_image_bruteforce(interaction, embed, view, image_name, image_index, len(current_image_names))
-
-            await asyncio.sleep(10)
-
-    @button(label = "Schedule", style = ButtonStyle.blurple)
-    async def schedule_bruteforce(self, button: Button, interaction: Interaction):
-
-        await interaction.response.send_message("Schedule not yet implemented.", delete_after=5)
-
-    @button(label = "Back", style = ButtonStyle.grey)
-    async def enter_control_panel(self, button: Button, interaction: Interaction):
+    async def enter_control_panel(self, interaction: Interaction):
 
         await bot.bruteforcer.handle_control_panel(interaction = interaction, mode = bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE)
 
 
-class BruteforceImageCancel(View):
+class BruteforceImageSchedule(View):
+    """
 
-    @button(label = "Cancel", style = ButtonStyle.red)
-    async def cancel_bruteforce(self, button: Button, interaction: Interaction):
+    """
+
+    def __init__(self, *items: Item, timeout: Optional[float] = 180, disable_on_timeout: bool = False):
+        super().__init__(*items, timeout=timeout, disable_on_timeout=disable_on_timeout)
+
+        self.timer_button = Button(label = "Timer",
+                                   style = ButtonStyle.green)
+        self.timer_button.callback = self.schedule_timer
+        self.add_item(self.timer_button)
+
+        self.date_button = Button(label = "Date",
+                                  style = ButtonStyle.green,
+                                  disabled = True)
+        self.date_button.callback = self.schedule_date
+        self.add_item(self.date_button)
+
+        self.back_button = Button(label = bot_globals.bruteforce_back_button,
+                                  style = ButtonStyle.grey)
+        self.back_button.callback = self.enter_run_panel
+        self.add_item(self.back_button)
+
+    async def schedule_timer(self, interaction: Interaction):
+
+        modal = BruteforceImageScheduleTimer(title = "Enter a time in seconds.")
+        await interaction.response.send_modal(modal)
+
+    async def schedule_date(self, interaction: Interaction):
+
+        return
+
+    async def enter_run_panel(self, interaction: Interaction):
+
+        await bot.bruteforcer.handle_run_panel(interaction = interaction, mode = bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE)
+
+
+class BruteforceImageScheduleTimer(Modal):
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.seconds_input = InputText(label = "Seconds", placeholder = "300")
+
+        self.add_item(self.seconds_input)
+
+    async def callback(self, interaction: Interaction):
+
+        seconds = self.seconds_input.value
+
+        await bot.add_scheduled_task("Scheduled Bruteforce", "start_image_bruteforce", delay = int(seconds))
+        await interaction.response.send_message("Scheduled timed bruteforce. Starting in 5 seconds, to loop every {seconds} seconds.".format(seconds = seconds))
+
+        return
+
+        # Current image names
+        current_image_names = await bot.bruteforcer.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_NAMES)
+
+        # Image index to pop
+        image_index = self.children[0].value
+
+        # Only pop the index if an integer was specified
+        if image_index.isdigit():
+
+            # The index can only be between 1 and the length of the image name list
+            if 1 <= int(image_index) <= len(current_image_names):
+
+                popped_image_name = current_image_names.pop(int(image_index) - 1)
+                await bot.bruteforcer.update_bruteforce_profile_info(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_NAMES, current_image_names)
+
+                await interaction.response.send_message("Popped **{popped_image_name}** from the list.".format(popped_image_name = popped_image_name), delete_after=5)
+                
+                return
+
+        await interaction.response.send_message("Invalid index specified.", delete_after=5)
+
+
+class BruteforceImageInProgress(View):
+    """
+    Interface for viewing the current bruteforce in progress
+
+    Cancel: Starts a bruteforce using the current profile, and displays a view of the bruteforce's progress.
+    Pause: Starts a bruteforce on loop using the current profile, and displays a view of the bruteforce's progress.
+    Back: Returns to the Image Bruteforcer Control Panel.
+
+    """
+
+    def __init__(self, *items: Item, timeout: Optional[float] = 180, disable_on_timeout: bool = False, interaction: Interaction = None):
+        super().__init__(*items, timeout = timeout, disable_on_timeout = disable_on_timeout)
+
+        self.interaction = interaction
+
+        self.cancel_button = Button(label = "Cancel",
+                                    style = ButtonStyle.red)
+        self.cancel_button.callback = self.cancel_bruteforce
+        self.add_item(self.cancel_button)
+
+        self.pause_button = Button(label = "Pause",
+                                   style = ButtonStyle.red,
+                                   disabled = True)
+        self.pause_button.callback = self.pause_bruteforce
+        self.add_item(self.pause_button)
+        print(self.pause_button.callback)
+
+        self.back_button = Button(label = bot_globals.bruteforce_back_button,
+                                  style = ButtonStyle.grey)
+        self.back_button.callback = self.enter_run_panel
+        self.add_item(self.back_button)
+
+        self.update_progress_embed.start()
+
+    @tasks.loop(seconds = 3)
+    async def update_progress_embed(self):
+
+        # If we're no longer attached to the interaction, stop the loop
+        if not bot.bruteforcer.ongoing_operation:
+            self.update_progress_embed.stop()
+            return
+
+        # Generate an embed
+        embed = await bot.bruteforcer.get_bruteforce_progress_embed()
+        await bot.bruteforcer.add_embed_comments(embed)
+
+        # Update our message with the new embed
+        await self.interaction.message.edit(embed = embed, view = self)
+
+    async def cancel_bruteforce(self, interaction: Interaction):
 
         bot.bruteforcer.loop_operation = False
         bot.bruteforcer.cancel_operation = True
 
+        self.update_progress_embed.stop()
+
         embed, view = await bot.bruteforcer.get_bruteforce_image_control_panel()
         await interaction.response.edit_message(content = None, embed = embed, view = view)
 
-    @button(label = "Pause", style = ButtonStyle.red)
-    async def pause_bruteforce(self, button: Button, interaction: Interaction):
+    async def pause_bruteforce(self, interaction: Interaction):
 
         if bot.bruteforcer.pause_operation:
-            
             bot.bruteforcer.pause_operation = False
-
-            button.label = "Pause"
-            button.style = ButtonStyle.red
-
-            await interaction.response.edit_message(view = self)
-
+        #    self.pause_button.label = "Pause"
+        #    self.pause_button.style = ButtonStyle.red
+            
         else:
-
             bot.bruteforcer.pause_operation = True
+        #    self.pause_button.label = "Resume"
+        #    self.pause_button.style = ButtonStyle.green
+        #self.pause_button.callback = self.pause_bruteforce
 
-            button.label = "Resume"
-            button.style = ButtonStyle.green
+        #await interaction.response.defer()
+        #await interaction.message.edit(view = self)
 
-            #await interaction.response.defer()
-            #await interaction.message.edit(view = self)
-            await bot.bruteforcer.update_bruteforce_progress(interaction, view = self)
+        await bot.bruteforcer.handle_in_progress_panel(interaction = interaction, mode = bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE)
+
+    async def enter_run_panel(self, interaction: Interaction):
+
+        self.update_progress_embed.stop()
+        await bot.bruteforcer.handle_run_panel(interaction = interaction, mode = bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE)
 
 
 class BruteforceImageProfiles(View):
@@ -980,6 +1224,50 @@ class BruteforceImageEditProfile(View):
                                              title = bot_globals.bruteforce_image_browse_terms_name,
                                              back_callback = self.back_callback)
         await browse_names_view.update(interaction)
+
+    @button(label = "Import", style = ButtonStyle.blurple)
+    async def import_names(self, button: Button, interaction: Interaction):
+
+        author = interaction.user
+        channel_id = interaction.channel_id
+
+        def check(m):
+            return m.author == author and m.channel.id == channel_id
+
+        await interaction.response.send_message("Please upload your file.")
+
+        try:
+            import_message = await bot.wait_for("message", check = check, timeout = 15.0)
+        except Exception as e:
+            await interaction.followup.send("Unable to import file. Please try again.")
+            return
+
+        new_names = []
+        for import_attachment in import_message.attachments:
+            if import_attachment.filename.endswith(".txt"):
+                await import_attachment.save(fp = "cache/Import.txt")
+                name_file = open("cache/Import.txt", "r")
+                name_list = name_file.readlines()
+                for name in name_list:
+                    new_names.append(name.strip())
+
+        await bot.bruteforcer.update_bruteforce_profile_info(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_NAMES, new_names)
+        await interaction.followup.send("Import successful.")
+        
+    @button(label = "Export", style = ButtonStyle.blurple)
+    async def export_names(self, button: Button, interaction: Interaction):
+
+        # Send a view with options for browsing the list of images
+        current_image_names = await bot.bruteforcer.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_NAMES)
+        profile_name = await bot.bruteforcer.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_PROFILE_NAME)
+
+        file_path = "cache/{profile_name}_Export.txt".format(profile_name = profile_name)
+        with open(file_path, "w") as f:
+            for image_name in current_image_names:
+                f.write("{image_name}\n".format(image_name = image_name))
+
+        export_file = File(file_path)
+        await interaction.response.send_message(file = export_file)
 
     async def back_callback(self, interaction):
 

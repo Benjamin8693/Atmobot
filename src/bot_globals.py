@@ -28,10 +28,12 @@ settings_path = "settings.json"
 # Scheduler template config
 scheduler_template = {
     "date": [{"name": "Good Morning Atmoplexia",
-              "time": 0,
+              "active": False,
+              "initial_time": 0,
               "method": "send_to_discord",
               "args": [963182643816579107, "Good morning Atmoplexia!"]}],
     "tick": [{"name": "Good Morning Atmoplexia",
+              "active": True,
               "initial_time": 0,
               "delay": 10,
               "method": "send_to_discord",
@@ -192,6 +194,7 @@ bruteforce_index_to_mode = {COMMAND_BRUTEFORCE_MODE_IMAGE: "image",
 bruteforcer_template = {
     "image": [{"profile_name": "Default Profile",
                "profile_active": True,
+               "run_confirmation": True,
                "image_names": [],
                "image_extensions": [".jpg", ".png", ".gif"],
                "image_prefixes": [""],
@@ -221,40 +224,55 @@ BRUTEFORCE_PROFILE_NAME = 0
 BRUTEFORCE_PROFILE_ACTIVE = 1
 
 # Config options for image bruteforcing mode
-BRUTEFORCE_IMAGE_IMAGE_NAMES = 2
-BRUTEFORCE_IMAGE_IMAGE_EXTENSIONS = 3
-BRUTEFORCE_IMAGE_IMAGE_PREFIXES = 4
-BRUTEFORCE_IMAGE_IMAGE_SUFFIXES = 5
-BRUTEFORCE_IMAGE_REQUEST_URL = 6
-BRUTEFORCE_IMAGE_REQUEST_COOLDOWN = 7
-BRUTEFORCE_IMAGE_REQUEST_ERROR_THRESHOLD = 8
-BRUTEFORCE_IMAGE_REQUEST_ERROR_RETRY_AFTER = 9
-BRUTEFORCE_IMAGE_REMOVE_IMAGE_WHEN_FOUND = 10
-BRUTEFORCE_IMAGE_DISCORD_NOTIFY = 11
-BRUTEFORCE_IMAGE_DISCORD_CHANNEL = 12
-BRUTEFORCE_IMAGE_DISCORD_MESSAGE = 13
-BRUTEFORCE_IMAGE_TWITTER_NOTIFY = 14
-BRUTEFORCE_IMAGE_TWITTER_MESSAGE = 15
+BRUTEFORCE_IMAGE_RUN_CONFIRMATION = 2
+BRUTEFORCE_IMAGE_IMAGE_NAMES = 3
+BRUTEFORCE_IMAGE_IMAGE_EXTENSIONS = 4
+BRUTEFORCE_IMAGE_IMAGE_PREFIXES = 5
+BRUTEFORCE_IMAGE_IMAGE_SUFFIXES = 6
+BRUTEFORCE_IMAGE_REQUEST_URL = 7
+BRUTEFORCE_IMAGE_REQUEST_COOLDOWN = 8
+BRUTEFORCE_IMAGE_REQUEST_ERROR_THRESHOLD = 9
+BRUTEFORCE_IMAGE_REQUEST_ERROR_RETRY_AFTER = 10
+BRUTEFORCE_IMAGE_REMOVE_IMAGE_WHEN_FOUND = 11
+BRUTEFORCE_IMAGE_DISCORD_NOTIFY = 12
+BRUTEFORCE_IMAGE_DISCORD_CHANNEL = 13
+BRUTEFORCE_IMAGE_DISCORD_MESSAGE = 14
+BRUTEFORCE_IMAGE_TWITTER_NOTIFY = 15
+BRUTEFORCE_IMAGE_TWITTER_MESSAGE = 16
 
-bruteforce_image_control_panel_name = "Bruteforcer Control Panel"
-bruteforce_image_control_panel_instructions = "__**Run**__ - Run the bruteforcer using the current profile\n__**Profiles**__ - Add, remove, or edit bruteforcing profiles\n__**Settings**__ - Modify the settings of the bruteforcer"
+bruteforce_embed_comments = "__Info__"
+bruteforce_embed_comments_idle = "The bruteforcer is currently idle."
+bruteforce_back_button = "Back"
+bruteforce_close_button = "Close"
+
+bruteforce_image_control_panel_name = "__Bruteforcer Control Panel__"
+bruteforce_image_control_panel_instructions = "**Run** - Run the bruteforcer using the current profile\n**Profiles** - Add, remove, or edit bruteforcing profiles\n**Close** - Closes the bruteforcer control panel"
 
 bruteforce_image_run_button = "Run"
-bruteforce_image_run_name = "Run Bruteforce"
-bruteforce_image_run_instructions = "__**Start**__ a bruteforce using the current settings\n__**Schedule**__ a bruteforce with a specific routine and settings"
+bruteforce_image_run_name = "__Run Bruteforce__"
+bruteforce_image_run_instructions = "**Start** - Start a bruteforce using the current profile\n**Loop** - Start a bruteforce on loop using the current profile\n**Schedule** - Schedule when the next bruteforce with this profile should occur\n**Back** - Go back to the bruteforcer control panel"
+bruteforce_image_run_start_button = "Start"
+bruteforce_image_run_loop_button = "Loop"
+bruteforce_image_run_schedule_button = "Schedule"
+bruteforce_image_run_in_progress_button = "In-Progress"
+bruteforce_image_run_inactive_name = "__Bruteforce Inactive__"
+bruteforce_image_run_in_progress_name = "__Bruteforce In-Progress__"
+bruteforce_image_run_paused_name = "__Bruteforce Paused__"
+bruteforce_image_run_completed_name  = "__Bruteforce Completed__"
+bruteforce_image_run_progress_embed = "**Bruteforcing query {current_query} of {total_queries}**\n**{percentage}%** completed\n**{estimated_time}** until completion"
+bruteforce_image_run_time_to_completion_default = "N/A"
 
 bruteforce_image_profiles_button = "Profiles"
 
 bruteforce_image_settings_button = "Settings"
 
 bruteforce_image_profile_add_term_button = "Add"
-
 bruteforce_image_profile_remove_term_button = "Remove"
-bruteforce_image_profile_remove_term_name = "Remove"
-bruteforce_image_profile_remove_term_instructions = "__**Clear**__ all names from the bruteforce list\n__**Remove First**__ name from the bruteforce list\n__**Remove Last**__ name from the bruteforce list\n__**Remove Specific**__ name from the bruteforce list"
+bruteforce_image_profile_remove_term_name = "__Remove__"
+bruteforce_image_profile_remove_term_instructions = "**Clear** all names from the bruteforce list\n**Remove First** name from the bruteforce list\n**Remove Last** name from the bruteforce list\n**Remove Specific** name from the bruteforce list"
 
 bruteforce_image_browse_terms_button = "Browse"
-bruteforce_image_browse_terms_name = "Bruteforce List"
+bruteforce_image_browse_terms_name = "__Bruteforce List__"
 
 # URLs for the bruteforcer to test
 test_patch_client_url = "https://www.wizard101.com/testpatchClient"

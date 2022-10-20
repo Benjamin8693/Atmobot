@@ -1,6 +1,6 @@
 from ast import expr_context
 import asyncio
-from datetime import datetime
+from datetime import date, datetime
 from datetime import timedelta
 
 scheduled_tasks = set()
@@ -65,10 +65,15 @@ class TickEvent(ManualEvent):
         if type(tick_rate) in (int, float):
             tick_rate = timedelta(seconds=tick_rate)
         self.tick_rate = tick_rate
+        now = datetime.now()
         if type(first_run_date) in (int, float):
             first_run_date = datetime.fromtimestamp(first_run_date)
         if first_run_date is None:
-            self.scheduled_time = datetime.now() + tick_rate
+            self.scheduled_time = now + tick_rate
+        # TODO: This helps tick tasks start up shortly after being loaded, so long as their initial time has passed
+        # We need to add a new setting to tick tasks where you can toggle this behavior, because sometimes it could screw things up with daily routines
+        elif now > first_run_date:
+            self.scheduled_time = now + timedelta(seconds = 5)
         else:
             self.scheduled_time = self.next_datetime(first_run_date)
 

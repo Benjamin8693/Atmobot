@@ -35,6 +35,9 @@ class Atmobot(commands.Bot):
         self.reduced_cooldown_channels = []
         self.reduced_cooldown_roles = []
 
+        # TEMP HACK
+        self.running_tasks = []
+
         # Create a builtin to reference our bot object at any time
         __builtins__.bot = self
 
@@ -224,21 +227,54 @@ class Atmobot(commands.Bot):
 
         # Handle date tasks
         for task in date_tasks:
-            date_task_time = task.get("time")
+            date_task_name = task.get("name")
+            date_task_time = task.get("initial_time")
             date_task_method = task.get("method")
             date_task_args = task.get("args")
-            if date_task_time and date_task_method:
+            if date_task_time and date_task_method and date_task_name not in self.running_tasks:
+                self.running_tasks.append(date_task_name)
                 await scheduler.DateEvent.create(date_task_time, date_task_method, *date_task_args)
 
         # Handle tick tasks
         for task in tick_tasks:
+            date_task_name = task.get("name")
             tick_task_initial_time = task.get("initial_time")
             tick_task_delay = task.get("delay")
             tick_task_method = task.get("method")
             tick_task_args = task.get("args")
-            if tick_task_delay and tick_task_method:
+            if tick_task_delay and tick_task_method and date_task_name not in self.running_tasks:
+                self.running_tasks.append(date_task_name)
                 await scheduler.TickEvent.create(tick_task_initial_time, tick_task_delay, tick_task_method, *tick_task_args)
 
+    async def add_scheduled_task(self, task_name, method_name, method_args = None, initial_time = None, delay = None):
+
+        # No initial time? How about now! 
+        if not initial_time:
+            initial_time = int(round((datetime.datetime.now() + datetime.timedelta(seconds = 5)).timestamp()))
+        
+        if delay:
+            task_type = "tick"
+            task_data = {"name": task_name,
+                         "active": True,
+                         "initial_time": initial_time,
+                         "delay": delay,
+                         "method": method_name,
+                         "args": [] if not method_args else method_args}
+
+        elif initial_time:
+            task_type = "date"
+            task_data = {}
+
+        else:
+            task_type = "manual"
+            task_data = {}
+
+        task_type_data = self.scheduler_config.get(task_type)
+        task_type_data.append(task_data)
+
+        await self.update_scheduler_config(task_type, task_type_data)
+        await self.populate_tasks()
+    
     async def update_scheduler_config(self, config_name, variable_to_replace):
 
         # We typically shouldn't be updating a config variable that doesn't already exist

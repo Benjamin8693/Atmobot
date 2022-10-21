@@ -179,18 +179,38 @@ class PrivateCommands(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def copydb(self, ctx):
+    async def restoredb(self, ctx):
 
-        source_directory="resources/database/wizdiff-V_r713909.Wizard_1_470.db"
+        source_directory="resources/database/backup.db"
         destination_directory="wizdiff.db"
         shutil.copy(source_directory, destination_directory)
 
-        await ctx.send("Copied test database.")
+        await ctx.send("Restored database backup.")
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def backupdb(self, ctx):
+
+        source_directory="wizdiff.db"
+        destination_directory="resources/database/backup.db"
+        shutil.copy(source_directory, destination_directory)
+
+        await ctx.send("Backed database up.")
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def testdb(self, ctx):
+
+        source_directory="resources/database/wizdiff-V_r707528.Wizard_1_460.db"
+        destination_directory="wizdiff.db"
+        shutil.copy(source_directory, destination_directory)
+
+        await ctx.send("Now using test database.")
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def initdb(self, ctx):
-        self.bot.spoilers.init_db()
+        await self.bot.spoilers.init_db()
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

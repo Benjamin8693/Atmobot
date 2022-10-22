@@ -226,6 +226,13 @@ class PrivateCommands(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
+    async def custommsg(self, ctx, message: str = ""):
+
+        discord_channel = self.bot.get_channel(389266925185662986)
+        await discord_channel.send(message)
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def clear(self, ctx, amount: str = "1"):
 
         # Logging

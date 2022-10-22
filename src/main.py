@@ -487,6 +487,7 @@ def _prefix_callable(bot, msg):
     return prefixes
 
 # Create the Atmobot class and run the bot
+os.environ['TZ'] = "America/Chicago"
 atmobot = Atmobot(command_prefix = _prefix_callable, case_insensitive = True, description = bot_globals.bot_description, intents = Intents.all(), help_command = None, startup_time = datetime.datetime.now())
 token = settings.get("bot_token", "")
 atmobot.run(token)

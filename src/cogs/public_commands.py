@@ -230,6 +230,67 @@ class Commands(commands.Cog):
         # Log the result
         print("{time} | THUMBNAIL: Custom thumbnail with header {thumbnail_header} and footer {thumbnail_footer} uploaded".format(time=await self.bot.get_formatted_time(), thumbnail_header=header, thumbnail_footer=footer))
 
+    @slash_command(name = bot_globals.command_days_name, description = bot_globals.command_days_description, guild_ids = [bot.guild_id])
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
+    async def days(self, ctx):
+
+        # Logging
+        print("{time} | DAYS: {user} requested days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+
+        today = datetime.datetime.now()
+        future = datetime.datetime(2022, 10, 24, 9, 30, 00)
+        diff = future - today
+
+        # Format month and day
+        month_name = future.strftime("%B")
+        if 4 <= future.day <= 20 or 24 <= future.day <= 30:
+            day_suffix = "th"
+        else:
+            day_suffix = ["st", "nd", "rd"][future.day % 10 - 1]
+        time_of_day = "AM"
+        if future.hour >= 12:
+            time_of_day = "PM"
+        formatted_day = "{month_name} {day}{day_suffix}, {hour}:{minute} {time_of_day}".format(month_name=month_name, day=future.day, day_suffix=day_suffix, hour=future.hour, minute=future.minute, time_of_day=time_of_day)
+
+        if diff.days > 2:
+
+            # Days plural
+            s = ""
+            verb = "is"
+            if diff.days > 1:
+                s = "s"
+                verb = "are"
+
+            # Send the amount of days
+            formatted_days = bot_globals.command_days_formatted.format(verb=verb, amount=diff.days, factor="day", s=s, date=formatted_day)
+            await ctx.respond(formatted_days)
+
+            # Log the result
+            print("{time} | DAYS: {days} day{s} until Test Realm Watch".format(time=await self.bot.get_formatted_time(), days=diff.days, s=s))
+
+        elif diff.days > 0:
+
+            hours = diff.seconds // 3600
+
+            s = ""
+            verb = "is"
+            if hours > 1:
+                s = "s"
+                verb = "are"
+
+            # Send the amount of hours
+            formatted_hours = bot_globals.command_days_formatted.format(verb=verb, amount=hours, factor="hour", s=s, date=formatted_day)
+            await ctx.respond(formatted_hours)
+
+            # Log the result
+            print("{time} | DAYS: {hours} hour{s} until Test Realm Watch".format(time=await self.bot.get_formatted_time(), hours=hours, s=s))
+            
+
+        else:
+
+            await ctx.respond(bot_globals.command_days_watch)
+            print("{time} | DAYS: Test Realm watch has begun!".format(time=await self.bot.get_formatted_time()))
+        
 
     """
     user_choices = []
@@ -328,42 +389,6 @@ class Commands(commands.Cog):
 
         # Log the result
         print("{time} | TESTREALM: Test Realm information posted".format(time=await self.bot.get_formatted_time()))
-    
-    @slash_command(name=bot_globals.command_days_name, description=bot_globals.command_days_description, guild_ids=subscribed_guild_ids)
-    @commands.check(CommandsCooldown(1, bot_globals.default_command_cooldown, 1, bot_globals.extended_command_cooldown, commands.BucketType.channel, cooldown_exempt_channel_ids, cooldown_exempt_role_ids))
-    async def days(self, ctx):
-
-        # Logging
-        print("{time} | DAYS: {user} requested days until Test Realm Watch".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
-
-        today = datetime.date.today()
-        future = datetime.date(2022, 7, 5)
-        diff = future - today
-
-        # Days plural
-        s = ""
-        verb = "is"
-        if diff.days > 1:
-            s = "s"
-            verb = "are"
-
-        # Format month and day
-        month_name = future.strftime("%B")
-        if 4 <= future.day <= 20 or 24 <= future.day <= 30:
-            day_suffix = "th"
-        else:
-            day_suffix = ["st", "nd", "rd"][future.day % 10 - 1]
-        formatted_day = "{month_name} {day}{day_suffix}".format(month_name=month_name, day=future.day, day_suffix=day_suffix)
-
-        # Send the amount of days
-        if diff.days > 0:
-            formatted_days = bot_globals.command_days_formatted.format(verb=verb, days=diff.days, s=s, date=formatted_day)
-            await ctx.send(formatted_days)
-        else:
-            await ctx.send(bot_globals.command_days_watch)
-
-        # Log the result
-        print("{time} | DAYS: {days} day{s} until Test Realm Watch".format(time=await self.bot.get_formatted_time(), days=diff.days, s=s))
 
     header_option = create_option(name=bot_globals.command_thumbnail_arg_header_name, description=bot_globals.command_thumbnail_arg_header_description, option_type=3, required=True)
     footer_option = create_option(name=bot_globals.command_thumbnail_arg_footer_name, description=bot_globals.command_thumbnail_arg_footer_description, option_type=3, required=True)

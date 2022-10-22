@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 import math
 
 
-def get_formatted_time(timezone = "America/Panama"):
+def get_formatted_time(timezone = "America/Chicago"):
     return datetime.datetime.now(tz=ZoneInfo(timezone)).strftime("%H:%M:%S")
 
 

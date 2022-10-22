@@ -104,7 +104,7 @@ command_quote_message_threshold = 10
 # Days command
 command_days_name = "days"
 command_days_description = "Displays the amount of days left until Test Realm Watch begins."
-command_days_formatted = "There {verb} **{days} day{s}** until Test Realm Watch ({date}).\nTest Realm Watch is the first day of the season in which Test Realm has a chance to release."
+command_days_formatted = "There {verb} **{amount} {factor}{s}** until Test Realm Watch ({date}).\nTest Realm Watch is the first day of the season in which Test Realm has a chance to release."
 command_days_watch = "**Test Realm Watch has begun!**\nTest Realm is likely to release any time **Monday through Thursday**, from **9:00 AM PST until 5:00 PM PST**."
 
 # Test Realm command

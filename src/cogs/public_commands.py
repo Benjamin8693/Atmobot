@@ -270,7 +270,7 @@ class Commands(commands.Cog):
 
         elif diff.days > 0:
 
-            hours = diff.seconds // 3600
+            hours = (diff.seconds // 3600) + (diff.days * 24)
 
             s = ""
             verb = "is"

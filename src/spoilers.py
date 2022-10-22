@@ -150,7 +150,7 @@ class Spoilers(UpdateNotifier):
 
     async def handle_revision(self, revision=None):
 
-        print("{time} | SPOILERS: File updated detected! Handling revision {revision}".format(time=await self.bot.get_formatted_time(), revision=self.revision_data))
+        print("{time} | SPOILERS: File updated detected! Handling revision {revision}".format(time=await self.bot.get_formatted_time(), revision=revision))
 
         # Disable all commands until we're done
         # TODO: Get this working
@@ -164,7 +164,10 @@ class Spoilers(UpdateNotifier):
 
         if not revision:
             revision = self.revision_data
-        file_list_url, base_url = await self.webdriver.get_patch_urls()
+        #file_list_url, base_url = await self.webdriver.get_patch_urls()
+        #print("filelisturl and baseurl are {} and {}".format(file_list_url, base_url))
+        file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/V_{}/Windows/LatestFileList.bin".format(revision)
+        base_url = "http://testversionec.us.wizard101.com/WizPatcher/V_{}/LatestBuild".format(revision)
         await self.new_revision(revision, file_list_url, base_url)
 
         # Re-enable commands

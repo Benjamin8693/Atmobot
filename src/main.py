@@ -136,7 +136,7 @@ class Atmobot(commands.Bot):
 
         else:
 
-            print("{time} | RECONNECT: Bot reconnected to Discord API".format(time=await utils.get_formatted_time()))
+            print("{time} | RECONNECT: Bot reconnected to Discord API".format(time=utils.get_formatted_time()))
 
     # Preliminary stuff done when starting up the bot
     async def startup(self):

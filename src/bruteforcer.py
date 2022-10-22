@@ -21,10 +21,56 @@ import os
 import json
 import math
 import time
+import queue
+import threading
 from multiprocessing import Process
 from socket import create_connection
 from urllib.request import urlopen, Request
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+
+
+def bruteforce_list(patch_url, revision_list, version_list, q):
+
+    # Iterate over all the versions we want to check
+    for version in version_list:
+
+        # And all of the revisions in our list
+        for revision in revision_list:
+
+            # Generate a patch link to test with
+            # TODO: Be able to change automatically between test and live
+            link = patch_url.format(revision=revision, version=version)
+            
+            # Only report back if we get a valid error code
+            if requests.get(link, headers={'User-Agent': 'Mozilla/5.0'}).status_code == 200:
+                new_revision = ["V_r{revision}".format(revision=revision), version]
+                q.put(new_revision)
+
+# Bruteforce a revision from the patcher
+async def bruteforce_revision(patch_url, revision_start, revision_range, version_list, q):
+
+    # Range of revisions to bruteforce
+    revision_end = revision_start + revision_range
+    revision_list = list(range(revision_start, revision_end))
+
+    # Divide our revisions between 16 processes
+    revision_lists = [[] for i in range(16)]
+    list_length = len(revision_lists)
+
+    i = 0
+    while revision_list:
+        revision_lists[i].append(revision_list.pop(0))
+        i = (i + 1) % list_length
+
+    # Execute all our processes
+    processes = []
+    for i, l in enumerate(revision_lists):
+        p = threading.Thread(target=bruteforce_list, args=(patch_url, l, version_list, q))
+        p.start()
+        processes.append(p)
+    
+    for p in processes:
+        p.join()
 
 
 class Bruteforcer:
@@ -561,6 +607,8 @@ class Bruteforcer:
         self.cancel_operation = False
         self.total_queries = 0
         self.current_query = 0
+        self.total_terms = 0
+        self.current_term = 0
         self.recent_timestamps = []
 
         print("Image bruteforce ended!")
@@ -644,6 +692,191 @@ class Bruteforcer:
         
         return None
 
+    async def start_revision_brutefore(self, patch_url, revision_start, revision_range, version_list):
+        q = queue.Queue()
+
+        await bruteforce_revision(patch_url, revision_start, revision_range, version_list, q)
+
+        new_revisions = list(q.queue)
+        return new_revisions
+
+    async def start_test_realm_check(self):
+
+        if self.bot.spoilers.important_update:
+            return
+
+        # TODO: This is temporary, hacky, and nasty
+        base_revision = "725848"
+        base_version = "WizardDev"
+        base_patcher = "testversionec"
+        base_patcher_secondary = "testversionec"
+        base_service = bot_globals.TEST_REALM
+
+        # We need to see if there are any signs of Test Realm!
+        # First things first, let's contact to patcher to see if it's online
+        patcher_status = await self.check_patcher(base_service, ["V_r{}".format(base_revision), base_version])
+
+        # Patcher is offline, don't go any further
+        if patcher_status == 504:
+            print("Patcher is offline.")
+            return
+
+        # Patcher returned an odd error code, let's make note of it
+        if patcher_status not in (200, 403, 404):
+            print("Patcher returned odd status code {}".format(patcher_status))
+
+        # The patcher could be online, let's notify Discord about it before proceeding
+        print("Patcher may be online! Returned error code {}".format(patcher_status))
+        spoiler_channel_ids = settings.get("spoiler_channels")
+        announcement_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_ANNOUNCEMENT])
+        announcement_channel.send("Patcher may be online! Returned error code {}".format(patcher_status))
+
+        # Now that we know the patcher has activity, let's attempt to get the new revision
+        try:
+
+            print("Attempting to obtain patcher revision normally.")
+
+            url_file, base_url = await self.get_patch_urls(base_patcher_secondary)
+            revision = await self.get_revision_from_url(url_file)
+
+            print("Successfully bruteforced patcher revision {} normally.".format(revision))
+
+            # Double check and make sure our revision is higher than the base one
+            revision_number = int(revision.split(".")[0].replace("V_r", ""))
+            if int(base_revision) >= revision_number:
+                print("The new revision is lower than or equal to our base revision!")
+                raise Exception
+
+        # Hmm, no luck. But we won't stop there, let's attempt to bruteforce the revision for ourselves.
+        except Exception as e:
+
+            print(e)
+
+            print("Unable to get patcher revision normally, attempting bruteforce.")
+            patch_url = "http://" + base_patcher + ".us.wizard101.com/WizPatcher/V_r{revision}.{version}/Windows/LatestFileList.bin"
+            revisions = await self.start_revision_brutefore(patch_url, int(base_revision), 5000, [base_version])
+
+            if not revisions:
+                print("Could not bruteforce a revision, ending test realm check.")
+                return
+
+            print("Successfully bruteforced revisions {}!".format(revisions))
+
+            def compare_bruteforced_revisions(revision_list):
+                highest_rev = None
+
+                for rev in revision_list:
+                    rev_number = int(rev[0].replace("V_r", ""))
+                    if not highest_rev:
+                        highest_rev = rev
+                        continue
+                    highest_rev_number = int(highest_rev[0].replace("V_r", ""))
+                    if rev_number > highest_rev_number:
+                        highest_rev = rev
+
+                return highest_rev
+
+            if len(revisions) > 1:
+                print("Multiple revisions bruteforced, finding largest!")
+                revision_pair = compare_bruteforced_revisions(revisions)
+            else:
+                revision_pair = revisions.pop(0)
+            revision_number = revision_pair[0].replace("V_", "")
+            version = revision_pair[1]
+            revision = "{}.{}".format(revision_number, version)
+
+            # Double check and make sure our revision is higher than the base one
+            if int(base_revision) >= int(revision_number.replace("r", "")):
+                print("The new revision is lower than or equal to our base revision!")
+                return
+
+        # By now we must have a revision, so let's pass it over to our spoilers system to handle
+        print("Revision obtained! Handling revision {} to be spoiled.".format(revision))
+
+        await self.bot.spoilers.handle_revision(revision)
+
+    async def get_patch_urls(self, server_name):
+
+        url_to_connect = "{server_name}.us.wizard101.com".format(server_name=server_name)
+        reader, writer = await asyncio.open_connection(url_to_connect, 12500)
+
+        writer.write(b"\x0D\xF0\x24\x00\x00\x00\x00\x00\x08\x01\x20" + bytes(29))
+        await reader.read(4096)  # session offer or whatever
+
+        data = await reader.read(4096)
+        writer.close()
+
+        def _read_url(start: int):
+            str_len_data = data[start: start + 2]
+            str_len = struct.unpack("<H", str_len_data)[0]
+
+            str_data = data[start + 2: start + 2 + str_len]
+
+            return str_data.decode()
+
+        # -2 for the str len
+        file_list_url_start = data.find(b"http") - 2
+        base_url_start = data.rfind(b"http") - 2
+
+        return _read_url(file_list_url_start), _read_url(base_url_start)
+
+    # Stolen from WizDiff, grabs revision from any patcher url
+    async def get_revision_from_url(self, url: str):
+        res = re.compile(r"WizPatcher/([^/]+)").search(url)
+
+        if res is None:
+            raise ValueError(f"Reversion string not found in {url}")
+
+        return res.group(1)
+
+    # Used to check whether the Test Realm patcher is online
+    async def check_patcher(self, service, revision):
+
+        # Status code of the patcher
+        status_code = 0
+
+        # We're making this a try in the case we cannot cannot (which is actually most of the time)
+        try:
+
+            # Make a request to the patcher to determine the status code
+            patcher_url = await self.grab_patcher_url(service=service, revision = revision)
+            patcher_request = requests.head(patcher_url)
+            status_code = patcher_request.status_code
+
+            return status_code
+
+        # If we cannot connect, that's a status code too
+        except requests.ConnectionError:
+
+            return status_code
+
+    # Constructs a pathcher url
+    async def grab_patcher_url(self, server=bot_globals.VERSIONEC, service=bot_globals.TEST_REALM, game=bot_globals.WIZARD101, revision=None, wad=bot_globals.fallback_wad):
+
+        # Grab our server name
+        service_name = bot_globals.service_names.get(service)
+        server_name = bot_globals.server_options.get(server)
+        full_server_name = service_name + server_name
+
+        # Game longhand and shorthand
+        game_longhand = bot_globals.game_longhands.get(game)
+        game_shorthand = bot_globals.game_shorthands_patcher.get(game)
+
+        # Grab revision from settings if we didn't provide it
+        if not revision:
+            setting_name = "revision_info_{service}".format(service=service_name if service_name else "live")
+            revision = settings.get(setting_name, [])
+
+        # TODO: Automatically request/bruteforce revision via URL if we STILL don't have it
+
+        # Separate revision number and version
+        revision_number = revision[bot_globals.REVISION_NUMBER]
+        revision_version = revision[bot_globals.REVISION_VERSION]
+
+        # Format everything together into our patcher url
+        patcher_url = bot_globals.patcher_url.format(server=full_server_name, game_longhand=game_longhand, game_shorthand=game_shorthand, revision_number=revision_number, revision_version=revision_version, wad_name=wad)
+        return patcher_url
+
     """
     async def grab_revision(self, service):
 
@@ -725,37 +958,6 @@ class Bruteforcer:
     async def int_to_version(self, version):
         return bot_globals.version_empty.format(version[0], version[1:])
 
-    # Stolen from WizDiff, grabs LatestFileList
-    async def get_patch_url(self, server_name):
-
-        url_to_connect = "{server_name}.us.wizard101.com".format(server_name=server_name)
-
-        with create_connection((url_to_connect, 12500)) as socket:
-            socket.send(b"\x0D\xF0\x24\x00\x00\x00\x00\x00\x08\x01\x20" + bytes(29))
-            socket.recv(4096)
-            data = socket.recv(4096)
-
-        def _read_url(start: int):
-            str_len_data = data[start:start + 2]
-            str_len = struct.unpack("<H", str_len_data)[0]
-
-            str_data = data[start + 2: start + 2 + str_len]
-
-            return str_data.decode()
-
-        file_list_url_start = data.find(b"http") - 2
-
-        return _read_url(file_list_url_start)
-
-    # Stolen from WizDiff, grabs revision from any patcher url
-    async def get_revision_from_url(self, url: str):
-        res = re.compile(r"WizPatcher/([^/]+)").search(url)
-
-        if res is None:
-            raise ValueError(f"Reversion string not found in {url}")
-
-        return res.group(1)
-
     # To grab important urls to check for Test Realm activity
     async def get_important_urls(self):
 
@@ -810,54 +1012,6 @@ class Bruteforcer:
                 print("Error has occurred: {}".format(e))
 
         return changed
-
-    # Used to check whether the Test Realm patcher is online
-    async def check_patcher(self):
-
-        # Status code of the patcher
-        status_code = 0
-
-        # We're making this a try in the case we cannot cannot (which is actually most of the time)
-        try:
-
-            # Make a request to the patcher to determine the status code
-            patcher_url = await self.grab_patcher_url()
-            patcher_request = requests.head(patcher_url)
-            status_code = patcher_request.status_code
-
-            return status_code
-
-        # If we cannot connect, that's a status code too
-        except requests.ConnectionError:
-
-            return status_code
-
-    # Constructs a pathcher url
-    async def grab_patcher_url(self, server=bot_globals.VERSIONEC, service=bot_globals.TEST_REALM, game=bot_globals.WIZARD101, revision=None, wad=bot_globals.fallback_wad):
-
-        # Grab our server name
-        service_name = bot_globals.service_names.get(service)
-        server_name = bot_globals.server_options.get(server)
-        full_server_name = service_name + server_name
-
-        # Game longhand and shorthand
-        game_longhand = bot_globals.game_longhands.get(game)
-        game_shorthand = bot_globals.game_shorthands.get(game)
-
-        # Grab revision from settings if we didn't provide it
-        if not revision:
-            setting_name = "revision_info_{service}".format(service=service_name if service_name else "live")
-            revision = settings.get(setting_name, [])
-
-        # TODO: Automatically request/bruteforce revision via URL if we STILL don't have it
-
-        # Separate revision number and version
-        revision_number = revision[bot_globals.REVISION_NUMBER]
-        revision_version = revision[bot_globals.REVISION_VERSION]
-
-        # Format everything together into our patcher url
-        patcher_url = bot_globals.patcher_url.format(server=full_server_name, game_longhand=game_longhand, game_shorthand=game_shorthand, revision_number=revision_number, revision_version=revision_version, wad_name=wad)
-        return patcher_url
 
     """
 
@@ -1085,7 +1239,6 @@ class BruteforceImageInProgress(View):
                                    disabled = True)
         self.pause_button.callback = self.pause_bruteforce
         self.add_item(self.pause_button)
-        print(self.pause_button.callback)
 
         self.back_button = Button(label = bot_globals.bruteforce_back_button,
                                   style = ButtonStyle.grey)

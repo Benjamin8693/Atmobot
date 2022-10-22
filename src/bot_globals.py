@@ -334,14 +334,14 @@ REVISION_NUMBER = 0
 REVISION_VERSION = 1
 
 fallback_game = WIZARD101
-fallback_revision = 716142
-fallback_version_live = "1_470"
+fallback_revision = 725847
+fallback_version_live = "1_490"
 fallback_version_live_formatted = "{game}_{version}"
 fallback_version_dev = "{game}Dev"
 
 version_empty = "{game}_{revision}_{version}"
 
-default_revision_range = 500
+default_revision_range = 5000
 
 # Fallback .WAD file used for testing
 fallback_wad = "Root"

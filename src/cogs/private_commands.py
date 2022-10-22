@@ -13,6 +13,7 @@ import sys
 import traceback
 import typing
 
+
 class PrivateCommands(commands.Cog):
 
     def __init__(self, bot):
@@ -242,6 +243,28 @@ class PrivateCommands(commands.Cog):
 
         print("{time} | SPOILERS: Finished spoiling {version_to_spoil}".format(time=await self.bot.get_formatted_time(), version_to_spoil=version_to_spoil))
         await ctx.send("Finished spoiling {version_to_spoil}.".format(version_to_spoil=version_to_spoil))
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def testcheck(self, ctx):
+
+        await ctx.send("Checking for Test Realm")
+
+        await self.bot.bruteforcer.start_test_realm_check()
+
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def revisiontest(self, ctx, revision_start: str, revision_range: str):
+
+        await ctx.send("Bruteforcing starting at revision {} through revision {}".format(revision_start, (int(revision_start) + int(revision_range))))
+
+        patch_url = "http://versionec.us.wizard101.com/WizPatcher/V_r{revision}.{version}/Windows/LatestFileList.bin"
+        new_revisions = await self.bot.bruteforcer.start_revision_brutefore(patch_url, int(revision_start), int(revision_range), ["Wizard_1_490"])
+
+        if new_revisions:
+            await ctx.send("Revisions: {}".format(new_revisions))
+        else:
+            await ctx.send("No new revisions")
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

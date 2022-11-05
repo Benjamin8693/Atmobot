@@ -535,7 +535,7 @@ class Bruteforcer:
             # Execute all our processes
             processes = []
             for i, l in enumerate(image_lists):
-                p = threading.Thread(target = asyncio.run, args=(self.bruteforce_image_list(interaction, i, l, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_url, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message),))
+                p = threading.Thread(target = asyncio.run, args=(self.bruteforce_image_list(interaction, l, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_url, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message),), daemon=True)
                 processes.append(p)
                 p.start()
 
@@ -544,6 +544,9 @@ class Bruteforcer:
                 for p in processes:
                     status.append(p.is_alive())
                 return status
+
+            for p in processes:
+                p.join()
             
             thread_status = get_thread_status()
             while any(thread_status):
@@ -571,9 +574,10 @@ class Bruteforcer:
 
         print("Image bruteforce ended!")
 
-    async def bruteforce_image_list(self, interaction: Interaction, index, image_list: list, image_names: list, image_names_successes: list, image_prefixes: list, image_suffixes: list, image_extensions: list, request_url: str, request_cooldown: float, discord_notify: bool, discord_channel: int, discord_message: str, twitter_notify: bool, twitter_message: str):
+    async def bruteforce_image_list(self, interaction: Interaction, image_list: list, image_names: list, image_names_successes: list, image_prefixes: list, image_suffixes: list, image_extensions: list, request_url: str, request_cooldown: float, discord_notify: bool, discord_channel: int, discord_message: str, twitter_notify: bool, twitter_message: str):
 
         for image_name in image_list:
+            #print("on image {}, index {}\n\n".format(image_name, image_list.index(image_name)))
             await self.bruteforce_image_name(interaction, image_name, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_url, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message)
 
     async def bruteforce_image_name(self, interaction: Interaction, image_name: str, image_names: list, image_names_successes: list, image_prefixes: list, image_suffixes: list, image_extensions: list, request_url: str, request_cooldown: float, discord_notify: bool, discord_channel: int, discord_message: str, twitter_notify: bool, twitter_message: str):
@@ -669,7 +673,8 @@ class Bruteforcer:
 
         # Attempt to see if the image exists
         try:
-            response = await self.http_client.fetch(HTTPRequest(formatted_url, follow_redirects = False), raise_error = False)
+            http_client = AsyncHTTPClient()
+            response = await http_client.fetch(HTTPRequest(formatted_url, follow_redirects = False), raise_error = False)
             response_code = response.code
         
         # If it times out, that's fine, just make note of the error

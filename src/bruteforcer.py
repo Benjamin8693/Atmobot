@@ -526,8 +526,9 @@ class Bruteforcer:
             list_length = len(image_lists)
 
             i = 0
-            while image_names:
-                image_lists[i].append(image_names.pop(0))
+            image_names_copy = image_names[:]
+            while image_names_copy:
+                image_lists[i].append(image_names_copy.pop(0))
                 i = (i + 1) % list_length
 
             # Execute all our processes
@@ -685,6 +686,11 @@ class Bruteforcer:
     async def bruteforce_error(self, error, formatted_url):
 
         self.error_count += 1
+        print("BRUTEFORCE ERROR: {}\nERROR COUNT: {}".format(error, self.error_count))
+
+        if self.error_count > 25:
+            self.cancel_operation = True
+            print("BRUTEFORCE CANCELLED BECAUSE OF TOO MANY ERRORS! @everyone")
 
     async def cancel_image_bruteforce(self, interaction, reason: str):
 

@@ -573,8 +573,9 @@ class Bruteforcer:
         print("Image bruteforce ended!")
 
     async def bruteforce_image_list(self, interaction: Interaction, image_list: list, image_names: list, image_names_successes: list, image_prefixes: list, image_suffixes: list, image_extensions: list, request_url: str, request_cooldown: float, discord_notify: bool, discord_channel: int, discord_message: str, twitter_notify: bool, twitter_message: str):
-       
+
         for image_name in image_list:
+            print("on image {}, index {}".format(image_name, image_list.index(image_name)))
             await self.bruteforce_image_name(interaction, image_name, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_url, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message)
 
     async def bruteforce_image_name(self, interaction: Interaction, image_name: str, image_names: list, image_names_successes: list, image_prefixes: list, image_suffixes: list, image_extensions: list, request_url: str, request_cooldown: float, discord_notify: bool, discord_channel: int, discord_message: str, twitter_notify: bool, twitter_message: str):
@@ -787,7 +788,7 @@ class Bruteforcer:
         print("Patcher may be online! Returned error code {}".format(patcher_status))
         spoiler_channel_ids = settings.get("spoiler_channels")
         announcement_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_ANNOUNCEMENT])
-        announcement_channel.send("Patcher may be online! Returned error code {}".format(patcher_status))
+        await announcement_channel.send("Patcher may be online! Returned error code {}".format(patcher_status))
 
         # Now that we know the patcher has activity, let's attempt to get the new revision
         try:

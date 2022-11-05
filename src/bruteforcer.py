@@ -544,9 +544,6 @@ class Bruteforcer:
                 for p in processes:
                     status.append(p.is_alive())
                 return status
-
-            for p in processes:
-                p.join()
             
             thread_status = get_thread_status()
             while any(thread_status):

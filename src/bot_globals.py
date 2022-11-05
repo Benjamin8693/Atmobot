@@ -202,6 +202,7 @@ bruteforcer_template = {
                "image_suffixes": ["", "01", "02", "03", "04", "05", "01_600", "02_600", "03_600", "04_600", "05_600", "_Lead", "_compressed", "_Lead_compressed_600", "_600", "_600b", "_Mercedes", "_watermark_contrast_600", "_watermark_contrast"],
                "request_url": "https://edgecast.wizard101.com/image/free/Wizard/C/Wizard-Society/Patch-Notes/{}?v=1",
                "request_threading": False,
+               "request_threading_count": 16,
                "request_cooldown": 0.05,
                "request_error_threshold": 5,
                "request_error_retry_after": 300,
@@ -234,15 +235,16 @@ BRUTEFORCE_IMAGE_IMAGE_PREFIXES = 6
 BRUTEFORCE_IMAGE_IMAGE_SUFFIXES = 7
 BRUTEFORCE_IMAGE_REQUEST_URL = 8
 BRUTEFORCE_IMAGE_REQUEST_THREADING = 9
-BRUTEFORCE_IMAGE_REQUEST_COOLDOWN = 10
-BRUTEFORCE_IMAGE_REQUEST_ERROR_THRESHOLD = 11
-BRUTEFORCE_IMAGE_REQUEST_ERROR_RETRY_AFTER = 12
-BRUTEFORCE_IMAGE_REMOVE_IMAGE_WHEN_FOUND = 13
-BRUTEFORCE_IMAGE_DISCORD_NOTIFY = 14
-BRUTEFORCE_IMAGE_DISCORD_CHANNEL = 15
-BRUTEFORCE_IMAGE_DISCORD_MESSAGE = 16
-BRUTEFORCE_IMAGE_TWITTER_NOTIFY = 17
-BRUTEFORCE_IMAGE_TWITTER_MESSAGE = 18
+BRUTEFORCE_IMAGE_REQUEST_THREADING_COUNT = 10
+BRUTEFORCE_IMAGE_REQUEST_COOLDOWN = 11
+BRUTEFORCE_IMAGE_REQUEST_ERROR_THRESHOLD = 12
+BRUTEFORCE_IMAGE_REQUEST_ERROR_RETRY_AFTER = 13
+BRUTEFORCE_IMAGE_REMOVE_IMAGE_WHEN_FOUND = 14
+BRUTEFORCE_IMAGE_DISCORD_NOTIFY = 15
+BRUTEFORCE_IMAGE_DISCORD_CHANNEL = 16
+BRUTEFORCE_IMAGE_DISCORD_MESSAGE = 17
+BRUTEFORCE_IMAGE_TWITTER_NOTIFY = 18
+BRUTEFORCE_IMAGE_TWITTER_MESSAGE = 19
 
 bruteforce_embed_comments = "__Info__"
 bruteforce_embed_comments_idle = "The bruteforcer is currently idle."

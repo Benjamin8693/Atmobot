@@ -520,9 +520,10 @@ class Bruteforcer:
 
 
         request_threading = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_REQUEST_THREADING)
+        request_threading_count = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_REQUEST_THREADING_COUNT)
         if request_threading:
-            # Divide our images between 16 processes
-            image_lists = [[] for i in range(16)]
+            # Divide our images between X processes
+            image_lists = [[] for i in range(request_threading_count)]
             list_length = len(image_lists)
 
             i = 0
@@ -547,6 +548,7 @@ class Bruteforcer:
             thread_status = get_thread_status()
             while any(thread_status):
                 thread_status = get_thread_status()
+                print("thread status is {}".format(thread_status))
                 await asyncio.sleep(5)
 
         else:

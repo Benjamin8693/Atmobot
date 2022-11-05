@@ -652,7 +652,7 @@ class Bruteforcer:
                         if discord_notify and discord_channel:
                             formatted_discord_message = "**{discord_message}\n{image_name}**\n<{image_url}>".format(discord_message = discord_message, image_name = possible_image, image_url = formatted_url)
                             file_to_send = File(file_path)
-                            await self.bot.send_to_discord(discord_channel, formatted_discord_message, file_to_send)
+                            await self.bot.queue_to_discord(discord_channel, formatted_discord_message, file_to_send)
 
                         # Attempt to post to Twitter
                         if twitter_notify:

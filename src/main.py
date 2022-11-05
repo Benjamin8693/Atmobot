@@ -36,8 +36,9 @@ class Atmobot(commands.Bot):
         self.reduced_cooldown_channels = []
         self.reduced_cooldown_roles = []
 
-        # TEMP HACK
+        # TEMP HACKS
         self.running_tasks = []
+        self.discord_queue = []
 
         # Create a builtin to reference our bot object at any time
         __builtins__.bot = self
@@ -175,6 +176,8 @@ class Atmobot(commands.Bot):
 
         await self.load_scheduler()
 
+        asyncio.ensure_future(self.handle_discord_queue())
+
         # Set up Discord logging
         sys.stdout.bot = self
         sys.stdout.load_log_channel()
@@ -304,6 +307,24 @@ class Atmobot(commands.Bot):
 
     async def scheduled_message_error(self, *args):
         print("Attempted to run a scheduled task but a function could not be found!")
+
+    async def handle_discord_queue(self):
+
+        while True:
+
+            # Empty the queue if anything is in there
+            if self.discord_queue:
+                for message_to_send in self.discord_queue:
+                    await self.send_to_discord(*message_to_send)
+
+                self.discord_queue = []
+
+            # Wait a few seconds before trying again
+            await asyncio.sleep(5)
+
+    async def queue_to_discord(self, channel_id, message, files = None):
+        message_to_send = (channel_id, message, files)
+        self.discord_queue.append(message_to_send)
 
     async def send_to_discord(self, channel_id, message, files = None):
 

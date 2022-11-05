@@ -1,4 +1,4 @@
-from discord import ButtonStyle, Embed, Interaction, Color
+from discord import ButtonStyle, Embed, Interaction, Color#, MessageInteraction
 from discord.ui import View, Button, button
 
 import datetime
@@ -10,10 +10,25 @@ def get_formatted_time(timezone = "America/Chicago"):
     return datetime.datetime.now(tz=ZoneInfo(timezone)).strftime("%H:%M:%S")
 
 
-class DataHandler(View):
+class PrivateView(View):
 
-    def __init__(self, *items, timeout = 180, data = None, per_page = 10, title = "Embed", back_callback = None, select_callback = None):
-        super().__init__(*items, timeout=timeout)
+    def __init__(self, author, *args, **kwargs):
+
+        self.author = author
+        super().__init__(*args, **kwargs)
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        if interaction.user != self.author:
+            await interaction.response.send_message("You cannot interact with a View created by someone else!", ephemeral=True, delete_after=5)
+            return False
+
+        return True
+
+
+class DataHandler(PrivateView):
+
+    def __init__(self, author, *items, timeout = 180, data = None, per_page = 10, title = "Embed", back_callback = None, select_callback = None):
+        super().__init__(author, *items, timeout=timeout)
 
         self.data = data
         self.per_page = per_page

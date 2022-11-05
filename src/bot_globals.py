@@ -196,10 +196,12 @@ bruteforcer_template = {
                "profile_active": True,
                "run_confirmation": True,
                "image_names": [],
+               "image_names_successes": [],
                "image_extensions": [".jpg", ".png", ".gif"],
                "image_prefixes": [""],
                "image_suffixes": ["", "01", "02", "03", "04", "05", "01_600", "02_600", "03_600", "04_600", "05_600", "_Lead", "_compressed", "_Lead_compressed_600", "_600", "_600b", "_Mercedes", "_watermark_contrast_600", "_watermark_contrast"],
                "request_url": "https://edgecast.wizard101.com/image/free/Wizard/C/Wizard-Society/Patch-Notes/{}?v=1",
+               "request_threading": False,
                "request_cooldown": 0.05,
                "request_error_threshold": 5,
                "request_error_retry_after": 300,
@@ -226,19 +228,21 @@ BRUTEFORCE_PROFILE_ACTIVE = 1
 # Config options for image bruteforcing mode
 BRUTEFORCE_IMAGE_RUN_CONFIRMATION = 2
 BRUTEFORCE_IMAGE_IMAGE_NAMES = 3
-BRUTEFORCE_IMAGE_IMAGE_EXTENSIONS = 4
-BRUTEFORCE_IMAGE_IMAGE_PREFIXES = 5
-BRUTEFORCE_IMAGE_IMAGE_SUFFIXES = 6
-BRUTEFORCE_IMAGE_REQUEST_URL = 7
-BRUTEFORCE_IMAGE_REQUEST_COOLDOWN = 8
-BRUTEFORCE_IMAGE_REQUEST_ERROR_THRESHOLD = 9
-BRUTEFORCE_IMAGE_REQUEST_ERROR_RETRY_AFTER = 10
-BRUTEFORCE_IMAGE_REMOVE_IMAGE_WHEN_FOUND = 11
-BRUTEFORCE_IMAGE_DISCORD_NOTIFY = 12
-BRUTEFORCE_IMAGE_DISCORD_CHANNEL = 13
-BRUTEFORCE_IMAGE_DISCORD_MESSAGE = 14
-BRUTEFORCE_IMAGE_TWITTER_NOTIFY = 15
-BRUTEFORCE_IMAGE_TWITTER_MESSAGE = 16
+BRUTEFORCE_IMAGE_IMAGE_NAMES_SUCCESSES = 4
+BRUTEFORCE_IMAGE_IMAGE_EXTENSIONS = 5
+BRUTEFORCE_IMAGE_IMAGE_PREFIXES = 6
+BRUTEFORCE_IMAGE_IMAGE_SUFFIXES = 7
+BRUTEFORCE_IMAGE_REQUEST_URL = 8
+BRUTEFORCE_IMAGE_REQUEST_THREADING = 9
+BRUTEFORCE_IMAGE_REQUEST_COOLDOWN = 10
+BRUTEFORCE_IMAGE_REQUEST_ERROR_THRESHOLD = 11
+BRUTEFORCE_IMAGE_REQUEST_ERROR_RETRY_AFTER = 12
+BRUTEFORCE_IMAGE_REMOVE_IMAGE_WHEN_FOUND = 13
+BRUTEFORCE_IMAGE_DISCORD_NOTIFY = 14
+BRUTEFORCE_IMAGE_DISCORD_CHANNEL = 15
+BRUTEFORCE_IMAGE_DISCORD_MESSAGE = 16
+BRUTEFORCE_IMAGE_TWITTER_NOTIFY = 17
+BRUTEFORCE_IMAGE_TWITTER_MESSAGE = 18
 
 bruteforce_embed_comments = "__Info__"
 bruteforce_embed_comments_idle = "The bruteforcer is currently idle."

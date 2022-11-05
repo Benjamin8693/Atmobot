@@ -537,12 +537,17 @@ class Bruteforcer:
                 p = threading.Thread(target = asyncio.run, args=(self.bruteforce_image_list(interaction, l, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_url, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message),))
                 p.start()
                 processes.append(p)
-            
-            while processes:
-                await asyncio.sleep(5)
+
+            def get_thread_status():
+                status = []
                 for p in processes:
-                    if not p.is_alive():
-                        processes.remove(p)
+                    status.append(p.is_alive())
+                return status
+            
+            thread_status = get_thread_status()
+            while any(thread_status):
+                thread_status = get_thread_status()
+                await asyncio.sleep(5)
 
         else:
 

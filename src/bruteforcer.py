@@ -535,7 +535,7 @@ class Bruteforcer:
             # Execute all our processes
             processes = []
             for i, l in enumerate(image_lists):
-                p = threading.Thread(target = asyncio.run, args=(self.bruteforce_image_list(interaction, l, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_url, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message),), daemon=True)
+                p = threading.Thread(target = asyncio.run, args=(self.bruteforce_image_list(interaction, l, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_url, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message),))
                 processes.append(p)
                 p.start()
 

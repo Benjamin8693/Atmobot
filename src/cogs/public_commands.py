@@ -139,6 +139,30 @@ class Commands(commands.Cog):
         # Print to console
         print(log_message)
 
+    # Clear Command
+    # Clears the last X amount of messages in the current channel
+    @slash_command(name = "clear", description = "Clears messages in the current channel", guild_ids = [bot.guild_id], default_member_permissions = Permissions(manage_messages = True))
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
+    async def clear(self, ctx, amount: str = "1"):
+
+        # Logging
+        print("{time} | CLEAR: {user} requested to clear {amount} messages from {channel_name}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), amount=amount, channel_name=ctx.channel.name))
+
+        # Make sure an actual digit was provided
+        if not amount.isdigit():
+            return
+        amount = int(amount)
+
+        # Delete the messages
+        await ctx.channel.purge(limit=amount)
+
+        # Send notification in the channel that the messages were deleted
+        await ctx.respond("{amount} messages cleared.".format(amount=amount), delete_after = 5, ephemeral = True)
+
+        # Log the result
+        print("{time} | CLEAR: Cleared {amount} messages from {channel_name}".format(time=await self.bot.get_formatted_time(), amount=amount, channel_name=ctx.channel.name))
+
+
     # Bruteforcer Command
     # Opens the control panel for bruteforcing functionality
     @slash_command(name = bot_globals.command_bruteforce_name, description = bot_globals.command_bruteforce_description, guild_ids = [bot.guild_id], default_member_permissions = Permissions(manage_messages = True))

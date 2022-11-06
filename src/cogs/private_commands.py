@@ -1,5 +1,5 @@
 # 3rd-Party Packages
-from discord import Color, Embed
+from discord import Color, Embed, slash_command, Permissions
 from discord.ext import commands
 
 # Local packages
@@ -53,6 +53,23 @@ class PrivateCommands(commands.Cog):
 
         full_username = "{user_name}#{user_discriminator}".format(user_name=user_name, user_discriminator=user_discriminator)
         return full_username
+
+    def cooldown_behavior(message):
+
+        # Users with manage messages perms get to bypass all cooldowns
+        if message.author.guild_permissions.manage_messages:
+            return None
+
+        # This is a channel with a reduced cooldown
+        elif message.channel in bot.reduced_cooldown_channels:
+            return commands.Cooldown(1, 3)
+
+        # We have a role that reduces cooldowns
+        elif any(role in message.author.roles for role in bot.reduced_cooldown_roles):
+            return commands.Cooldown(1, 5)
+
+        # All other users have the regular cooldown
+        return commands.Cooldown(1, 15)
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
@@ -148,8 +165,10 @@ class PrivateCommands(commands.Cog):
         # Send the embed
         await ctx.send(embed=initial_embed, components=[get_role_button])
 
-    @commands.command()
-    @commands.has_permissions(manage_messages=True)
+    # Update Command
+    # Automatically pulls the latest commit and restarts Atmobot
+    @slash_command(name = "update", description = "Updates Atmobot", guild_ids = [bot.guild_id], default_member_permissions = Permissions(manage_messages = True))
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
     async def update(self, ctx):
 
         await ctx.send("Updating Atmobot.")
@@ -160,6 +179,36 @@ class PrivateCommands(commands.Cog):
             output = subprocess.getoutput(command)
             final_ouput += output
             final_ouput += "\n"
+
+        await ctx.send(final_ouput)
+
+    # Restart Command
+    # Restarts Atmobot
+    @slash_command(name = "restart", description = "Restarts Atmobot", guild_ids = [bot.guild_id], default_member_permissions = Permissions(manage_messages = True))
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
+    async def restart(self, ctx):
+
+        await ctx.send("Restarting Atmobot.")
+
+        final_ouput = ""
+        output = subprocess.getoutput("sudo pm2 restart Atmobot")
+        final_ouput += output
+        final_ouput += "\n"
+
+        await ctx.send(final_ouput)
+
+    # Stop Command
+    # Stops Atmobot
+    @slash_command(name = "stop", description = "Stops Atmobot", guild_ids = [bot.guild_id], default_member_permissions = Permissions(manage_messages = True))
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
+    async def stop(self, ctx):
+
+        await ctx.send("Stopping Atmobot.")
+
+        final_ouput = ""
+        output = subprocess.getoutput("sudo pm2 stop Atmobot")
+        final_ouput += output
+        final_ouput += "\n"
 
         await ctx.send(final_ouput)
 
@@ -265,27 +314,6 @@ class PrivateCommands(commands.Cog):
             await ctx.send("Revisions: {}".format(new_revisions))
         else:
             await ctx.send("No new revisions")
-
-    @commands.command()
-    @commands.has_permissions(manage_messages=True)
-    async def clear(self, ctx, amount: str = "1"):
-
-        # Logging
-        print("{time} | CLEAR: {user} requested to clear {amount} messages from {channel_name}".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author), amount=amount, channel_name=ctx.message.channel.name))
-
-        # Make sure an actual digit was provided
-        if not amount.isdigit():
-            return
-        amount = int(amount)
-
-        # Delete the messages
-        await ctx.channel.purge(limit=amount)
-
-        # Send notification in the channel that the messages were deleted
-        await ctx.send("{amount} messages cleared.".format(amount=amount), delete_after=5)
-
-        # Log the result
-        print("{time} | CLEAR: Cleared {amount} messages from {channel_name}".format(time=await self.bot.get_formatted_time(), amount=amount, channel_name=ctx.message.channel.name))
 
 # Used for connecting the Command Center to the rest of the bot
 def setup(bot):

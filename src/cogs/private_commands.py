@@ -171,7 +171,7 @@ class PrivateCommands(commands.Cog):
     @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
     async def update(self, ctx):
 
-        await ctx.send("Updating Atmobot.")
+        await ctx.respond("Updating Atmobot.")
 
         final_ouput = ""
         commands_to_run = ("git pull", "sudo pm2 restart Atmobot")
@@ -180,7 +180,7 @@ class PrivateCommands(commands.Cog):
             final_ouput += output
             final_ouput += "\n"
 
-        await ctx.send(final_ouput)
+        await ctx.respond(final_ouput)
 
     # Restart Command
     # Restarts Atmobot
@@ -188,14 +188,14 @@ class PrivateCommands(commands.Cog):
     @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
     async def restart(self, ctx):
 
-        await ctx.send("Restarting Atmobot.")
+        await ctx.respond("Restarting Atmobot.")
 
         final_ouput = ""
         output = subprocess.getoutput("sudo pm2 restart Atmobot")
         final_ouput += output
         final_ouput += "\n"
 
-        await ctx.send(final_ouput)
+        await ctx.respond(final_ouput)
 
     # Stop Command
     # Stops Atmobot
@@ -203,14 +203,14 @@ class PrivateCommands(commands.Cog):
     @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
     async def stop(self, ctx):
 
-        await ctx.send("Stopping Atmobot.")
+        await ctx.respond("Stopping Atmobot.")
 
         final_ouput = ""
         output = subprocess.getoutput("sudo pm2 stop Atmobot")
         final_ouput += output
         final_ouput += "\n"
 
-        await ctx.send(final_ouput)
+        await ctx.respond(final_ouput)
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

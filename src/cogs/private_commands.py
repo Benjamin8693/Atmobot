@@ -315,6 +315,16 @@ class PrivateCommands(commands.Cog):
         else:
             await ctx.send("No new revisions")
 
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def restoreben(self, ctx):
+
+        member = await ctx.guild.fetch_member(104405233987235840)
+        role = ctx.guild.get_role(786274093036732517)
+        await member.add_roles(role)
+
+        await ctx.send("Benjamin has Minimod once more.")
+
 # Used for connecting the Command Center to the rest of the bot
 def setup(bot):
     bot.add_cog(PrivateCommands(bot=bot))

@@ -231,6 +231,8 @@ class PrivateCommands(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def restoredb(self, ctx):
 
+        await ctx.send("Restoring database backup.")
+
         source_directory="resources/database/backup.db"
         destination_directory="wizdiff.db"
         shutil.copy(source_directory, destination_directory)
@@ -240,6 +242,8 @@ class PrivateCommands(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def backupdb(self, ctx):
+
+        await ctx.send("Backing up current database.")
 
         source_directory="wizdiff.db"
         destination_directory="resources/database/backup.db"
@@ -251,6 +255,8 @@ class PrivateCommands(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def testdb(self, ctx):
 
+        await ctx.send("Copying over reliable test database.")
+
         source_directory="resources/database/wizdiff-V_r707528.Wizard_1_460.db"
         destination_directory="wizdiff.db"
         shutil.copy(source_directory, destination_directory)
@@ -260,7 +266,10 @@ class PrivateCommands(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def initdb(self, ctx):
+
+        await ctx.send("Initializing database.")
         await self.bot.spoilers.init_db()
+        await ctx.send("Database initialized.")
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)

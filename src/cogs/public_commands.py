@@ -173,6 +173,20 @@ class Commands(commands.Cog):
         mode = bot_globals.bruteforce_mode_to_index.get(mode)
         await self.bot.bruteforcer.handle_control_panel(interaction = ctx, mode = mode, respond = True)
 
+    # Surprise Command
+    # Posts a crown code image for the holidays
+    @slash_command(name = "surprise", description = "i wonder what this could do?", guild_ids = [bot.guild_id])
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
+    async def surprise(self, ctx):
+
+        # Path to get our Hero101 assets from
+        current_path = os.path.join(os.getcwd(), bot_globals.resources_path)
+
+        # Generate a file path and send the file
+        file_path = os.path.join(current_path, "surprise.png")
+        file_to_send = File(file_path)
+        await ctx.respond(file=file_to_send)
+
     # Hero101 Command
     # Posts a random Hero101-related image
     @slash_command(name = bot_globals.command_hero101_name, description = bot_globals.command_hero101_description, guild_ids = [bot.guild_id])

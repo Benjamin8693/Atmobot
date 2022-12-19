@@ -166,8 +166,8 @@ class Spoilers(UpdateNotifier):
             revision = self.revision_data
         #file_list_url, base_url = await self.webdriver.get_patch_urls()
         #print("filelisturl and baseurl are {} and {}".format(file_list_url, base_url))
-        file_list_url = "http://testversionec.us.wizard101.com/WizPatcher/V_{}/Windows/LatestFileList.bin".format(revision)
-        base_url = "http://testversionec.us.wizard101.com/WizPatcher/V_{}/LatestBuild".format(revision)
+        file_list_url = "http://versionec.us.wizard101.com/WizPatcher/V_{}/Windows/LatestFileList.bin".format(revision)
+        base_url = "http://versionec.us.wizard101.com/WizPatcher/V_{}/LatestBuild".format(revision)
         await self.new_revision(revision, file_list_url, base_url)
 
         # Re-enable commands

@@ -198,8 +198,10 @@ class Atmobot(commands.Bot):
 
         # TODO: ITEMBOT - Integrate this properly in the future
         async with aiosqlite.connect(self.db_path) as db:
+            print("its working")
             self.db = await aiosqlite.connect(":memory:")
             await db.backup(self.db)
+            print(self.db)
 
         # Make our item list        
         async with self.db.execute(FIND_ITEM_NAME_QUERY) as cursor:

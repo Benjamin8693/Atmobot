@@ -21,7 +21,7 @@ import sys
 import time
 
 # TODO: ITEMBOT - Set up properly later
-DATABASE_PATH = "resources/database/items.db"
+DATABASE_PATH = os.path.join(os.getcwd(),"resources/database/items.db")
 
 FIND_ITEM_NAME_QUERY = """
 SELECT locale_en.data FROM items

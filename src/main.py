@@ -10,13 +10,23 @@ import spoilers
 import utils
 
 # Built-in packages
+import aiosqlite
 import asyncio
 import datetime
 import inspect
 import json
 import os
+from pathlib import Path
 import sys
 import time
+
+# TODO: ITEMBOT - Set up properly later
+DATABASE_PATH = "resources/database/items.db"
+
+FIND_ITEM_NAME_QUERY = """
+SELECT locale_en.data FROM items
+INNER JOIN locale_en ON locale_en.id == items.name
+"""
 
 
 class Atmobot(commands.Bot):
@@ -40,6 +50,12 @@ class Atmobot(commands.Bot):
         self.running_tasks = []
         self.discord_queue = []
 
+        # TODO: ITEMBOT - Set this up properly in the future
+        self.db_path = DATABASE_PATH
+        print(self.db_path)
+        self.db = None
+        self.item_list = []
+
         # Create a builtin to reference our bot object at any time
         __builtins__.bot = self
 
@@ -59,6 +75,8 @@ class Atmobot(commands.Bot):
         if settings.get("deprecated_commands", False):
             print("{time} | STARTUP: Loading Deprecated Commands".format(time=utils.get_formatted_time()))
             self.load_extension("cogs.deprecated_commands")
+
+        self.load_extension("cogs.itembot_commands")
 
     # Used to load the settings file
     def load_settings(self):
@@ -178,11 +196,28 @@ class Atmobot(commands.Bot):
 
         asyncio.ensure_future(self.handle_discord_queue())
 
+        # TODO: ITEMBOT - Integrate this properly in the future
+        async with aiosqlite.connect(self.db_path) as db:
+            self.db = await aiosqlite.connect(":memory:")
+            await db.backup(self.db)
+
+        # Make our item list        
+        async with self.db.execute(FIND_ITEM_NAME_QUERY) as cursor:
+            tuple_item_list = await cursor.fetchall()
+
+        for i in tuple_item_list:
+            self.item_list.append(i[0])
+
+        #self.load_extension("cogs.itembot_commands")
+
         # Set up Discord logging
         sys.stdout.bot = self
         sys.stdout.load_log_channel()
         sys.stderr.bot = self
         sys.stderr.load_log_channel()
+
+    async def close(self):
+        await self.db.close()
 
     async def load_scheduler(self):
 

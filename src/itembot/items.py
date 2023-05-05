@@ -34,26 +34,26 @@ class ItemView(ui.View):
 
     @ui.button(style=discord.ButtonStyle.primary, emoji="⏪")
     async def goto_first_button(
-        self, interaction: discord.Interaction, _button: ui.Button
+        self, _button: ui.Button, interaction: discord.Interaction, 
     ):
         self.current_page = 1
         await self.update(interaction)
 
     @ui.button(style=discord.ButtonStyle.primary, emoji="⬅️")
-    async def back_button(self, interaction: discord.Interaction, _button: ui.Button):
+    async def back_button(self, _button: ui.Button, interaction: discord.Interaction, ):
         self.current_page -= 1
         await self.update(interaction)
 
     @ui.button(style=discord.ButtonStyle.primary, emoji="➡️")
     async def forward_button(
-        self, interaction: discord.Interaction, _button: ui.Button
+        self, _button: ui.Button, interaction: discord.Interaction, 
     ):
         self.current_page += 1
         await self.update(interaction)
 
     @ui.button(style=discord.ButtonStyle.primary, emoji="⏩")
     async def goto_last_button(
-        self, interaction: discord.Interaction, _button: ui.Button
+        self, _button: ui.Button, interaction: discord.Interaction, 
     ):
         self.current_page = self.total_entries
         await self.update(interaction)

@@ -52,7 +52,6 @@ class Atmobot(commands.Bot):
 
         # TODO: ITEMBOT - Set this up properly in the future
         self.db_path = DATABASE_PATH
-        print(self.db_path)
         self.db = None
         self.item_list = []
 
@@ -190,7 +189,7 @@ class Atmobot(commands.Bot):
         # Automatic spoiler system
         print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))
         self.spoilers = spoilers.Spoilers(self)
-        await self.spoilers.startup()
+        #await self.spoilers.startup()
 
         await self.load_scheduler()
 
@@ -198,10 +197,8 @@ class Atmobot(commands.Bot):
 
         # TODO: ITEMBOT - Integrate this properly in the future
         async with aiosqlite.connect(self.db_path, timeout=10) as db:
-            print("its working")
             self.db = await aiosqlite.connect(":memory:", timeout=10)
             await db.backup(self.db)
-            print(self.db)
 
         # Make our item list        
         async with self.db.execute(FIND_ITEM_NAME_QUERY) as cursor:

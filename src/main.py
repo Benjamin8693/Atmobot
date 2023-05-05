@@ -197,9 +197,9 @@ class Atmobot(commands.Bot):
         asyncio.ensure_future(self.handle_discord_queue())
 
         # TODO: ITEMBOT - Integrate this properly in the future
-        async with aiosqlite.connect(self.db_path) as db:
+        async with aiosqlite.connect(self.db_path, timeout=10) as db:
             print("its working")
-            self.db = await aiosqlite.connect(":memory:")
+            self.db = await aiosqlite.connect(":memory:", timeout=10)
             await db.backup(self.db)
             print(self.db)
 

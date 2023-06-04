@@ -334,6 +334,12 @@ class PrivateCommands(commands.Cog):
 
         await ctx.send("Benjamin has Minimod once more.")
 
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def setdelay(self, ctx, seconds: int):
+        await ctx.channel.edit(slowmode_delay=seconds)
+        await ctx.send(f"Set the slowmode delay in this channel to {seconds} seconds!")
+
 # Used for connecting the Command Center to the rest of the bot
 def setup(bot):
     bot.add_cog(PrivateCommands(bot=bot))

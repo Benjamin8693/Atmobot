@@ -471,6 +471,7 @@ prefix_to_world = {
     "NV": "Novus",
     "YG": "Yago",
     "WL": "Wallaru",
+    "WA": "Wallaru",
     "SI": "Skull Island",
     "MO": "Monquista",
     "MQ": "Monquista",
@@ -485,7 +486,9 @@ prefix_to_world = {
     "TKO": "Tokyo",
     "TK": "Tokyo",
     "RUS": "Russia",
-    "RS": "Russia"
+    "RS": "Russia",
+    "GR": "Raids",
+    "Raids": "Raids"
 }
 
 twitter_video_limit = 140

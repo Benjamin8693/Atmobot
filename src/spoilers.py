@@ -5,7 +5,7 @@ from discord.ext.commands import bot
 from moviepy.editor import *
 from PIL import Image, ImageFont, ImageDraw
 from numpy import broadcast_to
-import twitter
+import tweepy
 from wizdiff.delta import FileDelta
 from wizdiff.update_notifier import UpdateNotifier
 from wizdiff.utils import get_revision_from_url
@@ -40,13 +40,14 @@ class Spoilers(UpdateNotifier):
         self.bot = bot
 
         # TODO: Move to main.py
-        self.twitter_api = None
+        self.twitter_api_v1 = None
+        self.twitter_api_v2 = None
 
         # TODO: REMOVE
         self.state = False
 
         # TODO: Keep track of most recent revision somewhere else
-        self.revision_data = "V_r713909.Wizard_1_470"
+        self.revision_data = "r736675.Wizard_1_510"
 
         # Keep track of spoiler data
         self.important_update = False
@@ -77,16 +78,19 @@ class Spoilers(UpdateNotifier):
             consumer_secret = twitter_api_keys[bot_globals.TWITTER_KEY_CONSUMER_SECRET]
             access_token_key = twitter_api_keys[bot_globals.TWITTER_KEY_ACCESS_TOKEN]
             access_token_secret = twitter_api_keys[bot_globals.TWITTER_KEY_ACCESS_TOKEN_SECRET]
+            bearer_token = twitter_api_keys[bot_globals.TWITTER_KEY_BEAR]
 
             # Load the API
-            self.twitter_api = twitter.Api(consumer_key=consumer_key, consumer_secret=consumer_secret, access_token_key=access_token_key, access_token_secret=access_token_secret)
+            auth = tweepy.OAuth1UserHandler(consumer_key, consumer_secret, access_token_key, access_token_secret)
+            self.twitter_api_v1 = tweepy.API(auth)
+            self.twitter_api_v2 = tweepy.Client(bearer_token=bearer_token, consumer_key=consumer_key, consumer_secret=consumer_secret, access_token=access_token_key, access_token_secret=access_token_secret)
 
         # Check if we're logged in and verified
-        if self.twitter_api:
-            verified = self.twitter_api.VerifyCredentials()
+        #if self.twitter_api:
+        #    verified = self.twitter_api.VerifyCredentials()
 
         # Notify about the API
-        if not self.twitter_api or not verified:
+        if not self.twitter_api_v1 and not self.twitter_api_v2:# or not verified:
             print("{time} | SPOILERS: Could not load the Twitter API".format(time=self.get_formatted_time()))
         else:
             print("{time} | SPOILERS: Logged into the Twitter API".format(time=self.get_formatted_time()))
@@ -212,13 +216,15 @@ class Spoilers(UpdateNotifier):
 
             # Add information about Atmobot
             greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_information_title, value=bot_globals.spoilers_incoming_discord_information, inline=False)
-            greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_coming_soon_title, value=bot_globals.spoilers_incoming_discord_coming_soon, inline=False)
+
+            spoilers_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_ANNOUNCEMENT]).mention
+            greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_coming_soon_title, value=bot_globals.spoilers_incoming_discord_coming_soon.format(spoilers_channel=spoilers_channel), inline=False)
 
             images_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_IMAGES]).mention
             music_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_MUSIC]).mention
             locale_channel = self.bot.get_channel(spoiler_channel_ids[bot_globals.CHANNEL_LOCALE]).mention
-            formatted_channels = bot_globals.spoilers_incoming_discord_channels.format(images_channel=images_channel, music_channel=music_channel, locale_channel=locale_channel)
-            greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_channels_title, value=formatted_channels, inline=False)
+            #formatted_channels = bot_globals.spoilers_incoming_discord_channels.format(images_channel=images_channel, music_channel=music_channel, locale_channel=locale_channel)
+            #greetings_embed.add_field(name=bot_globals.spoilers_incoming_discord_channels_title, value=formatted_channels, inline=False)
 
             # Send the embed
             if announcement_channel:
@@ -232,7 +238,8 @@ class Spoilers(UpdateNotifier):
 
             # Post it to Twitter
             if announcement_text:
-                self.twitter_api.PostUpdate(status=announcement_text, media="resources/greetings_wizard.png")
+                media = self.twitter_api_v1.media_upload(filename = "resources/greetings_wizard.png")
+                self.twitter_api_v2.create_tweet(text=announcement_text, media_ids=[media.media_id_string])
 
     async def post_goodbye(self):
 
@@ -258,7 +265,8 @@ class Spoilers(UpdateNotifier):
 
             # Post the goodbye message
             if goodbye_text:
-                self.twitter_api.PostUpdate(status=goodbye_text, media="resources/goodbye_wizard.png")
+                media = self.twitter_api_v1.media_upload(filename = "resources/goodbye_wizard.png")
+                self.twitter_api_v2.create_tweet(text=goodbye_text, media_ids=[media.media_id_string])
 
         # Shut off the Discord and Twitter posts just in-case
         #self.discord_post_override = True
@@ -615,7 +623,7 @@ class Spoilers(UpdateNotifier):
                     chain_counter = bot_globals.twitter_description_extension.format(current=(chain_index + 1), total=len(line_chains))
                     twitter_post_description = spoiler_post_description + chain_counter
 
-                await self.post_spoiler_to_twitter(output_path, spoiler_name, bot_globals.CHANNEL_LOCALE, twitter_post_description, in_reply_to_status_id)
+                await self.post_spoiler_to_twitter([output_path], spoiler_name, bot_globals.CHANNEL_LOCALE, twitter_post_description, in_reply_to_status_id)
 
             await asyncio.sleep(bot_globals.time_between_posts)
 
@@ -848,7 +856,7 @@ class Spoilers(UpdateNotifier):
 
             # Tweet out the spoiler!
             if spoiler_post_to_twitter:
-                await self.post_spoiler_to_twitter(file_name, spoiler_name, bot_globals.CHANNEL_IMAGES, spoiler_post_description)
+                await self.post_spoiler_to_twitter([file_name], spoiler_name, bot_globals.CHANNEL_IMAGES, spoiler_post_description)
 
             # Delete our file from cache
             #os.remove(file_name)
@@ -1042,7 +1050,7 @@ class Spoilers(UpdateNotifier):
             in_reply_to_status_id = self.last_tweet_ids[bot_globals.CHANNEL_MUSIC]
 
         # Post the tweet
-        await self.post_spoiler_to_twitter(video_path, spoiler_name, bot_globals.CHANNEL_MUSIC, spoiler_post_description, in_reply_to_status_id)
+        await self.post_spoiler_to_twitter([video_path], spoiler_name, bot_globals.CHANNEL_MUSIC, spoiler_post_description, in_reply_to_status_id)
 
         # Delete the file
         #os.remove(video_path)
@@ -1241,44 +1249,45 @@ class Spoilers(UpdateNotifier):
         # Log it
         print("{time} | SPOILERS: Posted spoiler \"{spoiler_name}\" on Discord".format(time=self.get_formatted_time(), spoiler_name=os.path.basename(file_name)))
 
-    async def post_spoiler_to_twitter(self, file_name, spoiler_name, spoiler_type, spoiler_post_description=None, in_reply_to_status_id=None):
+    async def post_spoiler_to_twitter(self, file_names, spoiler_name, spoiler_type, spoiler_post_description=None, in_reply_to_status_id=None):
 
         if self.twitter_post_override:
             return
 
-        media_id = file_name
+        media_ids = []
         
         # Format description
+        twitter_description = ""
         if spoiler_post_description:
-            twitter_description = self.format_twitter_description(spoiler_post_description)
-        else:
-            twitter_description = ""
+            twitter_description += self.format_twitter_description(spoiler_post_description)
 
-        # Handle uploading MP4s
-        if type(file_name) == str and file_name.endswith(".mp4"):
-            video_id: int = self.twitter_api.UploadMediaChunked(media = file_name, media_category = 'tweet_video')
+        for file_name in file_names:
 
-            # Sleep so that our uploaded video has some time to process
-            # We're using time.sleep() here because asyncio.sleep() doesn't work in a thread
-            time.sleep(bot_globals.twitter_video_process_time)
+            # Handle uploading MP4s
+            if file_name.endswith(".mp4"):
+                video = self.twitter_api_v1.media_upload(filename = file_name, media_category = 'tweet_video')
 
-            media_id = video_id
+                # Sleep so that our uploaded video has some time to process
+                # We're using time.sleep() here because asyncio.sleep() doesn't work in a thread
+                time.sleep(bot_globals.twitter_video_process_time)
+
+                media_ids.append(video.media_id_string)
+                continue
+
+            media = self.twitter_api_v1.media_upload(filename = file_name)
+            media_ids.append(media.media_id_string)
 
         # Publish the tweet
-        status = self.twitter_api.PostUpdate(status=twitter_description, media=media_id, in_reply_to_status_id=in_reply_to_status_id)
+        status = self.twitter_api_v2.create_tweet(text=twitter_description, in_reply_to_tweet_id=in_reply_to_status_id, media_ids=media_ids)
 
         # Store the ID of the last tweet made
-        self.last_tweet_ids[spoiler_type] = status.id
+        self.last_tweet_ids[spoiler_type] = status.data['id']
 
-        # Single-file tweet logging
-        if type(media_id) == str:
-            spoiler_name = os.path.basename(file_name)
+        # Tweet logging
+        for x in range(len(media_ids)):
+            spoiler_name = file_names[x]
             print("{time} | SPOILERS: Tweeted spoiler \"{spoiler_name}\"".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
-
-        # Multi-file tweet logging
-        elif type(media_id) == list:
-            for spoiler_name in media_id:
-                print("{time} | SPOILERS: Tweeted spoiler \"{spoiler_name}\"".format(time=self.get_formatted_time(), spoiler_name=spoiler_name))
+        return
 
     def format_twitter_description(self, description, current=1, total=1):
 

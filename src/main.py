@@ -189,7 +189,7 @@ class Atmobot(commands.Bot):
         # Automatic spoiler system
         print("{time} | STARTUP: Loading Spoilers Center".format(time=await self.get_formatted_time()))
         self.spoilers = spoilers.Spoilers(self)
-        #await self.spoilers.startup()
+        await self.spoilers.startup()
 
         await self.load_scheduler()
 

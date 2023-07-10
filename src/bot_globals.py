@@ -340,10 +340,10 @@ REVISION_NUMBER = 0
 REVISION_VERSION = 1
 
 fallback_game = WIZARD101
-fallback_revision = 725847
-fallback_version_live = "1_490"
+fallback_revision = 736675
+fallback_version_live = "1_510"
 fallback_version_live_formatted = "{game}_{version}"
-fallback_version_dev = "{game}Dev"
+fallback_version_dev = "WizardDev"
 
 version_empty = "{game}_{revision}_{version}"
 
@@ -390,9 +390,9 @@ BRUTEFORCER_ROUTINE_REPEAT_AFTER_SUCCESS = 5
 spoilers_incoming_twitter = "Hello! I am Atmobot.\nThe Test Realm files have just updated, so I'm here to spoil a few things automatically! Plex is datamining manually at the moment, so enjoy these automatic spoilers while you wait.\nAny automatically posted tweets will begin with [BOT]."
 spoilers_incoming_discord_title = "Atmobot"
 spoilers_incoming_discord_information_title = "Hello! I am Atmobot"
-spoilers_incoming_discord_information = "I am a bot created by the Atmoplex team for the purpose of spoiling Test Realm. Test Realm has just updated, so it's time for me to spoil a few things automatically!"
+spoilers_incoming_discord_information = "I am a bot created by the Atmoplex team for the purpose of spoiling Test Realm. Test Realm has just updated, so I will begin to post spoilers momentarily."
 spoilers_incoming_discord_coming_soon_title = "So what now?"
-spoilers_incoming_discord_coming_soon = "Within the next minute, I will begin posting in the spoilers category of this server. There will be about one file posted every 10 seconds, give or take.\n\nIn the meantime, the Atmoplex team is datamining the update manually. Whatever is missed by Atmobot will be later posted to Twitter. Enjoy these automatic spoilers!"
+spoilers_incoming_discord_coming_soon = "I will imminently begin posting in {spoilers_channel}. It may take a while for me to get through everything, but expect messages to appear sporadically as I datamine the update.\n\nIn the meantime, the Atmoplex team is datamining the update manually. Whatever is missed by Atmobot will be posted later. Enjoy these automatic spoilers!"
 spoilers_incoming_discord_channels_title = "New Channels"
 spoilers_incoming_discord_channels = "{images_channel} - Icons of new spells, equipment, furniture, spells, NPCs, and more.\n\n{music_channel} - All of the new soundtracks, excluding ambient music and cues.\n\n{locale_channel} - A collection of new zone names, mob names, and more."
 

@@ -344,6 +344,8 @@ class PrivateCommands(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def testtweet(self, ctx, message: str):
 
+        return
+
         self.bot.spoilers.twitter_api_v2.create_tweet(text=message)
         await ctx.send(f"Tweeted message '{message}'.")
 

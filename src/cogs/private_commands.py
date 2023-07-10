@@ -340,6 +340,13 @@ class PrivateCommands(commands.Cog):
         await ctx.channel.edit(slowmode_delay=seconds)
         await ctx.send(f"Set the slowmode delay in this channel to {seconds} seconds!")
 
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def testtweet(self, ctx, message: str):
+
+        self.bot.spoilers.twitter_api_v2.create_tweet(text=message)
+        await ctx.send(f"Tweeted message '{message}'.")
+
 # Used for connecting the Command Center to the rest of the bot
 def setup(bot):
     bot.add_cog(PrivateCommands(bot=bot))

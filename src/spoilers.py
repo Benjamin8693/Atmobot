@@ -389,11 +389,13 @@ class Spoilers(UpdateNotifier):
             with self.safe_open_w(file_name) as fp:
                 fp.write(file_data)
 
+            # Determine file handler
+            file_handler = self.determine_file_handler(inner_file_info.name)
+            if file_handler == bot_globals.CHANNEL_LOCALE:
+                chained = False
+
             # Handle the file right away
             if not chained:
-
-                # Determine file handler
-                file_handler = self.determine_file_handler(inner_file_info.name)
 
                 # Handle locale files
                 if file_handler == bot_globals.CHANNEL_LOCALE:
@@ -473,7 +475,7 @@ class Spoilers(UpdateNotifier):
 
         return file_handler
 
-    async def handle_locale_spoiler(self, spoiler_data, config):
+    async def handle_locale_spoiler(self, spoiler_data, config, chain_index=-1, total_chains=-1, total_spoilers=-1):
 
         # Unpack our spoiler config
         spoiler_name, spoiler_file_path, spoiler_channel_to_post, spoiler_post_description, spoiler_post_to_twitter, spoiler_divide_threshold = self.unpack_spoiler_config(config)
@@ -486,10 +488,16 @@ class Spoilers(UpdateNotifier):
         old_file_name = os.path.join(bot_globals.resources_path, bot_globals.locale_path, bot_globals.locale_path_old, os.path.basename(spoiler_data))
 
         # Open the files for comparison
-        with open(file_name, "r", encoding="utf8", errors='ignore') as new_file:
-            with open(old_file_name, "r", encoding="utf8", errors='ignore') as old_file:
-                # Find the differences between the two files
-                file_difference = difflib.ndiff(old_file.readlines(), new_file.readlines())
+        new_file = open(file_name, "r", encoding="utf8", errors='ignore')
+        new_lines = new_file.readlines()
+        try:
+            old_file = open(old_file_name, "r", encoding="utf8", errors='ignore')
+            old_lines = old_file.readlines()
+        except FileNotFoundError:
+            old_lines = []
+
+        # Find the differences between the two files
+        file_difference = difflib.ndiff(old_lines, new_lines)
 
         new_lines = []
         file_difference = tuple(x for x in file_difference)
@@ -562,7 +570,7 @@ class Spoilers(UpdateNotifier):
             y = ((bot_globals.thumbnail_dimensions[1] - height) / 2 + bot_globals.locale_header_offset_y)
 
             # Place the header on template
-            editing_template.text((x, y), locale_title, bot_globals.thumbnail_header_color, font=font)
+            editing_template.text((x, y), locale_title, (239, 238, 41), font=font)
 
             # Now set up the font for our individual lines
             font_size = 48
@@ -582,7 +590,7 @@ class Spoilers(UpdateNotifier):
                 font_to_use = font
                 if len(line) >= 30:
                     font_to_use = smaller_font
-                editing_template.text((x_offset, y_offset), line, bot_globals.thumbnail_footer_color, font=font_to_use, align="left")
+                editing_template.text((x_offset, y_offset), line, (255, 255, 255), font=font_to_use, align="left")
 
                 # Reset our position now that we're in the second column
                 index = chain.index(line)

@@ -173,20 +173,6 @@ class Commands(commands.Cog):
         mode = bot_globals.bruteforce_mode_to_index.get(mode)
         await self.bot.bruteforcer.handle_control_panel(interaction = ctx, mode = mode, respond = True)
 
-    # Surprise Command
-    # Posts a crown code image for the holidays
-    @slash_command(name = "surprise", description = "i wonder what this could do?", guild_ids = [bot.guild_id])
-    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
-    async def surprise(self, ctx):
-
-        # Path to get our Hero101 assets from
-        current_path = os.path.join(os.getcwd(), bot_globals.resources_path)
-
-        # Generate a file path and send the file
-        file_path = os.path.join(current_path, "surprise.png")
-        file_to_send = File(file_path)
-        await ctx.respond(file=file_to_send)
-
     # Hero101 Command
     # Posts a random Hero101-related image
     @slash_command(name = bot_globals.command_hero101_name, description = bot_globals.command_hero101_description, guild_ids = [bot.guild_id])
@@ -228,6 +214,26 @@ class Commands(commands.Cog):
 
         # Log the result
         print("{time} | REMCO: Ascii art posted".format(time=await self.bot.get_formatted_time()))
+
+    # Funny dev moment
+    @slash_command(name = bot_globals.command_server_name, description = bot_globals.command_server_description, guild_ids = [bot.guild_id])
+    @commands.dynamic_cooldown(cooldown_behavior, commands.BucketType.user)
+    async def server(self, ctx, command: str = "1"):
+
+        # Logging
+        print("{time} | SERVER: {user} requested Server Command".format(time=await self.bot.get_formatted_time(), user=await self.get_full_username(ctx.author)))
+
+        if command.lower() == 'wincombat':
+            current_path = os.path.join(os.getcwd(), bot_globals.resources_path)
+            file_path = os.path.join(current_path, "you_win.png")
+            file_to_send = File(file_path)
+            await ctx.respond(file=file_to_send)
+        else:
+            # Send the amount of days
+            await ctx.respond("Sorry, that command is invalid!")
+
+        # Log the result
+        print("{time} | SERVER: Response posted".format(time=await self.bot.get_formatted_time()))
 
     # Thumbnail Command
     # Creates a custom image based on the text provided

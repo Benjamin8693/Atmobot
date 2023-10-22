@@ -505,7 +505,7 @@ class Bruteforcer:
             await self.cancel_image_bruteforce(interaction = interaction, reason = "Attempted to start an image bruteforce with a request cooldown less than or equal to 0!")
             return
 
-        self.total_queries = len(image_names) * len(image_prefixes) * len(image_suffixes) * len(image_extensions)
+        self.total_queries = len(image_names) * len(image_prefixes) * len(image_suffixes) * len(image_extensions) * len(request_urls)
         self.total_terms = len(image_names)
 
         if interaction:

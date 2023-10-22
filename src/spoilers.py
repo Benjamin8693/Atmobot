@@ -47,7 +47,7 @@ class Spoilers(UpdateNotifier):
         self.state = False
 
         # TODO: Keep track of most recent revision somewhere else
-        self.revision_data = "r736675.Wizard_1_510"
+        self.revision_data = "r743518.Wizard_1_520"
 
         # Keep track of spoiler data
         self.important_update = False

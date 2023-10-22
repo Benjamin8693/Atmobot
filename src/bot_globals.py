@@ -344,8 +344,8 @@ REVISION_NUMBER = 0
 REVISION_VERSION = 1
 
 fallback_game = WIZARD101
-fallback_revision = 736675
-fallback_version_live = "1_510"
+fallback_revision = 743518
+fallback_version_live = "1_520"
 fallback_version_live_formatted = "{game}_{version}"
 fallback_version_dev = "WizardDev"
 

@@ -773,7 +773,7 @@ class Bruteforcer:
             return
 
         # TODO: This is temporary, hacky, and nasty
-        base_revision = "736675"
+        base_revision = "743518"
         base_version = "WizardDev"
         base_patcher = "testversionec"
         base_patcher_secondary = "testversionec"

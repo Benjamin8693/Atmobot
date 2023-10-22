@@ -494,8 +494,8 @@ class Bruteforcer:
             return
 
         # Grab the URL we're going to bruteforce, don't proceed if it doesn't exist
-        request_url = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_REQUEST_URL)
-        if not request_url:
+        request_urls = await self.get_bruteforce_profile_setting(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_REQUEST_URLS)
+        if not request_urls:
             await self.cancel_image_bruteforce(interaction = interaction, reason = "Attempted to start an image bruteforce without a URL to bruteforce!")
             return
 
@@ -535,7 +535,7 @@ class Bruteforcer:
             # Execute all our processes
             processes = []
             for i, l in enumerate(image_lists):
-                p = threading.Thread(target = asyncio.run, args=(self.bruteforce_image_list(interaction, l, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_url, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message),))
+                p = threading.Thread(target = asyncio.run, args=(self.bruteforce_image_list(interaction, l, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_urls, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message),))
                 processes.append(p)
                 p.start()
 
@@ -553,7 +553,7 @@ class Bruteforcer:
         else:
 
             for image_name in image_names:
-                await self.bruteforce_image_name(interaction, image_name, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_url, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message)
+                await self.bruteforce_image_name(interaction, image_name, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_urls, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message)
 
         # Give our info collector some time to catch up
         asyncio.sleep(3)
@@ -571,13 +571,13 @@ class Bruteforcer:
 
         print("Image bruteforce ended!")
 
-    async def bruteforce_image_list(self, interaction: Interaction, image_list: list, image_names: list, image_names_successes: list, image_prefixes: list, image_suffixes: list, image_extensions: list, request_url: str, request_cooldown: float, discord_notify: bool, discord_channel: int, discord_message: str, twitter_notify: bool, twitter_message: str):
+    async def bruteforce_image_list(self, interaction: Interaction, image_list: list, image_names: list, image_names_successes: list, image_prefixes: list, image_suffixes: list, image_extensions: list, request_urls: list, request_cooldown: float, discord_notify: bool, discord_channel: int, discord_message: str, twitter_notify: bool, twitter_message: str):
 
         for image_name in image_list:
             #print("on image {}, index {}\n\n".format(image_name, image_list.index(image_name)))
-            await self.bruteforce_image_name(interaction, image_name, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_url, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message)
+            await self.bruteforce_image_name(interaction, image_name, image_names, image_names_successes, image_prefixes, image_suffixes, image_extensions, request_urls, request_cooldown, discord_notify, discord_channel, discord_message, twitter_notify, twitter_message)
 
-    async def bruteforce_image_name(self, interaction: Interaction, image_name: str, image_names: list, image_names_successes: list, image_prefixes: list, image_suffixes: list, image_extensions: list, request_url: str, request_cooldown: float, discord_notify: bool, discord_channel: int, discord_message: str, twitter_notify: bool, twitter_message: str):
+    async def bruteforce_image_name(self, interaction: Interaction, image_name: str, image_names: list, image_names_successes: list, image_prefixes: list, image_suffixes: list, image_extensions: list, request_urls: list, request_cooldown: float, discord_notify: bool, discord_channel: int, discord_message: str, twitter_notify: bool, twitter_message: str):
 
         # Term tracking for reporting info back to our user
         self.current_term += 1
@@ -590,77 +590,85 @@ class Bruteforcer:
             await self.cancel_image_bruteforce(interaction = interaction, reason = "User requested to cancel the image bruteforce.")
             #break
 
-        # Iterate over all of our prefixes to attempt every possible variation
-        for prefix in image_prefixes:
+        # Iterate over all of our request URLs
+        for current_url in request_urls:
 
             # Break out of the loop if we need to cancel the operation
             if self.cancel_operation:
                 await self.cancel_image_bruteforce(interaction = interaction, reason = "User requested to cancel the image bruteforce.")
                 break
 
-            # Also iterate over all of our suffixes
-            for suffix in image_suffixes:
+            # Iterate over all of our prefixes to attempt every possible variation
+            for prefix in image_prefixes:
 
                 # Break out of the loop if we need to cancel the operation
                 if self.cancel_operation:
                     await self.cancel_image_bruteforce(interaction = interaction, reason = "User requested to cancel the image bruteforce.")
                     break
 
-                # Finally iterate over all the possible file extensions
-                for extension in image_extensions:
+                # Also iterate over all of our suffixes
+                for suffix in image_suffixes:
 
                     # Break out of the loop if we need to cancel the operation
                     if self.cancel_operation:
                         await self.cancel_image_bruteforce(interaction = interaction, reason = "User requested to cancel the image bruteforce.")
                         break
 
-                    # The operation is paused, hold here until further notice
-                    while self.pause_operation:
-                        time.sleep(1.0)
+                    # Finally iterate over all the possible file extensions
+                    for extension in image_extensions:
 
-                    # Query tracking for reporting back info to the user
-                    self.current_query += 1
+                        # Break out of the loop if we need to cancel the operation
+                        if self.cancel_operation:
+                            await self.cancel_image_bruteforce(interaction = interaction, reason = "User requested to cancel the image bruteforce.")
+                            break
 
-                    # Bruteforce this image
-                    possible_image = prefix + image_name + suffix + extension
-                    formatted_url = request_url.format(possible_image)
-                    response = await self.bruteforce_image(formatted_url, request_cooldown)
+                        # The operation is paused, hold here until further notice
+                        while self.pause_operation:
+                            time.sleep(1.0)
 
-                    # We got a response, which means the image exists! Handle it according to our config
-                    if response and ((discord_notify and discord_channel) or twitter_notify):
+                        # Query tracking for reporting back info to the user
+                        self.current_query += 1
 
-                        print("Bruteforce found image! {image_name}".format(image_name = possible_image))
+                        # Bruteforce this image
+                        possible_image = prefix + image_name + suffix + extension
+                        formatted_url = current_url.format(possible_image)
+                        response = await self.bruteforce_image(formatted_url, request_cooldown)
 
-                        # Remove the image name from the list
-                        image_name_index = image_names.index(image_name)
-                        updated_image_names = image_names[:]
-                        del updated_image_names[image_name_index]
-                        await bot.bruteforcer.update_bruteforce_profile_info(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_NAMES, updated_image_names)
+                        # We got a response, which means the image exists! Handle it according to our config
+                        if response and ((discord_notify and discord_channel) or twitter_notify):
 
-                        # Add it to the the successful name list
-                        image_names_successes.append(image_name)
-                        await bot.bruteforcer.update_bruteforce_profile_info(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_NAMES_SUCCESSES, image_names_successes)
+                            print("Bruteforce found image! {image_name}".format(image_name = possible_image))
 
-                        # Save the image to file
-                        image = response.body
-                        file_path = "cache/{image_name}".format(image_name = possible_image)
-                        saved_file = open(file_path, "wb")
-                        saved_file.write(image)
-                        saved_file.close()
+                            # Remove the image name from the list
+                            image_name_index = image_names.index(image_name)
+                            updated_image_names = image_names[:]
+                            del updated_image_names[image_name_index]
+                            await bot.bruteforcer.update_bruteforce_profile_info(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_NAMES, updated_image_names)
 
-                        # Attempt to post to Discord
-                        if discord_notify and discord_channel:
-                            formatted_discord_message = "**{discord_message}\n{image_name}**\n<{image_url}>".format(discord_message = discord_message, image_name = possible_image, image_url = formatted_url)
-                            file_to_send = File(file_path)
-                            await self.bot.queue_to_discord(discord_channel, formatted_discord_message, file_to_send)
+                            # Add it to the the successful name list
+                            image_names_successes.append(image_name)
+                            await bot.bruteforcer.update_bruteforce_profile_info(bot_globals.COMMAND_BRUTEFORCE_MODE_IMAGE, bot_globals.BRUTEFORCE_IMAGE_IMAGE_NAMES_SUCCESSES, image_names_successes)
 
-                        # Attempt to post to Twitter
-                        if twitter_notify:
-                            formatted_twitter_message = "{twitter_message}\n{image_name}\n\n{image_url}".format(twitter_message = twitter_message, image_name = possible_image, image_url = formatted_url)
-                            await self.bot.send_to_twitter(formatted_twitter_message, file_path)
+                            # Save the image to file
+                            image = response.body
+                            file_path = "cache/{image_name}".format(image_name = possible_image)
+                            saved_file = open(file_path, "wb")
+                            saved_file.write(image)
+                            saved_file.close()
 
-                    # We're done the bruteforce, cool down a bit to avoid being rate limited
-                    #await asyncio.sleep(request_cooldown)
+                            # Attempt to post to Discord
+                            if discord_notify and discord_channel:
+                                formatted_discord_message = "**{discord_message}\n{image_name}**\n<{image_url}>".format(discord_message = discord_message, image_name = possible_image, image_url = formatted_url)
+                                file_to_send = File(file_path)
+                                await self.bot.queue_to_discord(discord_channel, formatted_discord_message, file_to_send)
+
+                            # Attempt to post to Twitter
+                            if twitter_notify:
+                                formatted_twitter_message = "{twitter_message}\n{image_name}\n\n{image_url}".format(twitter_message = twitter_message, image_name = possible_image, image_url = formatted_url)
+                                await self.bot.send_to_twitter(formatted_twitter_message, file_path)
+
+                        # We're done the bruteforce, cool down a bit to avoid being rate limited
+                        #await asyncio.sleep(request_cooldown)
 
         # Record how long it took to bruteforce this one term
         time_taken =  datetime.datetime.now() - time_started

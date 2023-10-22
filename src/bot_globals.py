@@ -204,7 +204,7 @@ bruteforcer_template = {
                "image_extensions": [".jpg", ".png", ".gif"],
                "image_prefixes": [""],
                "image_suffixes": ["", "01", "02", "03", "04", "05", "01_600", "02_600", "03_600", "04_600", "05_600", "_Lead", "_compressed", "_Lead_compressed_600", "_600", "_600b", "_Mercedes", "_watermark_contrast_600", "_watermark_contrast"],
-               "request_url": "https://edgecast.wizard101.com/image/free/Wizard/C/Wizard-Society/Patch-Notes/{}?v=1",
+               "request_urls": ["https://edgecast.wizard101.com/image/free/Wizard/C/Wizard-Society/Patch-Notes/{}?v=1", "https://edgecast.wizard101.com/file/free/Wizard/C/Wizard-Society/Patch-Notes/{}?v=1"],
                "request_threading": False,
                "request_threading_count": 16,
                "request_cooldown": 0.05,
